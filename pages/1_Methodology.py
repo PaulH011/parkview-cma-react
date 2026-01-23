@@ -9,14 +9,6 @@ This page serves as a help/reference guide for users to understand:
 
 import streamlit as st
 
-# Page configuration
-st.set_page_config(
-    page_title="Methodology - RA CME Tool",
-    page_icon="📚",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Custom CSS
 st.markdown("""
 <style>

@@ -316,7 +316,8 @@ col_sub1, col_sub2 = st.columns([4, 1])
 with col_sub1:
     st.markdown('<p class="sub-header">Adjust assumptions to see how expected returns change across asset classes</p>', unsafe_allow_html=True)
 with col_sub2:
-    st.link_button("📚 Methodology Guide", "/Methodology")
+    if st.button("📚 Methodology Guide"):
+        st.switch_page("pages/1_Methodology.py")
 
 # Initialize session state for overrides
 if 'overrides' not in st.session_state:
@@ -1024,4 +1025,5 @@ with col_f2:
         Toggle "Advanced Mode" in sidebar for building block inputs
     </div>
     """, unsafe_allow_html=True)
-    st.link_button("📚 View Full Methodology Documentation", "/Methodology", use_container_width=True)
+    if st.button("📚 View Full Methodology Documentation", use_container_width=True):
+        st.switch_page("pages/1_Methodology.py")
