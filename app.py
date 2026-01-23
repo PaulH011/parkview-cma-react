@@ -310,7 +310,13 @@ MODEL_FORMULAS = {
 
 # Header
 st.markdown('<p class="main-header">Research Affiliates CME Stress Testing Tool</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Adjust assumptions to see how expected returns change across asset classes</p>', unsafe_allow_html=True)
+
+# Sub-header with methodology link
+col_sub1, col_sub2 = st.columns([4, 1])
+with col_sub1:
+    st.markdown('<p class="sub-header">Adjust assumptions to see how expected returns change across asset classes</p>', unsafe_allow_html=True)
+with col_sub2:
+    st.link_button("📚 Methodology Guide", "/Methodology")
 
 # Initialize session state for overrides
 if 'overrides' not in st.session_state:
@@ -1009,9 +1015,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Footer
-st.markdown("""
-<div style="text-align: center; color: #666; font-size: 0.8rem; margin-top: 2rem;">
-    Research Affiliates CME Methodology Replication Tool |
-    Toggle "Advanced Mode" in sidebar for building block inputs
-</div>
-""", unsafe_allow_html=True)
+st.markdown("---")
+col_f1, col_f2, col_f3 = st.columns([1, 2, 1])
+with col_f2:
+    st.markdown("""
+    <div style="text-align: center; color: #666; font-size: 0.85rem;">
+        Research Affiliates CME Methodology Replication Tool<br/>
+        Toggle "Advanced Mode" in sidebar for building block inputs
+    </div>
+    """, unsafe_allow_html=True)
+    st.link_button("📚 View Full Methodology Documentation", "/Methodology", use_container_width=True)
