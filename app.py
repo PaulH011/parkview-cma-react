@@ -323,9 +323,9 @@ MODEL_FORMULAS = {
 }
 
 # Header with logo
-col_logo, col_title = st.columns([1, 5])
+col_logo, col_title = st.columns([1.5, 4])
 with col_logo:
-    st.image("assets/parkview_logo.png", width=180)
+    st.image("assets/parkview_logo.png")
 with col_title:
     st.markdown('<p class="main-header">Parkview CMA Tool</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Adjust assumptions to see how expected returns change across asset classes. See the <strong>Methodology</strong> page in the sidebar for calculation details.</p>', unsafe_allow_html=True)
