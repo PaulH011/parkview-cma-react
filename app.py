@@ -6,8 +6,155 @@ Run with: streamlit run app.py
 
 import streamlit as st
 import plotly.graph_objects as go
+import json
+import os
+from datetime import datetime
 from ra_stress_tool.main import CMEEngine
 from ra_stress_tool.config import AssetClass, EXPECTED_VOLATILITY
+
+# =============================================================================
+# Scenario Management Functions
+# =============================================================================
+
+SCENARIOS_FILE = 'scenarios.json'
+
+def load_scenarios():
+    """Load saved scenarios from JSON file."""
+    try:
+        with open(SCENARIOS_FILE, 'r') as f:
+            return json.load(f).get('scenarios', {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def save_scenario(name, overrides, base_currency):
+    """Save a scenario to JSON file."""
+    scenarios = load_scenarios()
+    scenarios[name] = {
+        'name': name,
+        'timestamp': datetime.now().isoformat(),
+        'base_currency': base_currency,
+        'overrides': overrides
+    }
+    try:
+        with open(SCENARIOS_FILE, 'w') as f:
+            json.dump({'scenarios': scenarios}, f, indent=2)
+        return True
+    except Exception as e:
+        return False
+
+def delete_scenario(name):
+    """Delete a scenario from JSON file."""
+    scenarios = load_scenarios()
+    if name in scenarios:
+        del scenarios[name]
+        try:
+            with open(SCENARIOS_FILE, 'w') as f:
+                json.dump({'scenarios': scenarios}, f, indent=2)
+            return True
+        except Exception:
+            return False
+    return False
+
+def apply_scenario_to_session(scenario_data):
+    """Apply a saved scenario's overrides to session state."""
+    overrides = scenario_data.get('overrides', {})
+    
+    # Clear existing session state (except essential keys)
+    keys_to_keep = {'base_currency_toggle', 'selected_scenario'}
+    for key in list(st.session_state.keys()):
+        if key not in keys_to_keep:
+            del st.session_state[key]
+    
+    # Set base currency
+    if 'base_currency' in scenario_data:
+        st.session_state['base_currency_toggle'] = scenario_data['base_currency']
+    
+    # Apply macro overrides
+    if 'macro' in overrides:
+        for region, region_overrides in overrides['macro'].items():
+            for key, value in region_overrides.items():
+                session_key = f"macro_{region}_{key}"
+                if key == 'my_ratio':
+                    st.session_state[session_key] = value
+                else:
+                    st.session_state[session_key] = value * 100  # Convert back to percentage
+    
+    # Apply bond overrides
+    for bond_type in ['bonds_global', 'bonds_hy', 'bonds_em']:
+        if bond_type in overrides:
+            for key, value in overrides[bond_type].items():
+                session_key = f"{bond_type}_{key}"
+                if key == 'duration':
+                    st.session_state[session_key] = value
+                else:
+                    st.session_state[session_key] = value * 100
+    
+    # Apply equity overrides
+    for region in ['us', 'europe', 'japan', 'em']:
+        equity_key = f"equity_{region}"
+        if equity_key in overrides:
+            for key, value in overrides[equity_key].items():
+                session_key = f"{equity_key}_{key}"
+                st.session_state[session_key] = value * 100
+    
+    # Apply hedge fund overrides
+    if 'absolute_return' in overrides:
+        for key, value in overrides['absolute_return'].items():
+            session_key = f"absolute_return_{key}"
+            if key == 'trading_alpha':
+                st.session_state[session_key] = value * 100
+            else:
+                st.session_state[session_key] = value
+
+def format_overrides_preview(overrides, base_currency=None):
+    """Format overrides for display in preview panel."""
+    if not overrides:
+        return "No changes from defaults"
+    
+    lines = []
+    
+    # Macro overrides
+    if 'macro' in overrides:
+        region_names = {'us': 'US', 'eurozone': 'Europe', 'japan': 'Japan', 'em': 'EM'}
+        for region, region_overrides in overrides['macro'].items():
+            region_name = region_names.get(region, region)
+            for key, value in region_overrides.items():
+                display_key = key.replace('_', ' ').title()
+                if key == 'my_ratio':
+                    lines.append(f"- {region_name} {display_key}: {value:.2f}")
+                else:
+                    lines.append(f"- {region_name} {display_key}: {value*100:.2f}%")
+    
+    # Bond overrides
+    bond_names = {'bonds_global': 'Bonds Global', 'bonds_hy': 'Bonds HY', 'bonds_em': 'Bonds EM'}
+    for bond_type, display_name in bond_names.items():
+        if bond_type in overrides:
+            for key, value in overrides[bond_type].items():
+                display_key = key.replace('_', ' ').title()
+                if key == 'duration':
+                    lines.append(f"- {display_name} {display_key}: {value:.1f} yrs")
+                else:
+                    lines.append(f"- {display_name} {display_key}: {value*100:.2f}%")
+    
+    # Equity overrides
+    equity_names = {'equity_us': 'Equity US', 'equity_europe': 'Equity Europe', 
+                    'equity_japan': 'Equity Japan', 'equity_em': 'Equity EM'}
+    for equity_key, display_name in equity_names.items():
+        if equity_key in overrides:
+            for key, value in overrides[equity_key].items():
+                display_key = key.replace('_', ' ').title()
+                lines.append(f"- {display_name} {display_key}: {value*100:.2f}%")
+    
+    # Hedge fund overrides
+    if 'absolute_return' in overrides:
+        for key, value in overrides['absolute_return'].items():
+            display_key = key.replace('_', ' ').title()
+            if key == 'trading_alpha':
+                lines.append(f"- Absolute Return {display_key}: {value*100:.2f}%")
+            else:
+                lines.append(f"- Absolute Return {display_key}: {value:.2f}")
+    
+    return "\n".join(lines) if lines else "No changes from defaults"
 
 # Page configuration
 st.set_page_config(
@@ -431,18 +578,97 @@ with st.sidebar:
 
     st.divider()
 
+    # ==========================================================================
+    # Scenario Management Section
+    # ==========================================================================
+    st.header("📁 Scenarios")
+    
+    # Load available scenarios
+    saved_scenarios = load_scenarios()
+    scenario_names = list(saved_scenarios.keys())
+    
+    # Scenario selector
+    scenario_options = ["-- New Scenario --"] + scenario_names
+    selected_scenario = st.selectbox(
+        "Select Scenario",
+        options=scenario_options,
+        key="selected_scenario_dropdown",
+        help="Choose a saved scenario to preview or load"
+    )
+    
+    # Show preview if a saved scenario is selected
+    if selected_scenario != "-- New Scenario --" and selected_scenario in saved_scenarios:
+        scenario_data = saved_scenarios[selected_scenario]
+        
+        with st.expander("📋 Scenario Preview", expanded=True):
+            # Metadata
+            timestamp = scenario_data.get('timestamp', 'Unknown')
+            if timestamp != 'Unknown':
+                try:
+                    dt = datetime.fromisoformat(timestamp)
+                    timestamp = dt.strftime("%Y-%m-%d %H:%M")
+                except:
+                    pass
+            
+            st.markdown(f"**Saved:** {timestamp}")
+            st.markdown(f"**Base Currency:** {scenario_data.get('base_currency', 'USD')}")
+            
+            st.markdown("---")
+            st.markdown("**Changes from defaults:**")
+            preview_text = format_overrides_preview(scenario_data.get('overrides', {}))
+            st.markdown(preview_text)
+        
+        # Load and Delete buttons
+        col_load, col_delete = st.columns(2)
+        with col_load:
+            if st.button("✅ Load Scenario", use_container_width=True):
+                apply_scenario_to_session(scenario_data)
+                st.success(f"Loaded '{selected_scenario}'")
+                st.rerun()
+        with col_delete:
+            if st.button("🗑️ Delete", use_container_width=True):
+                if delete_scenario(selected_scenario):
+                    st.success(f"Deleted '{selected_scenario}'")
+                    st.rerun()
+                else:
+                    st.error("Failed to delete scenario")
+    
+    st.markdown("---")
+    
+    # Save current scenario
+    st.markdown("**Save Current Settings:**")
+    new_scenario_name = st.text_input(
+        "Scenario Name",
+        placeholder="e.g., Bull Case, Bear Case, Base Case",
+        key="new_scenario_name",
+        label_visibility="collapsed"
+    )
+    
+    col_save, col_reset = st.columns(2)
+    with col_save:
+        if st.button("💾 Save Scenario", use_container_width=True):
+            if new_scenario_name and new_scenario_name.strip():
+                # We need to build overrides first - will be done after build_overrides is called
+                # Store the name in session state and handle save after overrides are built
+                st.session_state['pending_save_scenario'] = new_scenario_name.strip()
+                st.rerun()
+            else:
+                st.error("Please enter a scenario name")
+    
+    with col_reset:
+        if st.button("🔄 Reset All", use_container_width=True):
+            for key in list(st.session_state.keys()):
+                if key not in ['base_currency_toggle']:
+                    del st.session_state[key]
+            st.rerun()
+
+    st.divider()
+
     st.header("Input Assumptions")
 
     # Mode toggle
     advanced_mode = st.toggle("Advanced Mode", value=False,
                               help="Show all building block inputs (population growth, productivity, etc.)")
-
-    # Reset button
-    if st.button("Reset to Defaults"):
-        for key in list(st.session_state.keys()):
-            if key not in ['overrides', 'base_currency_toggle']:
-                del st.session_state[key]
-        st.rerun()
 
     st.divider()
 
@@ -794,6 +1020,16 @@ with st.sidebar:
 
 # Build overrides and compute results
 overrides = build_overrides()
+
+# Handle pending scenario save
+if 'pending_save_scenario' in st.session_state:
+    scenario_name = st.session_state['pending_save_scenario']
+    del st.session_state['pending_save_scenario']
+    if save_scenario(scenario_name, overrides, base_currency):
+        st.sidebar.success(f"Saved scenario: '{scenario_name}'")
+    else:
+        st.sidebar.error("Failed to save scenario (filesystem may be read-only)")
+
 base_ccy = base_currency.lower()  # 'usd' or 'eur'
 engine = CMEEngine(overrides if overrides else None, base_currency=base_ccy)
 results = engine.compute_all_returns("Current Scenario")
