@@ -9,6 +9,15 @@ This page serves as a help/reference guide for users to understand:
 
 import streamlit as st
 
+# =============================================================================
+# Authentication - Require login to access this page
+# =============================================================================
+from auth.middleware import require_auth, logout
+from auth.database import init_db
+
+init_db()
+user = require_auth()
+
 # Custom CSS
 st.markdown("""
 <style>
@@ -109,6 +118,20 @@ This guide documents the complete calculation methodology used in the Parkview
 Capital Market Assumptions (CMA) tool. Use this reference to understand 
 how expected returns are calculated and what each input assumption means.
 """)
+
+# User info and logout in sidebar
+st.sidebar.markdown(f"""
+<div style="background-color: #e8f4f8; padding: 0.5rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+    <span style="color: #1E3A5F; font-size: 0.9rem;">Logged in as:</span><br/>
+    <strong style="color: #1E3A5F;">{user['email']}</strong>
+</div>
+""", unsafe_allow_html=True)
+
+if st.sidebar.button("🚪 Logout", use_container_width=True):
+    logout()
+    st.rerun()
+
+st.sidebar.divider()
 
 # Sidebar navigation
 st.sidebar.header("📑 Quick Navigation")

@@ -29,3 +29,7 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
+
+# Database
+*.db
+parkview.db

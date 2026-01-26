@@ -13,10 +13,24 @@ from ra_stress_tool.main import CMEEngine
 from ra_stress_tool.config import AssetClass, EXPECTED_VOLATILITY
 
 # =============================================================================
-# Scenario Management Functions
+# Authentication
 # =============================================================================
 
-SCENARIOS_FILE = 'scenarios.json'
+from auth.middleware import require_auth, logout, load_scenarios, save_scenario, delete_scenario
+from auth.database import init_db
+from chatbot.assistant import render_chatbot
+
+# Initialize database and require authentication
+init_db()
+user = require_auth()
+user_id = user['id']
+
+# =============================================================================
+# Scenario Management Functions (Now handled by auth.middleware)
+# =============================================================================
+
+# Note: load_scenarios, save_scenario, delete_scenario are now imported from auth.middleware
+# and take user_id as first parameter
 
 # Default values for all inputs (used for comparison to detect overrides)
 def get_input_value(key):
@@ -122,51 +136,6 @@ INPUT_DEFAULTS = {
     'absolute_return_beta_investment': 0.05,
     'absolute_return_beta_momentum': 0.10,
 }
-
-def load_scenarios():
-    """Load saved scenarios from JSON file."""
-    try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(script_dir, SCENARIOS_FILE)
-        with open(file_path, 'r') as f:
-            return json.load(f).get('scenarios', {})
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-def save_scenario(name, overrides, base_currency):
-    """Save a scenario to JSON file."""
-    scenarios = load_scenarios()
-    scenarios[name] = {
-        'name': name,
-        'timestamp': datetime.now().isoformat(),
-        'base_currency': base_currency,
-        'overrides': overrides
-    }
-    try:
-        # Get the directory of the current script
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(script_dir, SCENARIOS_FILE)
-        with open(file_path, 'w') as f:
-            json.dump({'scenarios': scenarios}, f, indent=2)
-        return True
-    except Exception as e:
-        print(f"Error saving scenario: {e}")  # For debugging
-        return False
-
-def delete_scenario(name):
-    """Delete a scenario from JSON file."""
-    scenarios = load_scenarios()
-    if name in scenarios:
-        del scenarios[name]
-        try:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            file_path = os.path.join(script_dir, SCENARIOS_FILE)
-            with open(file_path, 'w') as f:
-                json.dump({'scenarios': scenarios}, f, indent=2)
-            return True
-        except Exception:
-            return False
-    return False
 
 def apply_scenario_to_session(scenario_data):
     """Apply a saved scenario's overrides to session state."""
@@ -704,6 +673,20 @@ def build_overrides():
 
 # Sidebar for inputs
 with st.sidebar:
+    # User info and logout
+    st.markdown(f"""
+    <div style="background-color: #e8f4f8; padding: 0.5rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+        <span style="color: #1E3A5F; font-size: 0.9rem;">Logged in as:</span><br/>
+        <strong style="color: #1E3A5F;">{user['email']}</strong>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("🚪 Logout", use_container_width=True):
+        logout()
+        st.rerun()
+
+    st.divider()
+
     st.header("Settings")
 
     # Base currency toggle
@@ -721,9 +704,9 @@ with st.sidebar:
     # Scenario Management Section
     # ==========================================================================
     st.header("📁 Scenarios")
-    
-    # Load available scenarios
-    saved_scenarios = load_scenarios()
+
+    # Load available scenarios for current user
+    saved_scenarios = load_scenarios(user_id)
     scenario_names = list(saved_scenarios.keys())
     
     # Scenario selector
@@ -766,7 +749,7 @@ with st.sidebar:
                 st.rerun()
         with col_delete:
             if st.button("🗑️ Delete", use_container_width=True):
-                if delete_scenario(selected_scenario):
+                if delete_scenario(user_id, selected_scenario):
                     st.success(f"Deleted '{selected_scenario}'")
                     st.rerun()
                 else:
@@ -789,7 +772,7 @@ with st.sidebar:
             if new_scenario_name and new_scenario_name.strip():
                 # Build overrides directly from current session state
                 current_overrides = build_overrides()
-                if save_scenario(new_scenario_name.strip(), current_overrides, base_currency):
+                if save_scenario(user_id, new_scenario_name.strip(), current_overrides, base_currency):
                     if current_overrides:
                         st.toast(f"✅ Saved '{new_scenario_name}' with {len(current_overrides)} override group(s)", icon="✅")
                     else:
@@ -1179,6 +1162,9 @@ with st.sidebar:
             st.number_input("Momentum β", min_value=-1.0, max_value=2.0, value=None,
                            step=0.05, key="absolute_return_beta_momentum",
                            placeholder="0.10", help="Default: 0.10 | Up-minus-Down (UMD)")
+
+    # AI Chatbot Assistant
+    render_chatbot()
 
 # Build overrides and compute results
 overrides = build_overrides()
