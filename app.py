@@ -18,6 +18,105 @@ from ra_stress_tool.config import AssetClass, EXPECTED_VOLATILITY
 
 SCENARIOS_FILE = 'scenarios.json'
 
+# Default values for all inputs (used for comparison to detect overrides)
+INPUT_DEFAULTS = {
+    # US Macro
+    'macro_us_inflation_forecast': 2.29,
+    'macro_us_rgdp_growth': 1.20,
+    'macro_us_tbill_forecast': 3.79,
+    'macro_us_population_growth': 0.40,
+    'macro_us_productivity_growth': 1.20,
+    'macro_us_my_ratio': 2.1,
+    'macro_us_current_headline_inflation': 2.50,
+    'macro_us_long_term_inflation': 2.20,
+    'macro_us_current_tbill': 4.50,
+    'macro_us_country_factor': 0.00,
+    # Eurozone Macro
+    'macro_eurozone_inflation_forecast': 2.06,
+    'macro_eurozone_rgdp_growth': 0.80,
+    'macro_eurozone_tbill_forecast': 2.70,
+    'macro_eurozone_population_growth': 0.10,
+    'macro_eurozone_productivity_growth': 1.00,
+    'macro_eurozone_my_ratio': 2.3,
+    'macro_eurozone_current_headline_inflation': 2.20,
+    'macro_eurozone_long_term_inflation': 2.00,
+    'macro_eurozone_current_tbill': 3.50,
+    'macro_eurozone_country_factor': 0.00,
+    # Japan Macro
+    'macro_japan_inflation_forecast': 1.65,
+    'macro_japan_rgdp_growth': 0.30,
+    'macro_japan_tbill_forecast': 1.00,
+    'macro_japan_population_growth': -0.50,
+    'macro_japan_productivity_growth': 0.80,
+    'macro_japan_my_ratio': 2.5,
+    'macro_japan_current_headline_inflation': 2.00,
+    'macro_japan_long_term_inflation': 1.50,
+    'macro_japan_current_tbill': 0.10,
+    'macro_japan_country_factor': 0.00,
+    # EM Macro
+    'macro_em_inflation_forecast': 3.80,
+    'macro_em_rgdp_growth': 3.00,
+    'macro_em_tbill_forecast': 5.50,
+    'macro_em_population_growth': 1.00,
+    'macro_em_productivity_growth': 2.50,
+    'macro_em_my_ratio': 1.5,
+    'macro_em_current_headline_inflation': 4.50,
+    'macro_em_long_term_inflation': 3.50,
+    'macro_em_current_tbill': 6.00,
+    'macro_em_country_factor': 0.00,
+    # Bonds Global
+    'bonds_global_current_yield': 3.50,
+    'bonds_global_duration': 7.0,
+    'bonds_global_fair_term_premium': 1.50,
+    'bonds_global_current_term_premium': 1.00,
+    # Bonds HY
+    'bonds_hy_current_yield': 7.50,
+    'bonds_hy_duration': 4.0,
+    'bonds_hy_credit_spread': 3.50,
+    'bonds_hy_fair_credit_spread': 4.00,
+    'bonds_hy_default_rate': 5.50,
+    'bonds_hy_recovery_rate': 40.0,
+    # Bonds EM
+    'bonds_em_current_yield': 6.50,
+    'bonds_em_duration': 5.5,
+    'bonds_em_fair_term_premium': 2.00,
+    'bonds_em_current_term_premium': 1.50,
+    'bonds_em_default_rate': 2.80,
+    'bonds_em_recovery_rate': 55.0,
+    # Equity US
+    'equity_us_dividend_yield': 1.50,
+    'equity_us_current_caey': 3.50,
+    'equity_us_fair_caey': 5.00,
+    'equity_us_real_eps_growth': 1.80,
+    'equity_us_regional_eps_growth': 1.60,
+    # Equity Europe
+    'equity_europe_dividend_yield': 3.00,
+    'equity_europe_current_caey': 5.50,
+    'equity_europe_fair_caey': 5.50,
+    'equity_europe_real_eps_growth': 1.20,
+    'equity_europe_regional_eps_growth': 1.60,
+    # Equity Japan
+    'equity_japan_dividend_yield': 2.20,
+    'equity_japan_current_caey': 5.50,
+    'equity_japan_fair_caey': 5.00,
+    'equity_japan_real_eps_growth': 0.80,
+    'equity_japan_regional_eps_growth': 1.60,
+    # Equity EM
+    'equity_em_dividend_yield': 3.00,
+    'equity_em_current_caey': 6.50,
+    'equity_em_fair_caey': 6.00,
+    'equity_em_real_eps_growth': 3.00,
+    'equity_em_regional_eps_growth': 2.80,
+    # Absolute Return
+    'absolute_return_trading_alpha': 1.00,
+    'absolute_return_beta_market': 0.30,
+    'absolute_return_beta_size': 0.10,
+    'absolute_return_beta_value': 0.05,
+    'absolute_return_beta_profitability': 0.05,
+    'absolute_return_beta_investment': 0.05,
+    'absolute_return_beta_momentum': 0.10,
+}
+
 def load_scenarios():
     """Load saved scenarios from JSON file."""
     try:
@@ -500,18 +599,26 @@ def get_source_badge(source):
         return '<span class="default-badge">DEFAULT</span>'
 
 def build_overrides():
-    """Build override dictionary from session state"""
+    """Build override dictionary from session state by comparing to defaults."""
     overrides = {}
 
-    def get_value(session_key):
-        """Get value from session state, handling None and empty cases."""
+    def is_override(session_key):
+        """Check if value differs from default (with tolerance for float comparison)."""
         if session_key not in st.session_state:
-            return None
+            return False, None
         val = st.session_state[session_key]
-        # Handle None, empty string, or NaN
-        if val is None or val == '' or (isinstance(val, float) and val != val):
-            return None
-        return val
+        default = INPUT_DEFAULTS.get(session_key)
+        
+        # Handle None or NaN
+        if val is None or (isinstance(val, float) and val != val):
+            return False, None
+        if default is None:
+            return True, val  # No default means any value is an override
+        
+        # Compare with tolerance for floating point
+        if abs(val - default) > 0.001:
+            return True, val
+        return False, None
 
     # Macro overrides (both basic and advanced)
     for region in ['us', 'eurozone', 'japan', 'em']:
@@ -520,8 +627,8 @@ def build_overrides():
         # Basic macro inputs
         for key in ['inflation_forecast', 'rgdp_growth', 'tbill_forecast']:
             session_key = f"macro_{region}_{key}"
-            val = get_value(session_key)
-            if val is not None:
+            is_changed, val = is_override(session_key)
+            if is_changed:
                 region_overrides[key] = val / 100
 
         # Advanced macro inputs (building blocks)
@@ -532,8 +639,8 @@ def build_overrides():
         ]
         for key in advanced_keys:
             session_key = f"macro_{region}_{key}"
-            val = get_value(session_key)
-            if val is not None:
+            is_changed, val = is_override(session_key)
+            if is_changed:
                 if key == 'my_ratio':
                     region_overrides[key] = val  # Not a percentage
                 else:
@@ -550,10 +657,12 @@ def build_overrides():
         for key in ['current_yield', 'duration', 'default_rate', 'recovery_rate', 'credit_spread',
                     'fair_term_premium', 'fair_credit_spread', 'current_term_premium']:
             session_key = f"{bond_key}_{key}"
-            val = get_value(session_key)
-            if val is not None:
+            is_changed, val = is_override(session_key)
+            if is_changed:
                 if key in ['duration']:
                     bond_overrides[key] = val
+                elif key in ['recovery_rate']:
+                    bond_overrides[key] = val / 100  # recovery_rate is stored as % in defaults
                 else:
                     bond_overrides[key] = val / 100
         if bond_overrides:
@@ -565,8 +674,8 @@ def build_overrides():
         equity_overrides = {}
         for key in ['dividend_yield', 'real_eps_growth', 'current_caey', 'fair_caey', 'regional_eps_growth']:
             session_key = f"{equity_key}_{key}"
-            val = get_value(session_key)
-            if val is not None:
+            is_changed, val = is_override(session_key)
+            if is_changed:
                 equity_overrides[key] = val / 100
         if equity_overrides:
             overrides[equity_key] = equity_overrides
@@ -575,8 +684,8 @@ def build_overrides():
     hf_overrides = {}
     for key in ['trading_alpha', 'beta_market', 'beta_value', 'beta_momentum', 'beta_size', 'beta_profitability', 'beta_investment']:
         session_key = f"absolute_return_{key}"
-        val = get_value(session_key)
-        if val is not None:
+        is_changed, val = is_override(session_key)
+        if is_changed:
             if key == 'trading_alpha':
                 hf_overrides[key] = val / 100
             else:
@@ -702,78 +811,95 @@ with st.sidebar:
         with tab_us:
             st.markdown("**📊 Direct Forecast Overrides:**")
             st.caption("Override the 10-year forecast directly (bypasses building block calculations)")
-            st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, value=None,
+            st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, 
+                           value=INPUT_DEFAULTS['macro_us_inflation_forecast'],
                            step=0.1, key="macro_us_inflation_forecast",
-                           placeholder="2.29", help="Default: 2.29% | Directly override the 10-year inflation forecast")
-            st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, value=None,
+                           help="Default: 2.29% | Directly override the 10-year inflation forecast")
+            st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, 
+                           value=INPUT_DEFAULTS['macro_us_rgdp_growth'],
                            step=0.1, key="macro_us_rgdp_growth",
-                           placeholder="1.20", help="Default: 1.20% | Directly override the 10-year GDP forecast")
-            st.number_input("E[T-Bill Rate] — 10yr Avg (%)", min_value=-1.0, max_value=15.0, value=None,
+                           help="Default: 1.20% | Directly override the 10-year GDP forecast")
+            st.number_input("E[T-Bill Rate] — 10yr Avg (%)", min_value=-1.0, max_value=15.0, 
+                           value=INPUT_DEFAULTS['macro_us_tbill_forecast'],
                            step=0.1, key="macro_us_tbill_forecast",
-                           placeholder="3.79", help="Default: 3.79% | Directly override the 10-year T-Bill forecast")
+                           help="Default: 3.79% | Directly override the 10-year T-Bill forecast")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks (GDP Model):**")
                 st.caption("GDP = Output-per-Capita Growth + Population Growth")
-                st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, value=None,
+                st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, 
+                               value=INPUT_DEFAULTS['macro_us_population_growth'],
                                step=0.1, key="macro_us_population_growth",
-                               placeholder="0.40", help="Default: 0.40% | UN Population Database forecast")
-                st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, value=None,
+                               help="Default: 0.40% | UN Population Database forecast")
+                st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, 
+                               value=INPUT_DEFAULTS['macro_us_productivity_growth'],
                                step=0.1, key="macro_us_productivity_growth",
-                               placeholder="1.20", help="Default: 1.20% | EWMA of historical output-per-capita (5yr half-life)")
-                st.number_input("MY Ratio", min_value=0.5, max_value=4.0, value=None,
+                               help="Default: 1.20% | EWMA of historical output-per-capita (5yr half-life)")
+                st.number_input("MY Ratio", min_value=0.5, max_value=4.0, 
+                               value=INPUT_DEFAULTS['macro_us_my_ratio'],
                                step=0.1, key="macro_us_my_ratio",
-                               placeholder="2.1", help="Default: 2.1 | Middle/Young population ratio (affects demographic drag)")
+                               help="Default: 2.1 | Middle/Young population ratio (affects demographic drag)")
 
                 st.markdown("**🔧 Building Blocks (Inflation Model):**")
                 st.caption("E[Inflation] = 30% × Current Headline + 70% × Long-Term Target")
-                st.number_input("Current Headline Inflation — Today (%)", min_value=-2.0, max_value=15.0, value=None,
+                st.number_input("Current Headline Inflation — Today (%)", min_value=-2.0, max_value=15.0, 
+                               value=INPUT_DEFAULTS['macro_us_current_headline_inflation'],
                                step=0.1, key="macro_us_current_headline_inflation",
-                               placeholder="2.50", help="Default: 2.50% | Latest YoY CPI reading")
-                st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, value=None,
+                               help="Default: 2.50% | Latest YoY CPI reading")
+                st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, 
+                               value=INPUT_DEFAULTS['macro_us_long_term_inflation'],
                                step=0.1, key="macro_us_long_term_inflation",
-                               placeholder="2.20", help="Default: 2.20% | EWMA of core inflation (5yr half-life)")
+                               help="Default: 2.20% | EWMA of core inflation (5yr half-life)")
 
                 st.markdown("**🔧 Building Blocks (T-Bill Model):**")
                 st.caption("E[T-Bill] = 30% × Current T-Bill + 70% × Long-Term Equilibrium")
-                st.number_input("Current T-Bill Rate — Today (%)", min_value=-1.0, max_value=15.0, value=None,
+                st.number_input("Current T-Bill Rate — Today (%)", min_value=-1.0, max_value=15.0, 
+                               value=INPUT_DEFAULTS['macro_us_current_tbill'],
                                step=0.1, key="macro_us_current_tbill",
-                               placeholder="4.50", help="Default: 4.50% | Today's 3-month T-Bill rate")
-                st.number_input("Country Factor (%)", min_value=-2.0, max_value=2.0, value=None,
+                               help="Default: 4.50% | Today's 3-month T-Bill rate")
+                st.number_input("Country Factor (%)", min_value=-2.0, max_value=2.0, 
+                               value=INPUT_DEFAULTS['macro_us_country_factor'],
                                step=0.1, key="macro_us_country_factor",
-                               placeholder="0.00", help="Default: 0.00% | Liquidity premium adjustment")
+                               help="Default: 0.00% | Liquidity premium adjustment")
 
         with tab_eu:
             st.markdown("**📊 Direct Forecast Overrides:**")
             st.caption("Override the 10-year forecast directly")
-            st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, value=None,
+            st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, 
+                           value=INPUT_DEFAULTS['macro_eurozone_inflation_forecast'],
                            step=0.1, key="macro_eurozone_inflation_forecast",
-                           placeholder="2.06", help="Default: 2.06%")
-            st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, value=None,
+                           help="Default: 2.06%")
+            st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, 
+                           value=INPUT_DEFAULTS['macro_eurozone_rgdp_growth'],
                            step=0.1, key="macro_eurozone_rgdp_growth",
-                           placeholder="0.51", help="Default: 0.51%")
+                           help="Default: 0.80%")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks (GDP):**")
-                st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, value=None,
+                st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, 
+                               value=INPUT_DEFAULTS['macro_eurozone_population_growth'],
                                step=0.1, key="macro_eurozone_population_growth",
-                               placeholder="0.10", help="Default: 0.10%")
-                st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, value=None,
+                               help="Default: 0.10%")
+                st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, 
+                               value=INPUT_DEFAULTS['macro_eurozone_productivity_growth'],
                                step=0.1, key="macro_eurozone_productivity_growth",
-                               placeholder="1.00", help="Default: 1.00%")
-                st.number_input("MY Ratio", min_value=0.5, max_value=4.0, value=None,
+                               help="Default: 1.00%")
+                st.number_input("MY Ratio", min_value=0.5, max_value=4.0, 
+                               value=INPUT_DEFAULTS['macro_eurozone_my_ratio'],
                                step=0.1, key="macro_eurozone_my_ratio",
-                               placeholder="2.3", help="Default: 2.3")
+                               help="Default: 2.3")
 
                 st.markdown("**🔧 Building Blocks (Inflation):**")
-                st.number_input("Current Headline Inflation (%)", min_value=-2.0, max_value=15.0, value=None,
+                st.number_input("Current Headline Inflation (%)", min_value=-2.0, max_value=15.0, 
+                               value=INPUT_DEFAULTS['macro_eurozone_current_headline_inflation'],
                                step=0.1, key="macro_eurozone_current_headline_inflation",
-                               placeholder="2.20", help="Default: 2.20%")
-                st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, value=None,
+                               help="Default: 2.20%")
+                st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, 
+                               value=INPUT_DEFAULTS['macro_eurozone_long_term_inflation'],
                                step=0.1, key="macro_eurozone_long_term_inflation",
-                               placeholder="2.00", help="Default: 2.00% (ECB target)")
+                               help="Default: 2.00% (ECB target)")
 
         with tab_jp:
             st.markdown("**📊 Direct Forecast Overrides:**")
