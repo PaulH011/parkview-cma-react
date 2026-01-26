@@ -114,6 +114,7 @@ how expected returns are calculated and what each input assumption means.
 st.sidebar.header("📑 Quick Navigation")
 st.sidebar.markdown("""
 - [Overview](#overview)
+- [Base Currency & FX](#base-currency-fx-adjustments)
 - [Macro Models](#macro-models)
   - [GDP Growth](#gdp-growth-model)
   - [Inflation](#inflation-model)
@@ -158,6 +159,107 @@ st.markdown("""
 <li><strong>Real Return</strong> = Purchasing power gain (excludes inflation)</li>
 <li>Nominal Return = Real Return + Expected Inflation</li>
 </ul>
+</div>
+""", unsafe_allow_html=True)
+
+# =============================================================================
+# BASE CURRENCY & FX ADJUSTMENTS
+# =============================================================================
+st.markdown('<p class="section-header" id="base-currency-fx-adjustments">Base Currency & FX Adjustments</p>', unsafe_allow_html=True)
+
+st.markdown("""
+The tool supports two base currencies: **USD** and **EUR**. When you select a base currency, 
+all returns are expressed from that currency's perspective, with appropriate FX adjustments 
+applied to foreign assets.
+""")
+
+st.markdown("""
+<div class="info-box">
+<strong>💱 Base Currency Toggle</strong><br/>
+Use the <strong>Base Currency</strong> selector in the sidebar to switch between USD and EUR perspectives.
+All expected returns will automatically adjust to reflect the chosen base currency.
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown('<p class="subsection-header">📊 FX Adjustment Formula</p>', unsafe_allow_html=True)
+
+st.markdown("""
+When viewing returns in a currency different from the asset's local currency, an FX adjustment is applied:
+""")
+
+st.markdown("""
+<div class="formula-box-highlight">
+<strong>E[FX Return] = 30% × (Home T-Bill - Foreign T-Bill) + 70% × (Home Inflation - Foreign Inflation)</strong>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+This formula is based on **Purchasing Power Parity (PPP)** theory with two components:
+
+| Component | Weight | Formula | Interpretation |
+|-----------|--------|---------|----------------|
+| **Carry** | 30% | Home T-Bill - Foreign T-Bill | Short-term interest rate differential |
+| **PPP** | 70% | Home Inflation - Foreign Inflation | Long-term inflation differential |
+
+**How to interpret:**
+- A **positive** FX return means the home currency is expected to **depreciate** vs the foreign currency
+- This **adds** to foreign asset returns when expressed in home currency terms
+- A **negative** FX return means the home currency is expected to **appreciate**, reducing foreign asset returns
+""")
+
+with st.expander("🔧 Example: EUR Investor Holding US Equities"):
+    st.markdown("""
+    **Scenario:** EUR-based investor, US equity return = 5.0%
+    
+    **Macro assumptions:**
+    - EUR T-Bill: 3.0%, USD T-Bill: 4.0%
+    - EUR Inflation: 2.5%, USD Inflation: 2.2%
+    
+    **FX Calculation:**
+    ```
+    Carry component = 3.0% - 4.0% = -1.0%
+    PPP component = 2.5% - 2.2% = +0.3%
+    
+    FX Return = 30% × (-1.0%) + 70% × (+0.3%)
+             = -0.30% + 0.21%
+             = -0.09%
+    ```
+    
+    **Interpretation:**
+    - EUR is expected to **appreciate slightly** vs USD (negative FX return)
+    - This **reduces** US equity returns for EUR investors
+    - Total EUR return = 5.0% + (-0.09%) = **4.91%**
+    """)
+
+st.markdown('<p class="subsection-header">📋 Asset Currency Mapping</p>', unsafe_allow_html=True)
+
+st.markdown("""
+Each asset class has a "local currency" that determines when FX adjustments apply:
+
+| Asset Class | Local Currency | USD Base | EUR Base |
+|-------------|---------------|----------|----------|
+| **Liquidity** | Base currency | No FX adjustment | No FX adjustment |
+| **Bonds Global** | USD | No FX adjustment | FX adjustment applied |
+| **Bonds High Yield** | USD | No FX adjustment | FX adjustment applied |
+| **Bonds EM** | EM currencies | FX adjustment applied | FX adjustment applied |
+| **Equity US** | USD | No FX adjustment | FX adjustment applied |
+| **Equity Europe** | EUR | FX adjustment applied | No FX adjustment |
+| **Equity Japan** | JPY | FX adjustment applied | FX adjustment applied |
+| **Equity EM** | EM currencies | FX adjustment applied | FX adjustment applied |
+| **Absolute Return** | Base currency | No FX adjustment | No FX adjustment |
+
+**Key points:**
+- **Liquidity** and **Absolute Return** always use the base currency, so no FX adjustment is ever needed
+- **Bonds Global** and **Bonds HY** are USD-denominated, so EUR investors see FX adjustments
+- **Equity Europe** is EUR-denominated, so USD investors see FX adjustments
+- **EM assets** always have FX adjustments regardless of base currency
+""")
+
+st.markdown("""
+<div class="warning-box">
+<strong>⚠️ Important:</strong> FX forecasts are based on PPP theory, which assumes currencies move toward 
+equilibrium over the long term. In practice, currencies can deviate from PPP for extended periods. 
+The 10-year horizon helps smooth short-term volatility, but FX remains a significant source of uncertainty.
 </div>
 """, unsafe_allow_html=True)
 
