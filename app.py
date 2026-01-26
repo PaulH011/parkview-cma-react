@@ -1049,6 +1049,10 @@ if 'pending_save_scenario' in st.session_state:
     scenario_name = st.session_state['pending_save_scenario']
     del st.session_state['pending_save_scenario']
     
+    # Debug: Check what's in session_state for macro inputs
+    debug_keys = [k for k in st.session_state.keys() if 'macro_us' in k]
+    us_inflation = st.session_state.get('macro_us_inflation_forecast', 'NOT FOUND')
+    
     # Debug: show what we're trying to save
     override_count = len(overrides) if overrides else 0
     
@@ -1056,7 +1060,9 @@ if 'pending_save_scenario' in st.session_state:
         if overrides:
             st.toast(f"✅ Saved '{scenario_name}' with {override_count} override group(s)", icon="✅")
         else:
-            st.toast(f"⚠️ Saved '{scenario_name}' (no changes from defaults)", icon="⚠️")
+            # Show debug info when no overrides found
+            st.toast(f"⚠️ Saved '{scenario_name}' (no changes detected)", icon="⚠️")
+            st.warning(f"Debug: US Inflation value = {us_inflation}, Keys found: {debug_keys}")
     else:
         st.toast(f"❌ Failed to save - filesystem may be read-only", icon="❌")
         st.error(f"Failed to save scenario '{scenario_name}'. On Streamlit Cloud, saving is not supported.")
