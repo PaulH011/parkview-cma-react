@@ -322,13 +322,9 @@ MODEL_FORMULAS = {
     }
 }
 
-# Header with logo
-col_logo, col_title = st.columns([1, 4])
-with col_logo:
-    st.image("assets/parkview_logo.png", width=150)
-with col_title:
-    st.markdown('<p class="main-header">Parkview CMA Tool</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-header">Adjust assumptions to see how expected returns change across asset classes. See the <strong>Methodology</strong> page in the sidebar for calculation details.</p>', unsafe_allow_html=True)
+# Header
+st.markdown('<p class="main-header">Parkview CMA Tool</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Adjust assumptions to see how expected returns change across asset classes. See the <strong>Methodology</strong> page in the sidebar for calculation details.</p>', unsafe_allow_html=True)
 
 # Initialize session state for overrides
 if 'overrides' not in st.session_state:
