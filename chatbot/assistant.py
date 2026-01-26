@@ -125,7 +125,7 @@ def get_anthropic_client():
 def stream_response(client, messages: list) -> Generator[str, None, None]:
     """Stream response from Claude Haiku."""
     with client.messages.stream(
-        model="claude-3-5-haiku-20241022",
+        model="claude-3-haiku-20240307",
         max_tokens=1024,
         system=SYSTEM_PROMPT,
         messages=messages
@@ -137,7 +137,7 @@ def stream_response(client, messages: list) -> Generator[str, None, None]:
 def get_response(client, messages: list) -> str:
     """Get non-streaming response from Claude Haiku."""
     response = client.messages.create(
-        model="claude-3-5-haiku-20241022",
+        model="claude-3-haiku-20240307",
         max_tokens=1024,
         system=SYSTEM_PROMPT,
         messages=messages
