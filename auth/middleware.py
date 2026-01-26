@@ -10,13 +10,13 @@ from typing import Optional, Tuple
 import json
 
 from auth.database import get_session, init_db
-from auth.models import User, EmailVerificationToken, Scenario
+from auth.models import User, EmailVerificationToken, PasswordResetToken, Scenario
 from auth.security import (
     hash_password, verify_password,
     generate_verification_token, get_token_expiry,
     validate_password_strength, validate_email
 )
-from auth.email_service import send_verification_email, is_email_configured
+from auth.email_service import send_verification_email, send_password_reset_email, is_email_configured
 
 
 def get_current_user() -> Optional[dict]:
@@ -101,10 +101,16 @@ def _show_login_form():
                 st.error("Please enter email and password")
                 return
 
+            clean_email = email.lower().strip()
+            
             with get_session() as session:
-                user = session.query(User).filter_by(email=email.lower().strip()).first()
+                user = session.query(User).filter_by(email=clean_email).first()
 
-                if user and verify_password(password, user.password_hash):
+                if not user:
+                    st.error("Invalid email or password")
+                    return
+                
+                if verify_password(password, user.password_hash):
                     # Update last login
                     user.last_login = datetime.utcnow()
                     session.commit()
@@ -227,6 +233,119 @@ def _show_resend_verification():
                     st.error("Failed to send verification email. Please try again later.")
 
 
+def _check_password_reset_token() -> Tuple[bool, Optional[str], Optional[Tuple[str, str]]]:
+    """
+    Check for password reset token in URL.
+    Returns (has_token, token_value, message).
+    """
+    query_params = st.query_params
+    reset_token = query_params.get('reset', None)
+
+    if not reset_token:
+        return False, None, None
+
+    # Validate the token without using it
+    with get_session() as session:
+        token = session.query(PasswordResetToken).filter_by(token=reset_token).first()
+
+        if not token:
+            st.query_params.clear()
+            return True, None, ("error", "Invalid password reset link.")
+        elif token.is_expired:
+            st.query_params.clear()
+            return True, None, ("error", "This password reset link has expired. Please request a new one.")
+        elif token.is_used:
+            st.query_params.clear()
+            return True, None, ("info", "This password reset link has already been used.")
+
+    return True, reset_token, None
+
+
+def _show_forgot_password_form():
+    """Display the forgot password form."""
+    st.markdown("### Forgot Password")
+    st.caption("Enter your email address and we'll send you a link to reset your password.")
+
+    with st.form("forgot_password_form"):
+        email = st.text_input("Email", key="forgot_email")
+        submitted = st.form_submit_button("Send Reset Link", use_container_width=True)
+
+        if submitted:
+            if not email:
+                st.error("Please enter your email")
+                return
+
+            email = email.lower().strip()
+
+            with get_session() as session:
+                user = session.query(User).filter_by(email=email).first()
+
+                if not user:
+                    # Don't reveal if email exists - security best practice
+                    st.success("If an account with this email exists, you will receive a password reset link.")
+                    return
+
+                # Create password reset token
+                token = PasswordResetToken(
+                    user_id=user.id,
+                    token=generate_verification_token(),
+                    expires_at=get_token_expiry()
+                )
+                session.add(token)
+                session.commit()
+
+                if send_password_reset_email(email, token.token):
+                    st.success("If an account with this email exists, you will receive a password reset link.")
+                else:
+                    st.error("Failed to send email. Please try again later.")
+
+
+def _show_password_reset_form(reset_token: str):
+    """Display the password reset form."""
+    st.markdown("### Reset Your Password")
+    st.caption("Enter your new password below.")
+
+    with st.form("reset_password_form"):
+        new_password = st.text_input("New Password", type="password", key="reset_new_password",
+                                     help="At least 8 characters with letters and numbers")
+        confirm_password = st.text_input("Confirm Password", type="password", key="reset_confirm_password")
+        submitted = st.form_submit_button("Reset Password", use_container_width=True)
+
+        if submitted:
+            # Validate password
+            is_valid, error = validate_password_strength(new_password)
+            if not is_valid:
+                st.error(error)
+                return
+
+            # Check passwords match
+            if new_password != confirm_password:
+                st.error("Passwords do not match")
+                return
+
+            with get_session() as session:
+                token = session.query(PasswordResetToken).filter_by(token=reset_token).first()
+
+                if not token or token.is_expired or token.is_used:
+                    st.error("Invalid or expired reset link. Please request a new one.")
+                    return
+
+                # Update user password
+                user = session.query(User).filter_by(id=token.user_id).first()
+                if user:
+                    user.password_hash = hash_password(new_password)
+                    token.used_at = datetime.utcnow()
+                    session.commit()
+
+                    # Clear the query parameter
+                    st.query_params.clear()
+
+                    st.success("Password reset successfully! You can now log in with your new password.")
+                    st.info("Please go to the Login tab to sign in.")
+                else:
+                    st.error("User not found. Please contact support.")
+
+
 def _show_verification_required():
     """Show message when user needs to verify their email."""
     user = st.session_state.get('user', {})
@@ -266,7 +385,9 @@ def _show_verification_required():
             st.rerun()
 
 
-def show_auth_page(verification_message: Optional[Tuple[str, str]] = None):
+def show_auth_page(verification_message: Optional[Tuple[str, str]] = None, 
+                   reset_token: Optional[str] = None,
+                   reset_message: Optional[Tuple[str, str]] = None):
     """Display the full authentication page with login/register tabs."""
     st.set_page_config(
         page_title="Login - Parkview CMA Tool",
@@ -276,6 +397,7 @@ def show_auth_page(verification_message: Optional[Tuple[str, str]] = None):
 
     # Show verification message if present (from URL token check)
     _show_verification_message(verification_message)
+    _show_verification_message(reset_message)
 
     # Header
     st.markdown("""
@@ -285,8 +407,21 @@ def show_auth_page(verification_message: Optional[Tuple[str, str]] = None):
     </div>
     """, unsafe_allow_html=True)
 
+    # If we have a valid reset token, show password reset form
+    if reset_token:
+        _show_password_reset_form(reset_token)
+        st.markdown("---")
+        if st.button("← Back to Login"):
+            st.query_params.clear()
+            st.rerun()
+        return
+
     # Auth tabs
-    tab_login, tab_register = st.tabs(["Login", "Create Account"])
+    if is_email_configured():
+        tab_login, tab_register, tab_forgot = st.tabs(["Login", "Create Account", "Forgot Password"])
+    else:
+        tab_login, tab_register = st.tabs(["Login", "Create Account"])
+        tab_forgot = None
 
     with tab_login:
         _show_login_form()
@@ -295,6 +430,10 @@ def show_auth_page(verification_message: Optional[Tuple[str, str]] = None):
         _show_register_form()
         if is_email_configured():
             _show_resend_verification()
+
+    if tab_forgot:
+        with tab_forgot:
+            _show_forgot_password_form()
 
 
 def require_auth():
@@ -309,18 +448,21 @@ def require_auth():
 
     # Check for verification token in URL (before any UI)
     # This doesn't display anything yet, just processes the token
-    has_token, verification_message = _check_verification_token()
+    has_verify_token, verification_message = _check_verification_token()
+
+    # Check for password reset token in URL
+    has_reset_token, reset_token, reset_message = _check_password_reset_token()
 
     # Check if user is logged in
     if 'user' not in st.session_state:
         # Show auth page (which sets page_config first, then shows any messages)
-        show_auth_page(verification_message)
+        show_auth_page(verification_message, reset_token, reset_message)
         st.stop()
 
     user = st.session_state['user']
 
     # Refresh user verification status from database if we had a token
-    if has_token and verification_message and verification_message[0] == "success":
+    if has_verify_token and verification_message and verification_message[0] == "success":
         with get_session() as session:
             db_user = session.query(User).filter_by(id=user['id']).first()
             if db_user:

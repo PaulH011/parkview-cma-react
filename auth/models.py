@@ -32,6 +32,7 @@ class User(Base):
     # Relationships
     scenarios = relationship('Scenario', back_populates='user', cascade='all, delete-orphan')
     verification_tokens = relationship('EmailVerificationToken', back_populates='user', cascade='all, delete-orphan')
+    reset_tokens = relationship('PasswordResetToken', back_populates='user', cascade='all, delete-orphan')
 
     def to_dict(self):
         """Convert user to dictionary for session storage."""
@@ -56,6 +57,30 @@ class EmailVerificationToken(Base):
 
     # Relationships
     user = relationship('User', back_populates='verification_tokens')
+
+    @property
+    def is_expired(self):
+        """Check if token has expired."""
+        return datetime.utcnow() > self.expires_at
+
+    @property
+    def is_used(self):
+        """Check if token has been used."""
+        return self.used_at is not None
+
+
+class PasswordResetToken(Base):
+    """Password reset token model."""
+    __tablename__ = 'password_reset_tokens'
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    token = Column(String(64), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    user = relationship('User', back_populates='reset_tokens')
 
     @property
     def is_expired(self):

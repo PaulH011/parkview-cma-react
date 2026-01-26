@@ -12,17 +12,22 @@ from auth.models import Base
 
 # Create engine
 # For SQLite, we need to handle the path correctly on Windows
-if DATABASE_URL.startswith('sqlite:///') and not DATABASE_URL.startswith('sqlite:////'):
-    # Relative path - make it relative to the app directory
-    db_path = DATABASE_URL.replace('sqlite:///', '')
+_db_url = DATABASE_URL
+
+if _db_url.startswith('sqlite:///') and not _db_url.startswith('sqlite:////'):
+    # Relative path - make it relative to the app directory (project root)
+    db_path = _db_url.replace('sqlite:///', '')
+    # Get the project root directory (parent of 'auth' folder)
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     full_db_path = os.path.join(script_dir, db_path)
-    DATABASE_URL = f'sqlite:///{full_db_path}'
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(full_db_path) if os.path.dirname(full_db_path) else '.', exist_ok=True)
+    _db_url = f'sqlite:///{full_db_path}'
 
 engine = create_engine(
-    DATABASE_URL,
+    _db_url,
     echo=False,  # Set to True for SQL debugging
-    connect_args={'check_same_thread': False} if 'sqlite' in DATABASE_URL else {}
+    connect_args={'check_same_thread': False} if 'sqlite' in _db_url else {}
 )
 
 # Create session factory
