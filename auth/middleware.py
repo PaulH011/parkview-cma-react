@@ -485,16 +485,41 @@ def require_auth():
 
 
 # =============================================================================
-# Scenario Management Functions (Database-backed)
+# Scenario Management Functions (Database-backed with caching)
 # =============================================================================
 
-def load_scenarios(user_id: str) -> dict:
-    """Load saved scenarios for a specific user from database."""
+def _get_scenarios_cache_key(user_id: str) -> str:
+    """Get the session state key for cached scenarios."""
+    return f'_cached_scenarios_{user_id}'
+
+
+def _invalidate_scenarios_cache(user_id: str):
+    """Invalidate the scenarios cache for a user."""
+    cache_key = _get_scenarios_cache_key(user_id)
+    if cache_key in st.session_state:
+        del st.session_state[cache_key]
+
+
+def load_scenarios(user_id: str, force_refresh: bool = False) -> dict:
+    """Load saved scenarios for a specific user from database.
+
+    Uses session state caching to avoid repeated database queries.
+    """
+    cache_key = _get_scenarios_cache_key(user_id)
+
+    # Return cached scenarios if available and not forcing refresh
+    if not force_refresh and cache_key in st.session_state:
+        return st.session_state[cache_key]
+
+    # Query database
     scenarios = {}
     with get_session() as session:
         user_scenarios = session.query(Scenario).filter_by(user_id=user_id).all()
         for scenario in user_scenarios:
             scenarios[scenario.name] = scenario.to_dict()
+
+    # Cache in session state
+    st.session_state[cache_key] = scenarios
     return scenarios
 
 
@@ -526,7 +551,10 @@ def save_scenario(user_id: str, name: str, overrides: dict, base_currency: str) 
                 session.add(scenario)
 
             session.commit()
-            return True
+
+        # Invalidate cache so next load fetches fresh data
+        _invalidate_scenarios_cache(user_id)
+        return True
     except Exception as e:
         print(f"Error saving scenario: {e}")
         return False
@@ -544,6 +572,8 @@ def delete_scenario(user_id: str, name: str) -> bool:
             if scenario:
                 session.delete(scenario)
                 session.commit()
+                # Invalidate cache so next load fetches fresh data
+                _invalidate_scenarios_cache(user_id)
                 return True
             return False
     except Exception as e:

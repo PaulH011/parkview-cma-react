@@ -12,6 +12,9 @@ import os
 from auth.config import DATABASE_URL
 from auth.models import Base
 
+# Track if database has been initialized this session
+_db_initialized = False
+
 # Create engine
 _db_url = DATABASE_URL
 
@@ -33,13 +36,13 @@ if _db_url.startswith('sqlite'):
     
 elif _db_url.startswith('postgresql'):
     # PostgreSQL configuration (Supabase/production)
-    # Connection pool settings optimized for serverless/cloud environments
+    # Connection pool settings optimized for low-latency operations
     engine_kwargs.update({
-        'pool_size': 5,           # Number of connections to keep open
-        'max_overflow': 10,       # Additional connections allowed beyond pool_size
-        'pool_timeout': 30,       # Seconds to wait for available connection
-        'pool_recycle': 1800,     # Recycle connections after 30 minutes
-        'pool_pre_ping': True,    # Test connections before using (handles disconnects)
+        'pool_size': 3,           # Smaller pool for serverless (reduces idle connections)
+        'max_overflow': 5,        # Additional connections allowed beyond pool_size
+        'pool_timeout': 10,       # Shorter timeout for faster failure detection
+        'pool_recycle': 300,      # Recycle connections every 5 minutes (Supabase may close idle)
+        'pool_pre_ping': False,   # Disable pre-ping to reduce latency (pool_recycle handles stale)
     })
 
 engine = create_engine(_db_url, **engine_kwargs)
@@ -49,8 +52,15 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    """Initialize the database, creating all tables if they don't exist."""
+    """Initialize the database, creating all tables if they don't exist.
+
+    Only runs once per application session to avoid repeated metadata checks.
+    """
+    global _db_initialized
+    if _db_initialized:
+        return
     Base.metadata.create_all(bind=engine)
+    _db_initialized = True
 
 
 @contextmanager
