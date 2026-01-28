@@ -33,10 +33,20 @@ user_id = user['id']
 # and take user_id as first parameter
 
 # Default values for all inputs (used for comparison to detect overrides)
+def get_reset_version():
+    """Get the current reset version counter."""
+    return st.session_state.get('_reset_version', 0)
+
+def widget_key(base_key):
+    """Generate a versioned widget key that changes on reset."""
+    return f"{base_key}_v{get_reset_version()}"
+
 def get_input_value(key):
     """Get value from session_state or return default if not set."""
-    if key in st.session_state:
-        return st.session_state[key]
+    # Look up using the versioned widget key
+    wkey = widget_key(key)
+    if wkey in st.session_state and st.session_state[wkey] is not None:
+        return st.session_state[wkey]
     return INPUT_DEFAULTS.get(key)
 
 INPUT_DEFAULTS = {
@@ -140,50 +150,49 @@ INPUT_DEFAULTS = {
 def apply_scenario_to_session(scenario_data):
     """Apply a saved scenario's overrides to session state."""
     overrides = scenario_data.get('overrides', {})
-    
-    # Clear existing override keys (not widget keys that are already rendered)
-    # We can't modify widget keys after they're rendered, so we only clear our custom keys
-    keys_to_clear = [k for k in st.session_state.keys() 
-                     if k.startswith(('macro_', 'bonds_', 'equity_', 'absolute_return_'))
-                     and k not in ['base_currency_toggle', 'selected_scenario_dropdown']]
-    for key in keys_to_clear:
-        del st.session_state[key]
-    
+
+    # Increment reset version to create fresh widget keys (clears all browser widget state)
+    st.session_state['_reset_version'] = st.session_state.get('_reset_version', 0) + 1
+
     # Note: base_currency cannot be changed after widget renders
     # User should manually switch if needed
-    
-    # Apply macro overrides
+
+    # Apply macro overrides (using new versioned keys)
     if 'macro' in overrides:
         for region, region_overrides in overrides['macro'].items():
             for key, value in region_overrides.items():
-                session_key = f"macro_{region}_{key}"
+                base_key = f"macro_{region}_{key}"
+                session_key = widget_key(base_key)
                 if key == 'my_ratio':
                     st.session_state[session_key] = value
                 else:
                     st.session_state[session_key] = value * 100  # Convert back to percentage
-    
+
     # Apply bond overrides
     for bond_type in ['bonds_global', 'bonds_hy', 'bonds_em']:
         if bond_type in overrides:
             for key, value in overrides[bond_type].items():
-                session_key = f"{bond_type}_{key}"
+                base_key = f"{bond_type}_{key}"
+                session_key = widget_key(base_key)
                 if key == 'duration':
                     st.session_state[session_key] = value
                 else:
                     st.session_state[session_key] = value * 100
-    
+
     # Apply equity overrides
     for region in ['us', 'europe', 'japan', 'em']:
         equity_key = f"equity_{region}"
         if equity_key in overrides:
             for key, value in overrides[equity_key].items():
-                session_key = f"{equity_key}_{key}"
+                base_key = f"{equity_key}_{key}"
+                session_key = widget_key(base_key)
                 st.session_state[session_key] = value * 100
-    
+
     # Apply hedge fund overrides
     if 'absolute_return' in overrides:
         for key, value in overrides['absolute_return'].items():
-            session_key = f"absolute_return_{key}"
+            base_key = f"absolute_return_{key}"
+            session_key = widget_key(base_key)
             if key == 'trading_alpha':
                 st.session_state[session_key] = value * 100
             else:
@@ -578,12 +587,14 @@ def build_overrides():
     """Build override dictionary from session state by comparing to defaults."""
     overrides = {}
 
-    def is_override(session_key):
+    def is_override(base_key):
         """Check if value differs from default (with tolerance for float comparison)."""
-        if session_key not in st.session_state:
+        # Use versioned widget key for session state lookup
+        wkey = widget_key(base_key)
+        if wkey not in st.session_state:
             return False, None
-        val = st.session_state[session_key]
-        default = INPUT_DEFAULTS.get(session_key)
+        val = st.session_state[wkey]
+        default = INPUT_DEFAULTS.get(base_key)
         
         # Handle None or NaN
         if val is None or (isinstance(val, float) and val != val):
@@ -673,6 +684,11 @@ def build_overrides():
 
 # Sidebar for inputs
 with st.sidebar:
+    # Show any pending toast messages (deferred from previous run)
+    if '_pending_toast' in st.session_state:
+        msg, icon = st.session_state.pop('_pending_toast')
+        st.toast(msg, icon=icon)
+
     # User info and logout
     st.markdown(f"""
     <div style="background-color: #e8f4f8; padding: 0.5rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
@@ -709,6 +725,9 @@ with st.sidebar:
     saved_scenarios = load_scenarios(user_id)
     scenario_names = list(saved_scenarios.keys())
     
+    # Track which scenario was last loaded to hide its preview
+    last_loaded = st.session_state.get('_last_loaded_scenario')
+
     # Scenario selector
     scenario_options = ["-- New Scenario --"] + scenario_names
     selected_scenario = st.selectbox(
@@ -717,11 +736,21 @@ with st.sidebar:
         key="selected_scenario_dropdown",
         help="Choose a saved scenario to preview or load"
     )
+
+    # Clear the "last loaded" marker if user selects a different scenario
+    if selected_scenario != last_loaded and last_loaded is not None:
+        del st.session_state['_last_loaded_scenario']
+        last_loaded = None
     
     # Show preview if a saved scenario is selected
-    if selected_scenario != "-- New Scenario --" and selected_scenario in saved_scenarios:
+    # Show preview only if a scenario is selected AND it wasn't just loaded
+    show_preview = (selected_scenario != "-- New Scenario --"
+                    and selected_scenario in saved_scenarios
+                    and selected_scenario != last_loaded)
+
+    if show_preview:
         scenario_data = saved_scenarios[selected_scenario]
-        
+
         with st.expander("📋 Scenario Preview", expanded=True):
             # Metadata
             timestamp = scenario_data.get('timestamp', 'Unknown')
@@ -745,15 +774,18 @@ with st.sidebar:
         with col_load:
             if st.button("✅ Load Scenario", use_container_width=True):
                 apply_scenario_to_session(scenario_data)
-                st.success(f"Loaded '{selected_scenario}'")
+                # Deferred toast (shown after rerun)
+                st.session_state['_pending_toast'] = (f"✅ Loaded '{selected_scenario}'", "✅")
+                # Mark this scenario as loaded (hides its preview until user selects different)
+                st.session_state['_last_loaded_scenario'] = selected_scenario
                 st.rerun()
         with col_delete:
             if st.button("🗑️ Delete", use_container_width=True):
                 if delete_scenario(user_id, selected_scenario):
-                    st.success(f"Deleted '{selected_scenario}'")
+                    st.session_state['_pending_toast'] = (f"🗑️ Deleted '{selected_scenario}'", "🗑️")
                     st.rerun()
                 else:
-                    st.error("Failed to delete scenario")
+                    st.toast("❌ Failed to delete scenario", icon="❌")
     
     st.markdown("---")
     
@@ -773,10 +805,11 @@ with st.sidebar:
                 # Build overrides directly from current session state
                 current_overrides = build_overrides()
                 if save_scenario(user_id, new_scenario_name.strip(), current_overrides, base_currency):
+                    # Deferred toast (shown after rerun)
                     if current_overrides:
-                        st.toast(f"✅ Saved '{new_scenario_name}' with {len(current_overrides)} override group(s)", icon="✅")
+                        st.session_state['_pending_toast'] = (f"✅ Saved '{new_scenario_name}' with {len(current_overrides)} override group(s)", "✅")
                     else:
-                        st.toast(f"⚠️ Saved '{new_scenario_name}' (no changes from defaults)", icon="⚠️")
+                        st.session_state['_pending_toast'] = (f"⚠️ Saved '{new_scenario_name}' (no changes from defaults)", "⚠️")
                     st.rerun()  # Refresh to show new scenario in dropdown
                 else:
                     st.toast(f"❌ Failed to save", icon="❌")
@@ -785,9 +818,12 @@ with st.sidebar:
     
     with col_reset:
         if st.button("🔄 Reset All", use_container_width=True):
-            for key in list(st.session_state.keys()):
-                if key not in ['base_currency_toggle']:
-                    del st.session_state[key]
+            # Increment reset version to create fresh widget keys (clears all browser widget state)
+            st.session_state['_reset_version'] = st.session_state.get('_reset_version', 0) + 1
+            # Also clear scenario-related keys
+            if '_last_loaded_scenario' in st.session_state:
+                del st.session_state['_last_loaded_scenario']
+            st.session_state['_pending_toast'] = ("✅ All inputs reset to defaults", "🔄")
             st.rerun()
 
     st.divider()
@@ -809,15 +845,15 @@ with st.sidebar:
             st.caption("Override the 10-year forecast directly (bypasses building block calculations)")
             st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, 
                            value=INPUT_DEFAULTS['macro_us_inflation_forecast'],
-                           step=0.1, key="macro_us_inflation_forecast",
+                           step=0.1, key=widget_key("macro_us_inflation_forecast"),
                            help="Default: 2.29% | Directly override the 10-year inflation forecast")
             st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, 
                            value=INPUT_DEFAULTS['macro_us_rgdp_growth'],
-                           step=0.1, key="macro_us_rgdp_growth",
+                           step=0.1, key=widget_key("macro_us_rgdp_growth"),
                            help="Default: 1.20% | Directly override the 10-year GDP forecast")
             st.number_input("E[T-Bill Rate] — 10yr Avg (%)", min_value=-1.0, max_value=15.0, 
                            value=INPUT_DEFAULTS['macro_us_tbill_forecast'],
-                           step=0.1, key="macro_us_tbill_forecast",
+                           step=0.1, key=widget_key("macro_us_tbill_forecast"),
                            help="Default: 3.79% | Directly override the 10-year T-Bill forecast")
 
             if advanced_mode:
@@ -826,37 +862,37 @@ with st.sidebar:
                 st.caption("GDP = Output-per-Capita Growth + Population Growth")
                 st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, 
                                value=INPUT_DEFAULTS['macro_us_population_growth'],
-                               step=0.1, key="macro_us_population_growth",
+                               step=0.1, key=widget_key("macro_us_population_growth"),
                                help="Default: 0.40% | UN Population Database forecast")
                 st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, 
                                value=INPUT_DEFAULTS['macro_us_productivity_growth'],
-                               step=0.1, key="macro_us_productivity_growth",
+                               step=0.1, key=widget_key("macro_us_productivity_growth"),
                                help="Default: 1.20% | EWMA of historical output-per-capita (5yr half-life)")
                 st.number_input("MY Ratio", min_value=0.5, max_value=4.0, 
                                value=INPUT_DEFAULTS['macro_us_my_ratio'],
-                               step=0.1, key="macro_us_my_ratio",
+                               step=0.1, key=widget_key("macro_us_my_ratio"),
                                help="Default: 2.1 | Middle/Young population ratio (affects demographic drag)")
 
                 st.markdown("**🔧 Building Blocks (Inflation Model):**")
                 st.caption("E[Inflation] = 30% × Current Headline + 70% × Long-Term Target")
                 st.number_input("Current Headline Inflation — Today (%)", min_value=-2.0, max_value=15.0, 
                                value=INPUT_DEFAULTS['macro_us_current_headline_inflation'],
-                               step=0.1, key="macro_us_current_headline_inflation",
+                               step=0.1, key=widget_key("macro_us_current_headline_inflation"),
                                help="Default: 2.50% | Latest YoY CPI reading")
                 st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, 
                                value=INPUT_DEFAULTS['macro_us_long_term_inflation'],
-                               step=0.1, key="macro_us_long_term_inflation",
+                               step=0.1, key=widget_key("macro_us_long_term_inflation"),
                                help="Default: 2.20% | EWMA of core inflation (5yr half-life)")
 
                 st.markdown("**🔧 Building Blocks (T-Bill Model):**")
                 st.caption("E[T-Bill] = 30% × Current T-Bill + 70% × Long-Term Equilibrium")
                 st.number_input("Current T-Bill Rate — Today (%)", min_value=-1.0, max_value=15.0, 
                                value=INPUT_DEFAULTS['macro_us_current_tbill'],
-                               step=0.1, key="macro_us_current_tbill",
+                               step=0.1, key=widget_key("macro_us_current_tbill"),
                                help="Default: 4.50% | Today's 3-month T-Bill rate")
                 st.number_input("Country Factor (%)", min_value=-2.0, max_value=2.0, 
                                value=INPUT_DEFAULTS['macro_us_country_factor'],
-                               step=0.1, key="macro_us_country_factor",
+                               step=0.1, key=widget_key("macro_us_country_factor"),
                                help="Default: 0.00% | Liquidity premium adjustment")
 
         with tab_eu:
@@ -864,11 +900,11 @@ with st.sidebar:
             st.caption("Override the 10-year forecast directly")
             st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, 
                            value=INPUT_DEFAULTS['macro_eurozone_inflation_forecast'],
-                           step=0.1, key="macro_eurozone_inflation_forecast",
+                           step=0.1, key=widget_key("macro_eurozone_inflation_forecast"),
                            help="Default: 2.06%")
             st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, 
                            value=INPUT_DEFAULTS['macro_eurozone_rgdp_growth'],
-                           step=0.1, key="macro_eurozone_rgdp_growth",
+                           step=0.1, key=widget_key("macro_eurozone_rgdp_growth"),
                            help="Default: 0.80%")
 
             if advanced_mode:
@@ -876,88 +912,88 @@ with st.sidebar:
                 st.markdown("**🔧 Building Blocks (GDP):**")
                 st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, 
                                value=INPUT_DEFAULTS['macro_eurozone_population_growth'],
-                               step=0.1, key="macro_eurozone_population_growth",
+                               step=0.1, key=widget_key("macro_eurozone_population_growth"),
                                help="Default: 0.10%")
                 st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, 
                                value=INPUT_DEFAULTS['macro_eurozone_productivity_growth'],
-                               step=0.1, key="macro_eurozone_productivity_growth",
+                               step=0.1, key=widget_key("macro_eurozone_productivity_growth"),
                                help="Default: 1.00%")
                 st.number_input("MY Ratio", min_value=0.5, max_value=4.0, 
                                value=INPUT_DEFAULTS['macro_eurozone_my_ratio'],
-                               step=0.1, key="macro_eurozone_my_ratio",
+                               step=0.1, key=widget_key("macro_eurozone_my_ratio"),
                                help="Default: 2.3")
 
                 st.markdown("**🔧 Building Blocks (Inflation):**")
                 st.number_input("Current Headline Inflation (%)", min_value=-2.0, max_value=15.0, 
                                value=INPUT_DEFAULTS['macro_eurozone_current_headline_inflation'],
-                               step=0.1, key="macro_eurozone_current_headline_inflation",
+                               step=0.1, key=widget_key("macro_eurozone_current_headline_inflation"),
                                help="Default: 2.20%")
                 st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, 
                                value=INPUT_DEFAULTS['macro_eurozone_long_term_inflation'],
-                               step=0.1, key="macro_eurozone_long_term_inflation",
+                               step=0.1, key=widget_key("macro_eurozone_long_term_inflation"),
                                help="Default: 2.00% (ECB target)")
 
         with tab_jp:
             st.markdown("**📊 Direct Forecast Overrides:**")
             st.caption("Override the 10-year forecast directly")
             st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, value=None,
-                           step=0.1, key="macro_japan_inflation_forecast",
+                           step=0.1, key=widget_key("macro_japan_inflation_forecast"),
                            placeholder="1.65", help="Default: 1.65%")
             st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, value=None,
-                           step=0.1, key="macro_japan_rgdp_growth",
+                           step=0.1, key=widget_key("macro_japan_rgdp_growth"),
                            placeholder="-0.46", help="Default: -0.46%")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks (GDP):**")
                 st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, value=None,
-                               step=0.1, key="macro_japan_population_growth",
+                               step=0.1, key=widget_key("macro_japan_population_growth"),
                                placeholder="-0.50", help="Default: -0.50% (declining population)")
                 st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, value=None,
-                               step=0.1, key="macro_japan_productivity_growth",
+                               step=0.1, key=widget_key("macro_japan_productivity_growth"),
                                placeholder="0.80", help="Default: 0.80%")
                 st.number_input("MY Ratio", min_value=0.5, max_value=4.0, value=None,
-                               step=0.1, key="macro_japan_my_ratio",
+                               step=0.1, key=widget_key("macro_japan_my_ratio"),
                                placeholder="2.5", help="Default: 2.5 (aging population)")
 
                 st.markdown("**🔧 Building Blocks (Inflation):**")
                 st.number_input("Current Headline Inflation (%)", min_value=-2.0, max_value=15.0, value=None,
-                               step=0.1, key="macro_japan_current_headline_inflation",
+                               step=0.1, key=widget_key("macro_japan_current_headline_inflation"),
                                placeholder="2.00", help="Default: 2.00%")
                 st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, value=None,
-                               step=0.1, key="macro_japan_long_term_inflation",
+                               step=0.1, key=widget_key("macro_japan_long_term_inflation"),
                                placeholder="1.50", help="Default: 1.50%")
 
         with tab_em:
             st.markdown("**📊 Direct Forecast Overrides:**")
             st.caption("Override the 10-year forecast directly")
             st.number_input("E[Inflation] — 10yr Avg (%)", min_value=-2.0, max_value=15.0, value=None,
-                           step=0.1, key="macro_em_inflation_forecast",
+                           step=0.1, key=widget_key("macro_em_inflation_forecast"),
                            placeholder="3.80", help="Default: 3.80%")
             st.number_input("E[Real GDP Growth] — 10yr Avg (%)", min_value=-5.0, max_value=10.0, value=None,
-                           step=0.1, key="macro_em_rgdp_growth",
+                           step=0.1, key=widget_key("macro_em_rgdp_growth"),
                            placeholder="3.46", help="Default: 3.46%")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks (GDP):**")
                 st.number_input("Population Growth (%)", min_value=-3.0, max_value=5.0, value=None,
-                               step=0.1, key="macro_em_population_growth",
+                               step=0.1, key=widget_key("macro_em_population_growth"),
                                placeholder="1.00", help="Default: 1.00%")
                 st.number_input("Productivity Growth (%)", min_value=-2.0, max_value=5.0, value=None,
-                               step=0.1, key="macro_em_productivity_growth",
+                               step=0.1, key=widget_key("macro_em_productivity_growth"),
                                placeholder="2.50", help="Default: 2.50%")
                 st.number_input("MY Ratio", min_value=0.5, max_value=4.0, value=None,
-                               step=0.1, key="macro_em_my_ratio",
+                               step=0.1, key=widget_key("macro_em_my_ratio"),
                                placeholder="1.5", help="Default: 1.5 (younger population)")
 
                 st.markdown("**🔧 Building Blocks (Inflation):**")
                 st.caption("EM uses 2-year half-life for EWMA")
                 st.number_input("Current Headline Inflation (%)", min_value=-2.0, max_value=15.0, value=None,
-                               step=0.1, key="macro_em_current_headline_inflation",
+                               step=0.1, key=widget_key("macro_em_current_headline_inflation"),
                                placeholder="4.50", help="Default: 4.50%")
                 st.number_input("Long-Term Inflation Target (%)", min_value=0.0, max_value=10.0, value=None,
-                               step=0.1, key="macro_em_long_term_inflation",
+                               step=0.1, key=widget_key("macro_em_long_term_inflation"),
                                placeholder="3.50", help="Default: 3.50%")
 
     # Bond Assumptions
@@ -967,76 +1003,76 @@ with st.sidebar:
         with tab_gov:
             st.markdown("**Primary Inputs:**")
             st.number_input("Current Yield (%)", min_value=0.0, max_value=15.0, value=None,
-                           step=0.1, key="bonds_global_current_yield",
+                           step=0.1, key=widget_key("bonds_global_current_yield"),
                            placeholder="3.50", help="Default: 3.50% | Yield to maturity of bond index")
             st.number_input("Duration (years)", min_value=0.0, max_value=30.0, value=None,
-                           step=0.5, key="bonds_global_duration",
+                           step=0.5, key=widget_key("bonds_global_duration"),
                            placeholder="7.0", help="Default: 7.0 years | Modified duration")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks:**")
                 st.number_input("Current Term Premium (%)", min_value=-2.0, max_value=5.0, value=None,
-                               step=0.1, key="bonds_global_current_term_premium",
+                               step=0.1, key=widget_key("bonds_global_current_term_premium"),
                                placeholder="1.00", help="Default: 1.00% | Current yield - T-Bill")
                 st.number_input("Fair Term Premium (%)", min_value=-1.0, max_value=5.0, value=None,
-                               step=0.1, key="bonds_global_fair_term_premium",
+                               step=0.1, key=widget_key("bonds_global_fair_term_premium"),
                                placeholder="1.50", help="Default: 1.50% | EWMA 20yr half-life, 50yr window")
 
         with tab_hy:
             st.markdown("**Primary Inputs:**")
             st.number_input("Current Yield (%)", min_value=0.0, max_value=20.0, value=None,
-                           step=0.1, key="bonds_hy_current_yield",
+                           step=0.1, key=widget_key("bonds_hy_current_yield"),
                            placeholder="7.50", help="Default: 7.50%")
             st.number_input("Duration (years)", min_value=0.0, max_value=15.0, value=None,
-                           step=0.5, key="bonds_hy_duration",
+                           step=0.5, key=widget_key("bonds_hy_duration"),
                            placeholder="4.0", help="Default: 4.0 years")
             st.number_input("Default Rate (%)", min_value=0.0, max_value=20.0, value=None,
-                           step=0.1, key="bonds_hy_default_rate",
+                           step=0.1, key=widget_key("bonds_hy_default_rate"),
                            placeholder="5.50", help="Default: 5.50% | Annual default probability")
             st.number_input("Recovery Rate (%)", min_value=0.0, max_value=100.0, value=None,
-                           step=1.0, key="bonds_hy_recovery_rate",
+                           step=1.0, key=widget_key("bonds_hy_recovery_rate"),
                            placeholder="40.0", help="Default: 40% | Recovery on default")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks:**")
                 st.number_input("Credit Spread (%)", min_value=0.0, max_value=20.0, value=None,
-                               step=0.1, key="bonds_hy_credit_spread",
+                               step=0.1, key=widget_key("bonds_hy_credit_spread"),
                                placeholder="3.50", help="Default: 3.50% | Spread vs duration-matched Treasury")
                 st.number_input("Fair Credit Spread (%)", min_value=0.0, max_value=20.0, value=None,
-                               step=0.1, key="bonds_hy_fair_credit_spread",
+                               step=0.1, key=widget_key("bonds_hy_fair_credit_spread"),
                                placeholder="4.00", help="Default: 4.00% | EWMA 20yr half-life")
                 st.number_input("Current Term Premium (%)", min_value=-2.0, max_value=5.0, value=None,
-                               step=0.1, key="bonds_hy_current_term_premium",
+                               step=0.1, key=widget_key("bonds_hy_current_term_premium"),
                                placeholder="1.00", help="Default: 1.00%")
                 st.number_input("Fair Term Premium (%)", min_value=-1.0, max_value=5.0, value=None,
-                               step=0.1, key="bonds_hy_fair_term_premium",
+                               step=0.1, key=widget_key("bonds_hy_fair_term_premium"),
                                placeholder="1.50", help="Default: 1.50%")
 
         with tab_emb:
             st.markdown("**Primary Inputs:**")
             st.number_input("Current Yield (%)", min_value=0.0, max_value=20.0, value=None,
-                           step=0.1, key="bonds_em_current_yield",
+                           step=0.1, key=widget_key("bonds_em_current_yield"),
                            placeholder="6.50", help="Default: 6.50%")
             st.number_input("Duration (years)", min_value=0.0, max_value=15.0, value=None,
-                           step=0.5, key="bonds_em_duration",
+                           step=0.5, key=widget_key("bonds_em_duration"),
                            placeholder="5.5", help="Default: 5.5 years")
             st.number_input("Default Rate (%)", min_value=0.0, max_value=10.0, value=None,
-                           step=0.1, key="bonds_em_default_rate",
+                           step=0.1, key=widget_key("bonds_em_default_rate"),
                            placeholder="2.80", help="Default: 2.80% | EM hard currency sovereign default rate")
             st.number_input("Recovery Rate (%)", min_value=0.0, max_value=100.0, value=None,
-                           step=1.0, key="bonds_em_recovery_rate",
+                           step=1.0, key=widget_key("bonds_em_recovery_rate"),
                            placeholder="55.0", help="Default: 55% | EM sovereign recovery rate")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks:**")
                 st.number_input("Current Term Premium (%)", min_value=-2.0, max_value=5.0, value=None,
-                               step=0.1, key="bonds_em_current_term_premium",
+                               step=0.1, key=widget_key("bonds_em_current_term_premium"),
                                placeholder="1.50", help="Default: 1.50%")
                 st.number_input("Fair Term Premium (%)", min_value=-1.0, max_value=5.0, value=None,
-                               step=0.1, key="bonds_em_fair_term_premium",
+                               step=0.1, key=widget_key("bonds_em_fair_term_premium"),
                                placeholder="2.00", help="Default: 2.00%")
 
     # Equity Assumptions
@@ -1046,13 +1082,13 @@ with st.sidebar:
         with tab_eq_us:
             st.markdown("**Primary Inputs:**")
             st.number_input("Dividend Yield (%)", min_value=0.0, max_value=10.0, value=None,
-                           step=0.1, key="equity_us_dividend_yield",
+                           step=0.1, key=widget_key("equity_us_dividend_yield"),
                            placeholder="1.50", help="Default: 1.50% | Trailing 12-month dividend yield")
             st.number_input("Current CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_us_current_caey",
+                           step=0.1, key=widget_key("equity_us_current_caey"),
                            placeholder="3.50", help="Default: 3.50% (CAPE ~28) | 1/CAPE")
             st.number_input("Fair CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_us_fair_caey",
+                           step=0.1, key=widget_key("equity_us_fair_caey"),
                            placeholder="5.00", help="Default: 5.00% (CAPE ~20) | EWMA 20yr half-life")
 
             if advanced_mode:
@@ -1060,66 +1096,66 @@ with st.sidebar:
                 st.markdown("**🔧 Building Blocks (EPS Growth):**")
                 st.caption("Final EPS = 50% Country + 50% Regional, capped at Global GDP")
                 st.number_input("Country EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_us_real_eps_growth",
+                               step=0.1, key=widget_key("equity_us_real_eps_growth"),
                                placeholder="1.80", help="Default: 1.80% | 50-year log-linear trend")
                 st.number_input("Regional (DM) EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_us_regional_eps_growth",
+                               step=0.1, key=widget_key("equity_us_regional_eps_growth"),
                                placeholder="1.60", help="Default: 1.60% | DM average")
 
         with tab_eq_eu:
             st.markdown("**Primary Inputs:**")
             st.number_input("Dividend Yield (%)", min_value=0.0, max_value=10.0, value=None,
-                           step=0.1, key="equity_europe_dividend_yield",
+                           step=0.1, key=widget_key("equity_europe_dividend_yield"),
                            placeholder="3.00", help="Default: 3.00%")
             st.number_input("Current CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_europe_current_caey",
+                           step=0.1, key=widget_key("equity_europe_current_caey"),
                            placeholder="5.50", help="Default: 5.50%")
             st.number_input("Fair CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_europe_fair_caey",
+                           step=0.1, key=widget_key("equity_europe_fair_caey"),
                            placeholder="5.50", help="Default: 5.50%")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks (EPS Growth):**")
                 st.number_input("Country EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_europe_real_eps_growth",
+                               step=0.1, key=widget_key("equity_europe_real_eps_growth"),
                                placeholder="1.20", help="Default: 1.20%")
                 st.number_input("Regional (DM) EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_europe_regional_eps_growth",
+                               step=0.1, key=widget_key("equity_europe_regional_eps_growth"),
                                placeholder="1.60", help="Default: 1.60%")
 
         with tab_eq_jp:
             st.markdown("**Primary Inputs:**")
             st.number_input("Dividend Yield (%)", min_value=0.0, max_value=10.0, value=None,
-                           step=0.1, key="equity_japan_dividend_yield",
+                           step=0.1, key=widget_key("equity_japan_dividend_yield"),
                            placeholder="2.20", help="Default: 2.20%")
             st.number_input("Current CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_japan_current_caey",
+                           step=0.1, key=widget_key("equity_japan_current_caey"),
                            placeholder="5.50", help="Default: 5.50%")
             st.number_input("Fair CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_japan_fair_caey",
+                           step=0.1, key=widget_key("equity_japan_fair_caey"),
                            placeholder="5.00", help="Default: 5.00%")
 
             if advanced_mode:
                 st.markdown("---")
                 st.markdown("**🔧 Building Blocks (EPS Growth):**")
                 st.number_input("Country EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_japan_real_eps_growth",
+                               step=0.1, key=widget_key("equity_japan_real_eps_growth"),
                                placeholder="0.80", help="Default: 0.80%")
                 st.number_input("Regional (DM) EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_japan_regional_eps_growth",
+                               step=0.1, key=widget_key("equity_japan_regional_eps_growth"),
                                placeholder="1.60", help="Default: 1.60%")
 
         with tab_eq_em:
             st.markdown("**Primary Inputs:**")
             st.number_input("Dividend Yield (%)", min_value=0.0, max_value=10.0, value=None,
-                           step=0.1, key="equity_em_dividend_yield",
+                           step=0.1, key=widget_key("equity_em_dividend_yield"),
                            placeholder="3.00", help="Default: 3.00%")
             st.number_input("Current CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_em_current_caey",
+                           step=0.1, key=widget_key("equity_em_current_caey"),
                            placeholder="6.50", help="Default: 6.50%")
             st.number_input("Fair CAEY (%)", min_value=1.0, max_value=15.0, value=None,
-                           step=0.1, key="equity_em_fair_caey",
+                           step=0.1, key=widget_key("equity_em_fair_caey"),
                            placeholder="6.00", help="Default: 6.00%")
 
             if advanced_mode:
@@ -1127,40 +1163,40 @@ with st.sidebar:
                 st.markdown("**🔧 Building Blocks (EPS Growth):**")
                 st.caption("EM uses 5-year minimum data window")
                 st.number_input("Country EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_em_real_eps_growth",
+                               step=0.1, key=widget_key("equity_em_real_eps_growth"),
                                placeholder="3.00", help="Default: 3.00%")
                 st.number_input("Regional (EM) EPS Growth (%)", min_value=-5.0, max_value=10.0, value=None,
-                               step=0.1, key="equity_em_regional_eps_growth",
+                               step=0.1, key=widget_key("equity_em_regional_eps_growth"),
                                placeholder="2.80", help="Default: 2.80%")
 
     # Hedge Fund Assumptions
     with st.expander("🎯 Absolute Return Assumptions", expanded=False):
         st.markdown("**Primary Inputs:**")
         st.number_input("Trading Alpha (%)", min_value=-5.0, max_value=10.0, value=None,
-                       step=0.1, key="absolute_return_trading_alpha",
+                       step=0.1, key=widget_key("absolute_return_trading_alpha"),
                        placeholder="1.00", help="Default: 1.00% | 50% of historical alpha (~2%)")
 
         st.markdown("**Factor Betas:**")
         col1, col2 = st.columns(2)
         with col1:
             st.number_input("Market β", min_value=-1.0, max_value=2.0, value=None,
-                           step=0.05, key="absolute_return_beta_market",
+                           step=0.05, key=widget_key("absolute_return_beta_market"),
                            placeholder="0.30", help="Default: 0.30 | Equity market exposure")
             st.number_input("Size β", min_value=-1.0, max_value=2.0, value=None,
-                           step=0.05, key="absolute_return_beta_size",
+                           step=0.05, key=widget_key("absolute_return_beta_size"),
                            placeholder="0.10", help="Default: 0.10 | Small-minus-Big (SMB)")
             st.number_input("Value β", min_value=-1.0, max_value=2.0, value=None,
-                           step=0.05, key="absolute_return_beta_value",
+                           step=0.05, key=widget_key("absolute_return_beta_value"),
                            placeholder="0.05", help="Default: 0.05 | High-minus-Low (HML)")
         with col2:
             st.number_input("Profitability β", min_value=-1.0, max_value=2.0, value=None,
-                           step=0.05, key="absolute_return_beta_profitability",
+                           step=0.05, key=widget_key("absolute_return_beta_profitability"),
                            placeholder="0.05", help="Default: 0.05 | Robust-minus-Weak (RMW)")
             st.number_input("Investment β", min_value=-1.0, max_value=2.0, value=None,
-                           step=0.05, key="absolute_return_beta_investment",
+                           step=0.05, key=widget_key("absolute_return_beta_investment"),
                            placeholder="0.05", help="Default: 0.05 | Conservative-minus-Aggressive (CMA)")
             st.number_input("Momentum β", min_value=-1.0, max_value=2.0, value=None,
-                           step=0.05, key="absolute_return_beta_momentum",
+                           step=0.05, key=widget_key("absolute_return_beta_momentum"),
                            placeholder="0.10", help="Default: 0.10 | Up-minus-Down (UMD)")
 
     # AI Chatbot Assistant
