@@ -6,8 +6,10 @@ Run with: streamlit run app.py
 
 import streamlit as st
 import plotly.graph_objects as go
+import pandas as pd
 import json
 import os
+import io
 from datetime import datetime
 from ra_stress_tool.main import CMEEngine
 from ra_stress_tool.config import AssetClass, EXPECTED_VOLATILITY
@@ -788,7 +790,87 @@ with st.sidebar:
                     st.toast("❌ Failed to delete scenario", icon="❌")
     
     st.markdown("---")
-    
+
+    # Quick Scenario Templates
+    st.markdown("**📋 Quick Templates:**")
+    st.caption("Load a preset scenario as a starting point")
+
+    # Define templates
+    SCENARIO_TEMPLATES = {
+        "-- Select Template --": None,
+        "🟢 Bull Market": {
+            'description': 'Higher growth (+0.5%), lower inflation (-0.3%)',
+            'overrides': {
+                'macro': {
+                    'us': {'rgdp_growth': 0.017, 'inflation_forecast': 0.0199},
+                    'eurozone': {'rgdp_growth': 0.013, 'inflation_forecast': 0.0176},
+                    'japan': {'rgdp_growth': 0.008, 'inflation_forecast': 0.0135},
+                    'em': {'rgdp_growth': 0.035, 'inflation_forecast': 0.035}
+                }
+            }
+        },
+        "🔴 Bear Market": {
+            'description': 'Lower growth (-1%), higher credit spreads',
+            'overrides': {
+                'macro': {
+                    'us': {'rgdp_growth': 0.002},
+                    'eurozone': {'rgdp_growth': -0.002},
+                    'japan': {'rgdp_growth': -0.007},
+                    'em': {'rgdp_growth': 0.02}
+                },
+                'bonds_hy': {'credit_spread': 0.05, 'default_rate': 0.07},
+                'bonds_em': {'default_rate': 0.04}
+            }
+        },
+        "🟠 Stagflation": {
+            'description': 'High inflation (+2%), low growth (-0.5%)',
+            'overrides': {
+                'macro': {
+                    'us': {'inflation_forecast': 0.0429, 'rgdp_growth': 0.007},
+                    'eurozone': {'inflation_forecast': 0.0406, 'rgdp_growth': 0.003},
+                    'japan': {'inflation_forecast': 0.0365, 'rgdp_growth': -0.002},
+                    'em': {'inflation_forecast': 0.058, 'rgdp_growth': 0.025}
+                }
+            }
+        },
+        "📈 Rising Rates": {
+            'description': 'Higher T-Bill (+1.5%), duration impact',
+            'overrides': {
+                'macro': {
+                    'us': {'tbill_forecast': 0.0529},
+                    'eurozone': {'tbill_forecast': 0.042},
+                    'japan': {'tbill_forecast': 0.025},
+                    'em': {'tbill_forecast': 0.07}
+                }
+            }
+        },
+        "⚖️ RA Base Case": {
+            'description': 'All default values',
+            'overrides': {}
+        }
+    }
+
+    selected_template = st.selectbox(
+        "Load Template",
+        options=list(SCENARIO_TEMPLATES.keys()),
+        key="template_selector",
+        label_visibility="collapsed"
+    )
+
+    if selected_template != "-- Select Template --" and SCENARIO_TEMPLATES[selected_template]:
+        template_data = SCENARIO_TEMPLATES[selected_template]
+        st.caption(f"_{template_data['description']}_")
+
+        if st.button("📥 Load Template", use_container_width=True):
+            # Apply template overrides
+            template_overrides = template_data.get('overrides', {})
+            apply_scenario_to_session({'overrides': template_overrides})
+            st.session_state['_pending_toast'] = (f"✅ Loaded template: {selected_template}", "📋")
+            # Reset template selector
+            st.rerun()
+
+    st.markdown("---")
+
     # Save current scenario
     st.markdown("**Save Current Settings:**")
     new_scenario_name = st.text_input(
@@ -1225,6 +1307,74 @@ results = engine.compute_all_returns("Current Scenario")
 base_engine = CMEEngine(None, base_currency=base_ccy)
 base_results = base_engine.compute_all_returns("RA Defaults")
 
+# Input Validation Warnings
+# Compute macro for validation checks
+macro = engine.compute_macro_forecasts()
+
+validation_warnings = []
+
+# Check 1: Real T-Bill rate < -2% (deeply negative real rates for extended period)
+for region, region_name in [('us', 'US'), ('eurozone', 'Eurozone'), ('japan', 'Japan'), ('em', 'EM')]:
+    region_data = macro[region]
+    real_tbill = region_data.get('tbill_rate', 0) - region_data.get('inflation', 0)
+    if real_tbill < -0.02:
+        validation_warnings.append(
+            f"**{region_name} Real T-Bill Rate**: {real_tbill*100:.2f}% — Deeply negative real rates "
+            f"(< -2%) are unusual for a 10-year average. Consider if this is realistic."
+        )
+
+# Check 2: EM inflation < US inflation (historically rare)
+em_inflation = macro['em'].get('inflation', 0)
+us_inflation = macro['us'].get('inflation', 0)
+if em_inflation < us_inflation:
+    validation_warnings.append(
+        f"**EM Inflation** ({em_inflation*100:.2f}%) < **US Inflation** ({us_inflation*100:.2f}%) — "
+        f"Emerging Markets typically have higher inflation than developed markets."
+    )
+
+# Check 3: Equity dividend yield > 6% (very high)
+us_div_yield = get_input_value('equity_us_dividend_yield')
+if us_div_yield and us_div_yield > 6:
+    validation_warnings.append(
+        f"**Equity US Dividend Yield**: {us_div_yield:.2f}% — Dividend yields above 6% are historically rare "
+        f"and typically signal market stress or data issues."
+    )
+
+# Check 4: GDP growth > 4% for DM (optimistic)
+us_gdp = macro['us'].get('rgdp_growth', 0)
+eu_gdp = macro['eurozone'].get('rgdp_growth', 0)
+jp_gdp = macro['japan'].get('rgdp_growth', 0)
+
+if us_gdp > 0.04:
+    validation_warnings.append(
+        f"**US GDP Growth**: {us_gdp*100:.2f}% — Real GDP growth above 4% is optimistic "
+        f"for a developed economy over a 10-year horizon."
+    )
+if eu_gdp > 0.04:
+    validation_warnings.append(
+        f"**Eurozone GDP Growth**: {eu_gdp*100:.2f}% — Real GDP growth above 4% is optimistic "
+        f"for a developed economy over a 10-year horizon."
+    )
+
+# Check 5: T-Bill significantly higher than GDP + Inflation (unusual for extended periods)
+for region, region_name in [('us', 'US'), ('eurozone', 'Eurozone')]:
+    region_data = macro[region]
+    tbill = region_data.get('tbill_rate', 0)
+    nominal_gdp = region_data.get('rgdp_growth', 0) + region_data.get('inflation', 0)
+    if tbill > nominal_gdp + 0.02:  # T-Bill more than 2% above nominal GDP
+        validation_warnings.append(
+            f"**{region_name} T-Bill Rate** ({tbill*100:.2f}%) > Nominal GDP ({nominal_gdp*100:.2f}%) + 2% — "
+            f"T-Bill rates significantly above nominal GDP are unusual over long horizons."
+        )
+
+# Display warnings if any
+if validation_warnings:
+    st.warning("**⚠️ Input Validation Warnings**")
+    with st.expander("View Warnings (click to expand)", expanded=True):
+        st.caption("These are soft warnings - your inputs may still be valid for specific scenarios.")
+        for warning in validation_warnings:
+            st.markdown(f"- {warning}")
+
 # Main content area
 col_results, col_details = st.columns([2, 3])
 
@@ -1284,6 +1434,72 @@ with col_results:
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+    # Export buttons
+    st.markdown("---")
+    st.markdown("**📥 Export Results**")
+
+    # Build export DataFrame
+    export_data = []
+    for key, name, icon in asset_order:
+        result = results.results[key]
+        base_result = base_results.results[key]
+        asset_enum = AssetClass(key)
+
+        nominal = result.expected_return_nominal * 100
+        real = result.expected_return_real * 100
+        volatility = EXPECTED_VOLATILITY.get(asset_enum, 0.10) * 100
+        diff = (result.expected_return_nominal - base_result.expected_return_nominal) * 100
+
+        export_data.append({
+            'Asset Class': name,
+            'Expected Return (Nominal)': f"{nominal:.2f}%",
+            'Expected Return (Real)': f"{real:.2f}%",
+            'Expected Volatility': f"{volatility:.1f}%",
+            'vs Default': f"{diff:+.2f}%" if abs(diff) >= 0.01 else "—"
+        })
+
+    export_df = pd.DataFrame(export_data)
+
+    col_csv, col_excel = st.columns(2)
+    with col_csv:
+        csv_buffer = export_df.to_csv(index=False)
+        st.download_button(
+            label="📄 Download CSV",
+            data=csv_buffer,
+            file_name=f"cma_results_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    with col_excel:
+        # Create Excel file in memory
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            export_df.to_excel(writer, sheet_name='Expected Returns', index=False)
+
+            # Also add macro forecasts sheet
+            macro_data = []
+            for region_key, region_name in [('us', 'United States'), ('eurozone', 'Eurozone'),
+                                             ('japan', 'Japan'), ('em', 'Emerging Markets')]:
+                region_data = macro[region_key]
+                macro_data.append({
+                    'Region': region_name,
+                    'E[GDP Growth]': f"{region_data['rgdp_growth']*100:.2f}%",
+                    'E[Inflation]': f"{region_data['inflation']*100:.2f}%",
+                    'E[T-Bill]': f"{region_data.get('tbill_rate', 0)*100:.2f}%"
+                })
+            macro_df = pd.DataFrame(macro_data)
+            macro_df.to_excel(writer, sheet_name='Macro Forecasts', index=False)
+
+        excel_buffer.seek(0)
+        st.download_button(
+            label="📊 Download Excel",
+            data=excel_buffer,
+            file_name=f"cma_results_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
 
 with col_details:
     st.markdown('<p class="section-header">Model Details & Assumptions</p>', unsafe_allow_html=True)
@@ -1562,6 +1778,211 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig)
+
+# Sensitivity Analysis Section
+st.divider()
+with st.expander("📊 What-If Sensitivity Analysis", expanded=False):
+    st.markdown("See how expected returns change when key inputs vary.")
+    st.caption("Select an input to analyze, then view impact on all asset classes.")
+
+    # Input options for sensitivity analysis
+    sensitivity_inputs = {
+        'US Inflation': ('macro', 'us', 'inflation_forecast'),
+        'US GDP Growth': ('macro', 'us', 'rgdp_growth'),
+        'US T-Bill Rate': ('macro', 'us', 'tbill_forecast'),
+        'Equity US Dividend Yield': ('equity_us', None, 'dividend_yield'),
+        'Equity US CAEY': ('equity_us', None, 'current_caey'),
+        'Bonds Global Yield': ('bonds_global', None, 'current_yield'),
+    }
+
+    selected_input = st.selectbox(
+        "Select Input to Analyze",
+        options=list(sensitivity_inputs.keys()),
+        key="sensitivity_input_selector"
+    )
+
+    # Variation amounts
+    variations = [-0.02, -0.01, -0.005, 0, 0.005, 0.01, 0.02]
+    variation_labels = ['-2%', '-1%', '-0.5%', 'Base', '+0.5%', '+1%', '+2%']
+
+    if selected_input:
+        input_config = sensitivity_inputs[selected_input]
+        category, region, param = input_config
+
+        # Build sensitivity table
+        sensitivity_data = []
+        asset_names_map = {
+            'liquidity': 'Liquidity',
+            'bonds_global': 'Bonds Global',
+            'bonds_hy': 'Bonds HY',
+            'bonds_em': 'Bonds EM',
+            'equity_us': 'Equity US',
+            'equity_europe': 'Equity Europe',
+            'equity_japan': 'Equity Japan',
+            'equity_em': 'Equity EM',
+            'absolute_return': 'Absolute Return',
+        }
+
+        for key in asset_names_map.keys():
+            row = {'Asset Class': asset_names_map[key]}
+            base_return = results.results[key].expected_return_nominal * 100
+
+            for var, label in zip(variations, variation_labels):
+                if var == 0:
+                    row[label] = base_return
+                else:
+                    # Build modified overrides
+                    modified_overrides = json.loads(json.dumps(overrides)) if overrides else {}
+
+                    # Get current value
+                    current_val = get_input_value(f"{category}_{region}_{param}" if region else f"{category}_{param}")
+                    if current_val is None:
+                        current_val = INPUT_DEFAULTS.get(f"{category}_{region}_{param}" if region else f"{category}_{param}", 0)
+
+                    # Convert to decimal for override (input is in %, override needs decimal)
+                    new_val = (current_val / 100) + var
+
+                    # Apply override
+                    if region:
+                        if category not in modified_overrides:
+                            modified_overrides[category] = {}
+                        if region not in modified_overrides[category]:
+                            modified_overrides[category][region] = {}
+                        modified_overrides[category][region][param] = new_val
+                    else:
+                        if category not in modified_overrides:
+                            modified_overrides[category] = {}
+                        modified_overrides[category][param] = new_val
+
+                    # Compute with modified overrides
+                    try:
+                        modified_engine = CMEEngine(modified_overrides, base_currency=base_ccy)
+                        modified_results = modified_engine.compute_all_returns("Sensitivity")
+                        row[label] = modified_results.results[key].expected_return_nominal * 100
+                    except Exception:
+                        row[label] = base_return
+
+            sensitivity_data.append(row)
+
+        sensitivity_df = pd.DataFrame(sensitivity_data)
+
+        # Format and style the table
+        def style_sensitivity(val, base_val):
+            if isinstance(val, str):
+                return ''
+            diff = val - base_val
+            if abs(diff) < 0.01:
+                return ''
+            elif diff > 0:
+                return 'background-color: #d4edda; color: #155724;'
+            else:
+                return 'background-color: #f8d7da; color: #721c24;'
+
+        # Display as formatted table
+        st.markdown(f"**Impact of {selected_input} Changes:**")
+
+        # Create styled dataframe
+        display_df = sensitivity_df.copy()
+        for col in variation_labels:
+            display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}%" if isinstance(x, (int, float)) else x)
+
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+        # Summary statistics
+        st.markdown("---")
+        st.caption("**Interpretation:** Green cells indicate higher returns vs base case, red indicates lower returns. "
+                   "Assets most sensitive to this input show the largest color changes.")
+
+# Scenario Comparison Section
+st.divider()
+with st.expander("📈 Scenario Comparison", expanded=False):
+    st.markdown("Compare multiple saved scenarios side-by-side.")
+
+    # Load saved scenarios
+    comparison_scenarios = load_scenarios(user_id)
+
+    if len(comparison_scenarios) < 2:
+        st.info("Save at least 2 scenarios to enable comparison. Use the sidebar to save your current settings.")
+    else:
+        scenario_names_list = list(comparison_scenarios.keys())
+
+        # Multi-select for scenarios (2-4)
+        selected_for_comparison = st.multiselect(
+            "Select Scenarios to Compare (2-4)",
+            options=scenario_names_list,
+            default=scenario_names_list[:min(2, len(scenario_names_list))],
+            max_selections=4,
+            key="comparison_scenario_selector"
+        )
+
+        if len(selected_for_comparison) >= 2:
+            # Compute results for each selected scenario
+            comparison_results = {}
+            for scenario_name in selected_for_comparison:
+                scenario_data = comparison_scenarios[scenario_name]
+                scenario_overrides = scenario_data.get('overrides', {})
+                scenario_base_ccy = scenario_data.get('base_currency', 'usd')
+
+                scenario_engine = CMEEngine(scenario_overrides if scenario_overrides else None,
+                                             base_currency=scenario_base_ccy)
+                comparison_results[scenario_name] = scenario_engine.compute_all_returns(scenario_name)
+
+            # Build comparison table
+            comparison_data = []
+            for key, name, icon in asset_order:
+                row = {'Asset Class': name}
+                for scenario_name in selected_for_comparison:
+                    ret = comparison_results[scenario_name].results[key].expected_return_nominal * 100
+                    row[scenario_name] = ret
+                comparison_data.append(row)
+
+            comparison_df = pd.DataFrame(comparison_data)
+
+            # Calculate differences if exactly 2 scenarios
+            if len(selected_for_comparison) == 2:
+                s1, s2 = selected_for_comparison
+                comparison_df['Difference'] = comparison_df[s1] - comparison_df[s2]
+
+            # Display comparison table
+            st.markdown("**Expected Returns Comparison:**")
+
+            display_comp_df = comparison_df.copy()
+            for col in selected_for_comparison:
+                display_comp_df[col] = display_comp_df[col].apply(lambda x: f"{x:.2f}%")
+            if 'Difference' in display_comp_df.columns:
+                display_comp_df['Difference'] = comparison_df['Difference'].apply(lambda x: f"{x:+.2f}%")
+
+            st.dataframe(display_comp_df, use_container_width=True, hide_index=True)
+
+            # Grouped bar chart
+            st.markdown("---")
+            st.markdown("**Visual Comparison:**")
+
+            fig_comp = go.Figure()
+            colors = ['#1E3A5F', '#28a745', '#dc3545', '#ffc107']
+
+            for i, scenario_name in enumerate(selected_for_comparison):
+                fig_comp.add_trace(go.Bar(
+                    name=scenario_name,
+                    x=[row['Asset Class'] for row in comparison_data],
+                    y=[row[scenario_name] for row in comparison_data],
+                    marker_color=colors[i % len(colors)],
+                ))
+
+            fig_comp.update_layout(
+                barmode='group',
+                xaxis_title="Asset Class",
+                yaxis_title="Expected Return (%)",
+                yaxis=dict(tickformat='.1f', ticksuffix='%'),
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                height=400,
+                legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
+            )
+
+            st.plotly_chart(fig_comp, use_container_width=True)
+        else:
+            st.warning("Please select at least 2 scenarios to compare.")
 
 # Active overrides display
 if overrides:
