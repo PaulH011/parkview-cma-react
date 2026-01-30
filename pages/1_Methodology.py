@@ -410,7 +410,7 @@ st.markdown("""
 
 | Component | Description | Default Values |
 |-----------|-------------|----------------|
-| **Current T-Bill** | Today's 3-month T-Bill rate | US: 3.67%, EU: 3.5%, JP: 0.1%, EM: 6.0% |
+| **Current T-Bill** | Today's 3-month T-Bill rate | US: 3.67%, EU: 2.04%, JP: 0.75%, EM: 6.0% |
 | **Country Factor** | Liquidity/risk premium adjustment | US: 0%, EU: -0.2%, JP: -0.5%, EM: +0.5% |
 | **Rate Floor** | Minimum possible rate | -0.75% (allows for negative rates) |
 
@@ -545,7 +545,7 @@ with col1:
     |-------|---------|
     | Current Yield | 7.5% |
     | Duration | 4.0 years |
-    | Credit Spread | 3.5% |
+    | Credit Spread | 2.71% |
     | Fair Credit Spread | 4.0% |
     """)
 
@@ -672,7 +672,7 @@ with col3:
     
     | Region | Current | Fair |
     |--------|---------|------|
-    | US | 3.5% | 5.0% |
+    | US | 2.48% | 5.0% |
     | Europe | 5.5% | 5.5% |
     | Japan | 5.5% | 5.0% |
     | EM | 6.5% | 6.0% |
@@ -689,10 +689,10 @@ with st.expander("🔧 Advanced: CAEY Valuation Change Calculation"):
     ```
     
     **Example - US Equity:**
-    - Current CAEY: 3.5% (CAPE ≈ 28)
+    - Current CAEY: 2.48% (CAPE ≈ 40)
     - Fair CAEY: 5.0% (CAPE ≈ 20)
-    - CAEY needs to rise 43% over 20 years
-    - Annual CAEY increase: ~1.8%
+    - CAEY needs to rise 102% over 20 years
+    - Annual CAEY increase: ~3.6%
     - This means prices fall relative to earnings → **negative valuation return**
     
     **Why 20 Years for Full Reversion?**
@@ -803,8 +803,8 @@ macro_data = {
         "E[Inflation] (direct)", "E[GDP Growth] (direct)", "E[T-Bill] (direct)"
     ],
     "US": ["0.4%", "1.2%", "2.1", "2.5%", "2.2%", "3.67%", "0.0%", "—", "—", "—"],
-    "Europe": ["0.1%", "1.0%", "2.3", "2.2%", "2.0%", "3.5%", "-0.2%", "—", "—", "—"],
-    "Japan": ["-0.5%", "0.8%", "2.5", "2.0%", "1.5%", "0.1%", "-0.5%", "—", "—", "—"],
+    "Europe": ["0.1%", "1.0%", "2.3", "2.2%", "2.0%", "2.04%", "-0.2%", "—", "—", "—"],
+    "Japan": ["-0.5%", "0.8%", "2.5", "2.0%", "1.5%", "0.75%", "-0.5%", "—", "—", "—"],
     "EM": ["1.0%", "2.5%", "1.5", "4.5%", "3.5%", "6.0%", "+0.5%", "—", "—", "—"],
     "Mode": ["Advanced", "Advanced", "Advanced", "Advanced", "Advanced", "Advanced", "Advanced", "Basic", "Basic", "Basic"],
     "Description": [
@@ -834,7 +834,7 @@ bond_data = {
         "Default Rate", "Recovery Rate"
     ],
     "Bonds Global": ["3.5%", "7.0", "1.0%", "1.5%", "—", "—", "0%", "100%"],
-    "Bonds HY": ["7.5%", "4.0", "1.0%", "1.5%", "3.5%", "4.0%", "5.5%", "40%"],
+    "Bonds HY": ["7.5%", "4.0", "1.0%", "1.5%", "2.71%", "4.0%", "5.5%", "40%"],
     "Bonds EM": ["5.77%", "5.5", "1.5%", "2.0%", "—", "—", "2.8%", "55%"],
     "Mode": ["Basic", "Basic", "Advanced", "Advanced", "Advanced", "Advanced", "Basic", "Basic"],
     "Description": [
@@ -859,7 +859,7 @@ equity_data = {
         "Dividend Yield", "Current CAEY", "Fair CAEY",
         "Country EPS Growth", "Regional EPS Growth"
     ],
-    "US": ["1.5%", "3.5%", "5.0%", "1.8%", "1.6%"],
+    "US": ["1.13%", "2.48%", "5.0%", "1.8%", "1.6%"],
     "Europe": ["3.0%", "5.5%", "5.5%", "1.2%", "1.6%"],
     "Japan": ["2.2%", "5.5%", "5.0%", "0.8%", "1.6%"],
     "EM": ["3.0%", "6.5%", "6.0%", "3.0%", "2.8%"],
@@ -966,10 +966,10 @@ with st.expander("Why are US equity returns lower than historical averages?"):
     st.markdown("""
     US equity returns in the model may be lower than historical averages (10%+) for several reasons:
     
-    1. **High Valuations**: Current CAEY of 3.5% (CAPE ~28) is below fair value of 5.0% (CAPE ~20). 
+    1. **High Valuations**: Current CAEY of 2.48% (CAPE ~40) is below fair value of 5.0% (CAPE ~20).
        This creates a valuation headwind as CAEY is expected to rise (prices fall relative to earnings).
-    
-    2. **Lower Dividend Yields**: Current yields (~1.5%) are below historical averages (~4%).
+
+    2. **Lower Dividend Yields**: Current yields (~1.13%) are near all-time lows vs historical averages (~4%).
     
     3. **Building Block Approach**: The model builds returns from fundamentals rather than 
        extrapolating historical returns, which may have benefited from multiple expansion.

@@ -420,7 +420,7 @@ class HighYieldBondModel(BondModel):
         inputs = self.get_inputs()
 
         # Get credit spread inputs
-        credit_spread = inputs.get('credit_spread', TrackedValue(0.035, InputSource.DEFAULT)).value
+        credit_spread = inputs.get('credit_spread', TrackedValue(0.0271, InputSource.DEFAULT)).value
         fair_credit_spread = inputs.get('fair_credit_spread', TrackedValue(0.04, InputSource.DEFAULT)).value
 
         # Base calculation

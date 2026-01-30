@@ -189,7 +189,7 @@ DEFAULT_MARKET_DATA = {
     # Eurozone Macro
     'eurozone': {
         'current_headline_inflation': 0.022,   # 2.2%
-        'current_tbill': 0.035,                # 3.5%
+        'current_tbill': 0.0204,               # 2.04% (3m Euribor)
         'population_growth': 0.001,            # 0.1%
         'productivity_growth': 0.010,          # 1.0%
         'my_ratio': 2.3,
@@ -197,7 +197,7 @@ DEFAULT_MARKET_DATA = {
     # Japan Macro
     'japan': {
         'current_headline_inflation': 0.020,   # 2.0%
-        'current_tbill': 0.001,                # 0.1%
+        'current_tbill': 0.0075,               # 0.75% (BOJ policy rate)
         'population_growth': -0.005,           # -0.5%
         'productivity_growth': 0.008,          # 0.8%
         'my_ratio': 2.5,
@@ -232,7 +232,7 @@ DEFAULT_ASSET_DATA = {
     AssetClass.BONDS_HY: {
         'current_yield': 0.075,                # 7.5%
         'duration': 4.0,                       # 4 years
-        'credit_spread': 0.035,                # 3.5%
+        'credit_spread': 0.0271,               # 2.71% (ICE BofA HY OAS)
         'fair_credit_spread': 0.04,            # 4.0%
         'default_rate': 0.055,                 # 5.5%
         'recovery_rate': 0.40,                 # 40%
@@ -248,8 +248,8 @@ DEFAULT_ASSET_DATA = {
     },
 
     AssetClass.EQUITY_US: {
-        'dividend_yield': 0.015,               # 1.5%
-        'current_caey': 0.035,                 # 3.5% (CAPE ~28)
+        'dividend_yield': 0.0113,              # 1.13% (S&P 500 TTM)
+        'current_caey': 0.0248,                # 2.48% (CAPE ~40)
         'fair_caey': 0.05,                     # 5.0% (CAPE ~20)
         'real_eps_growth': 0.018,              # 1.8%
         'regional_eps_growth': 0.016,          # DM average

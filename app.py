@@ -72,7 +72,7 @@ INPUT_DEFAULTS = {
     'macro_eurozone_my_ratio': 2.3,
     'macro_eurozone_current_headline_inflation': 2.20,
     'macro_eurozone_long_term_inflation': 2.00,
-    'macro_eurozone_current_tbill': 3.50,
+    'macro_eurozone_current_tbill': 2.04,
     'macro_eurozone_country_factor': 0.00,
     # Japan Macro
     'macro_japan_inflation_forecast': 1.65,
@@ -83,7 +83,7 @@ INPUT_DEFAULTS = {
     'macro_japan_my_ratio': 2.5,
     'macro_japan_current_headline_inflation': 2.00,
     'macro_japan_long_term_inflation': 1.50,
-    'macro_japan_current_tbill': 0.10,
+    'macro_japan_current_tbill': 0.75,
     'macro_japan_country_factor': 0.00,
     # EM Macro
     'macro_em_inflation_forecast': 3.80,
@@ -104,7 +104,7 @@ INPUT_DEFAULTS = {
     # Bonds HY
     'bonds_hy_current_yield': 7.50,
     'bonds_hy_duration': 4.0,
-    'bonds_hy_credit_spread': 3.50,
+    'bonds_hy_credit_spread': 2.71,
     'bonds_hy_fair_credit_spread': 4.00,
     'bonds_hy_default_rate': 5.50,
     'bonds_hy_recovery_rate': 40.0,
@@ -116,8 +116,8 @@ INPUT_DEFAULTS = {
     'bonds_em_default_rate': 2.80,
     'bonds_em_recovery_rate': 55.0,
     # Equity US
-    'equity_us_dividend_yield': 1.50,
-    'equity_us_current_caey': 3.50,
+    'equity_us_dividend_yield': 1.13,
+    'equity_us_current_caey': 2.48,
     'equity_us_fair_caey': 5.00,
     'equity_us_real_eps_growth': 1.80,
     'equity_us_regional_eps_growth': 1.60,
@@ -1121,7 +1121,7 @@ with st.sidebar:
                 st.markdown("**🔧 Building Blocks:**")
                 st.number_input("Credit Spread (%)", min_value=0.0, max_value=20.0, value=None,
                                step=0.1, key=widget_key("bonds_hy_credit_spread"),
-                               placeholder="3.50", help="Default: 3.50% | Spread vs duration-matched Treasury")
+                               placeholder="2.71", help="Default: 2.71% (ICE BofA HY OAS) | Spread vs duration-matched Treasury")
                 st.number_input("Fair Credit Spread (%)", min_value=0.0, max_value=20.0, value=None,
                                step=0.1, key=widget_key("bonds_hy_fair_credit_spread"),
                                placeholder="4.00", help="Default: 4.00% | EWMA 20yr half-life")
@@ -1165,10 +1165,10 @@ with st.sidebar:
             st.markdown("**Primary Inputs:**")
             st.number_input("Dividend Yield (%)", min_value=0.0, max_value=10.0, value=None,
                            step=0.1, key=widget_key("equity_us_dividend_yield"),
-                           placeholder="1.50", help="Default: 1.50% | Trailing 12-month dividend yield")
+                           placeholder="1.13", help="Default: 1.13% (S&P 500 TTM) | Trailing 12-month dividend yield")
             st.number_input("Current CAEY (%)", min_value=1.0, max_value=15.0, value=None,
                            step=0.1, key=widget_key("equity_us_current_caey"),
-                           placeholder="3.50", help="Default: 3.50% (CAPE ~28) | 1/CAPE")
+                           placeholder="2.48", help="Default: 2.48% (CAPE ~40) | 1/CAPE")
             st.number_input("Fair CAEY (%)", min_value=1.0, max_value=15.0, value=None,
                            step=0.1, key=widget_key("equity_us_fair_caey"),
                            placeholder="5.00", help="Default: 5.00% (CAPE ~20) | EWMA 20yr half-life")
