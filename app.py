@@ -1303,6 +1303,9 @@ base_ccy = base_currency.lower()  # 'usd' or 'eur'
 engine = CMEEngine(overrides if overrides else None, base_currency=base_ccy)
 results = engine.compute_all_returns("Current Scenario")
 
+# Store results in session state for chatbot context
+st.session_state['current_results'] = results
+
 # Also compute base case for comparison (same base currency)
 base_engine = CMEEngine(None, base_currency=base_ccy)
 base_results = base_engine.compute_all_returns("RA Defaults")

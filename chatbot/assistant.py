@@ -6,7 +6,7 @@ Uses Claude Haiku for fast, cost-effective responses.
 
 import streamlit as st
 import os
-from typing import Generator
+from typing import Generator, Dict, Any, Optional
 
 # Try to import anthropic, handle if not installed
 try:
@@ -15,8 +15,166 @@ try:
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
-# System prompt with methodology knowledge
-SYSTEM_PROMPT = """You are a helpful assistant for the Parkview Capital Market Assumptions (CMA) Tool. You help users understand the methodology, calculations, assumptions, and how to use overrides.
+
+def get_current_scenario_context() -> str:
+    """
+    Build context string from current session state values.
+    Shows current values and marks which are overrides vs defaults.
+    """
+    # Import here to avoid circular imports
+    try:
+        from app import INPUT_DEFAULTS, widget_key
+    except ImportError:
+        return ""
+
+    context_parts = []
+
+    # Helper to get current value and check if override
+    def get_value_info(key: str) -> tuple:
+        """Returns (current_value, is_override)"""
+        wkey = widget_key(key)
+        default = INPUT_DEFAULTS.get(key)
+        if wkey in st.session_state and st.session_state[wkey] is not None:
+            val = st.session_state[wkey]
+            is_override = default is None or abs(val - default) > 0.001
+            return val, is_override
+        return default, False
+
+    # Check for loaded scenario name
+    scenario_name = st.session_state.get('_last_loaded_scenario', 'Default (no scenario loaded)')
+    context_parts.append(f"**Currently Loaded Scenario:** {scenario_name}\n")
+
+    # Macro inputs by region
+    for region, region_label in [('us', 'US'), ('eurozone', 'Eurozone'), ('japan', 'Japan'), ('em', 'Emerging Markets')]:
+        overrides_in_region = []
+
+        macro_keys = [
+            ('inflation_forecast', 'Inflation Forecast', '%'),
+            ('rgdp_growth', 'Real GDP Growth', '%'),
+            ('tbill_forecast', 'T-Bill Forecast', '%'),
+            ('productivity_growth', 'Productivity Growth', '%'),
+            ('population_growth', 'Population Growth', '%'),
+            ('my_ratio', 'MY Ratio', ''),
+        ]
+
+        for key, label, unit in macro_keys:
+            session_key = f"macro_{region}_{key}"
+            val, is_override = get_value_info(session_key)
+            if val is not None and is_override:
+                overrides_in_region.append(f"  - {label}: {val:.2f}{unit} (OVERRIDE)")
+
+        if overrides_in_region:
+            context_parts.append(f"**Macro - {region_label} Overrides:**")
+            context_parts.extend(overrides_in_region)
+
+    # Equity inputs by region
+    for region, region_label in [('us', 'US'), ('europe', 'Europe'), ('japan', 'Japan'), ('em', 'EM')]:
+        overrides_in_region = []
+
+        equity_keys = [
+            ('dividend_yield', 'Dividend Yield', '%'),
+            ('real_eps_growth', 'Real EPS Growth', '%'),
+            ('current_caey', 'Current CAEY', '%'),
+            ('fair_caey', 'Fair CAEY', '%'),
+        ]
+
+        for key, label, unit in equity_keys:
+            session_key = f"equity_{region}_{key}"
+            val, is_override = get_value_info(session_key)
+            if val is not None and is_override:
+                overrides_in_region.append(f"  - {label}: {val:.2f}{unit} (OVERRIDE)")
+
+        if overrides_in_region:
+            context_parts.append(f"**Equity - {region_label} Overrides:**")
+            context_parts.extend(overrides_in_region)
+
+    # Bond inputs
+    for bond_type, bond_label in [('bonds_global', 'Bonds Global'), ('bonds_hy', 'Bonds HY'), ('bonds_em', 'Bonds EM')]:
+        overrides_in_region = []
+
+        bond_keys = [
+            ('current_yield', 'Current Yield', '%'),
+            ('duration', 'Duration', ' yrs'),
+            ('default_rate', 'Default Rate', '%'),
+            ('recovery_rate', 'Recovery Rate', '%'),
+        ]
+
+        for key, label, unit in bond_keys:
+            session_key = f"{bond_type}_{key}"
+            val, is_override = get_value_info(session_key)
+            if val is not None and is_override:
+                overrides_in_region.append(f"  - {label}: {val:.2f}{unit} (OVERRIDE)")
+
+        if overrides_in_region:
+            context_parts.append(f"**{bond_label} Overrides:**")
+            context_parts.extend(overrides_in_region)
+
+    if len(context_parts) == 1:
+        context_parts.append("No overrides - using all default values.")
+
+    return "\n".join(context_parts)
+
+
+def get_results_context() -> str:
+    """
+    Get computed results from session state if available.
+    """
+    if 'current_results' not in st.session_state:
+        return ""
+
+    results = st.session_state.get('current_results')
+    if not results:
+        return ""
+
+    context_parts = ["**Current Computed Expected Returns (Nominal):**"]
+
+    # Asset class display names
+    asset_names = {
+        'liquidity': 'Liquidity (Cash)',
+        'bonds_global': 'Bonds Global',
+        'bonds_hy': 'Bonds High Yield',
+        'bonds_em': 'Bonds EM',
+        'equity_us': 'Equity US',
+        'equity_europe': 'Equity Europe',
+        'equity_japan': 'Equity Japan',
+        'equity_em': 'Equity EM',
+        'absolute_return': 'Absolute Return',
+    }
+
+    try:
+        for key, name in asset_names.items():
+            if key in results.results:
+                ret = results.results[key].expected_return_nominal * 100
+                context_parts.append(f"  - {name}: {ret:.2f}%")
+    except Exception:
+        return ""
+
+    return "\n".join(context_parts)
+
+
+def build_dynamic_system_prompt() -> str:
+    """Build the system prompt with current scenario context."""
+    scenario_context = get_current_scenario_context()
+    results_context = get_results_context()
+
+    dynamic_section = ""
+    if scenario_context or results_context:
+        dynamic_section = f"""
+
+## Current User Scenario
+
+{scenario_context}
+
+{results_context}
+
+When answering questions, refer to the CURRENT values shown above (if any overrides exist), not the default values. Explain how the user's overrides affect the calculations.
+"""
+
+    return BASE_SYSTEM_PROMPT + dynamic_section
+
+
+# Base system prompt with methodology knowledge
+BASE_SYSTEM_PROMPT = """You are a helpful assistant for the Parkview Capital Market Assumptions (CMA) Tool. You help users understand the methodology, calculations, assumptions, and how to use overrides.
 
 ## Your Knowledge Base
 
@@ -111,6 +269,7 @@ E[FX Return] = 30% × (Home T-Bill - Foreign T-Bill) + 70% × (Home Inflation - 
 - Explain formulas step-by-step when asked
 - Help users understand how changing inputs affects outputs
 - If asked about something outside your knowledge, say so clearly
+- IMPORTANT: If the user has overrides in their current scenario, always explain calculations using their CURRENT values, not the defaults
 """
 
 
@@ -133,10 +292,11 @@ def get_anthropic_client():
 
 def stream_response(client, messages: list) -> Generator[str, None, None]:
     """Stream response from Claude Haiku."""
+    system_prompt = build_dynamic_system_prompt()
     with client.messages.stream(
         model="claude-3-haiku-20240307",
         max_tokens=1024,
-        system=SYSTEM_PROMPT,
+        system=system_prompt,
         messages=messages
     ) as stream:
         for text in stream.text_stream:
@@ -145,10 +305,11 @@ def stream_response(client, messages: list) -> Generator[str, None, None]:
 
 def get_response(client, messages: list) -> str:
     """Get non-streaming response from Claude Haiku."""
+    system_prompt = build_dynamic_system_prompt()
     response = client.messages.create(
         model="claude-3-haiku-20240307",
         max_tokens=1024,
-        system=SYSTEM_PROMPT,
+        system=system_prompt,
         messages=messages
     )
     return response.content[0].text
