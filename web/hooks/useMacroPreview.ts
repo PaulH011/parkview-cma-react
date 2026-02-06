@@ -76,6 +76,12 @@ export function useMacroPreview(region: MacroRegion): MacroPreviewState {
   }, [region, macroInputs, hasChanges]);
 
   // Check for conflicts between computed values and direct overrides
+  // A conflict exists when building blocks have changed AND the user has
+  // manually overridden the direct forecast field (dirty field).
+  // This ensures the user always sees that building blocks affect their override,
+  // even if the computed value happens to match.
+  const isMacroDirty = useInputStore((state) => state.isMacroDirty);
+
   const conflicts = useMemo(() => {
     if (!computed || !hasChanges) {
       return {
@@ -85,29 +91,14 @@ export function useMacroPreview(region: MacroRegion): MacroPreviewState {
       };
     }
 
-    // Current direct override values (as decimals for comparison)
-    const currentGdp = macroInputs.rgdp_growth / 100;
-    const currentInflation = macroInputs.inflation_forecast / 100;
-    const currentTbill = macroInputs.tbill_forecast / 100;
-
-    // Default values (as decimals)
-    const defaultGdp = defaults.rgdp_growth / 100;
-    const defaultInflation = defaults.inflation_forecast / 100;
-    const defaultTbill = defaults.tbill_forecast / 100;
-
-    // Conflict exists if:
-    // 1. Direct override differs from default (user set an override)
-    // 2. Computed value differs from override
-    const gdpOverridden = Math.abs(currentGdp - defaultGdp) > 0.0001;
-    const inflationOverridden = Math.abs(currentInflation - defaultInflation) > 0.0001;
-    const tbillOverridden = Math.abs(currentTbill - defaultTbill) > 0.0001;
-
+    // Show conflict if user has explicitly overridden the direct forecast field
+    // and building blocks have changed (hasChanges is already true at this point)
     return {
-      rgdp_growth: gdpOverridden && Math.abs(computed.rgdp_growth - currentGdp) > 0.0001,
-      inflation_forecast: inflationOverridden && Math.abs(computed.inflation - currentInflation) > 0.0001,
-      tbill_forecast: tbillOverridden && Math.abs(computed.tbill - currentTbill) > 0.0001,
+      rgdp_growth: isMacroDirty(region, 'rgdp_growth'),
+      inflation_forecast: isMacroDirty(region, 'inflation_forecast'),
+      tbill_forecast: isMacroDirty(region, 'tbill_forecast'),
     };
-  }, [computed, hasChanges, macroInputs, defaults]);
+  }, [computed, hasChanges, region, isMacroDirty]);
 
   return {
     computed,
