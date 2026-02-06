@@ -219,23 +219,27 @@ export function ScenarioManager() {
               <DropdownMenuItem
                 key={scenario.id}
                 className="flex items-center justify-between group"
+                onSelect={() => handleLoadSavedScenario(scenario)}
               >
-                <span
-                  className="flex-1 cursor-pointer"
-                  onClick={() => handleLoadSavedScenario(scenario)}
-                >
+                <span className="flex-1">
                   {scenario.is_local && (
                     <HardDrive className="h-3 w-3 inline mr-1 text-slate-400" />
                   )}
                   {scenario.name}
                 </span>
-                <Trash2
-                  className="h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-red-500 cursor-pointer"
+                <div
+                  role="button"
+                  tabIndex={-1}
+                  className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     handleDeleteScenario(scenario);
                   }}
-                />
+                >
+                  <Trash2 className="h-3 w-3 text-slate-400 hover:text-red-500" />
+                </div>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
