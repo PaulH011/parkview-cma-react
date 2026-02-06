@@ -424,6 +424,20 @@ class CMEEngine:
             include_gdp_cap=False,
         )
 
+        # Extract T-Bill computation inputs for display
+        tbill_components = region_macro['components'].get('tbill', {})
+        inputs_used = {
+            'base_currency': {'value': self.base_currency.value, 'source': 'computed'},
+        }
+        # Add all T-Bill sub-inputs (current_tbill, country_factor, rgdp_forecast, inflation_forecast, etc.)
+        for key, val in tbill_components.items():
+            if hasattr(val, 'value') and hasattr(val, 'source'):
+                inputs_used[key] = {'value': val.value, 'source': val.source.value}
+            elif isinstance(val, dict) and 'value' in val:
+                inputs_used[key] = val
+            else:
+                inputs_used[key] = {'value': val, 'source': 'computed'}
+
         return AssetClassResult(
             asset_class=self.ASSET_NAMES[AssetClass.LIQUIDITY],
             expected_return_nominal=nominal_return,
@@ -431,11 +445,7 @@ class CMEEngine:
             components={
                 'tbill_rate': nominal_return,
             },
-            inputs_used={
-                'current_tbill': {'value': region_macro['components']['tbill'].get('current_tbill', nominal_return),
-                                  'source': 'default'},
-                'base_currency': {'value': self.base_currency.value, 'source': 'computed'},
-            },
+            inputs_used=inputs_used,
             macro_dependencies=macro_deps,
         )
 
