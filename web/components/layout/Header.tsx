@@ -24,7 +24,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/pvlogo.png"
+              src="/parkview-icon.svg"
               alt="Parkview Group"
               width={36}
               height={36}
