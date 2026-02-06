@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useInputStore } from '@/stores/inputStore';
 import {
   Select,
@@ -21,8 +22,14 @@ export function Header() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo and Title */}
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">📊</span>
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/pvlogo.png"
+              alt="Parkview Group"
+              width={36}
+              height={36}
+              className="object-contain"
+            />
             <div>
               <h1 className="text-xl font-bold text-slate-800">Parkview CMA Tool</h1>
               <p className="text-xs text-slate-500">Capital Market Expectations</p>
