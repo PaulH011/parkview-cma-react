@@ -17,3 +17,9 @@ bcrypt>=4.0.0
 
 # Data processing (used by ra_stress_tool)
 pandas>=2.0.0
+
+# Supabase (for dynamic defaults storage)
+supabase>=2.3.0
+
+# AI research (for quarterly assumption refresh)
+anthropic>=0.18.0
