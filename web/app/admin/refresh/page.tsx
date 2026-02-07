@@ -350,7 +350,8 @@ export default function AdminRefreshPage() {
             </h2>
             <p className="text-sm text-slate-500">
               AI is searching the web for current market data across all assumptions.
-              Research is done in 4 batches to stay within rate limits — this takes about 3-4 minutes.
+              Research is done in 8 batches to stay within API rate limits — this takes about 8-10 minutes.
+              Please keep this tab open.
             </p>
           </CardContent>
         </Card>

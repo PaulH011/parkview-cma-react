@@ -107,31 +107,50 @@ def _unflatten_key(key: str, value: float, target: Dict[str, Any]):
 
 def _split_into_batches(data_sources: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
-    Split data sources into batches by category to stay under rate limits.
+    Split data sources into small batches (~10 each) by subcategory.
 
-    Produces ~4 batches of 15-20 assumptions each:
-      1. Macro DM  (US + Eurozone)   ~20
-      2. Macro Other (Japan + EM)    ~20
-      3. Bonds (Global + HY + EM)    ~16
-      4. Equity + Alternatives       ~27
+    Web search results count as input tokens, so batches must be small
+    enough that prompt + search results stay under the 30K token/min limit.
+
+    Produces ~8 batches:
+      1. Macro US          (10)
+      2. Macro Eurozone     (10)
+      3. Macro Japan        (10)
+      4. Macro EM           (10)
+      5. Bonds Global + HY  (10)
+      6. Bonds EM           (6)
+      7. Equity US + Europe  (10)
+      8. Equity Japan + EM + Alternatives  (~12)
     """
     groups: Dict[str, Dict[str, Any]] = {}
     for key, info in data_sources.items():
         parts = key.split(".")
         if parts[0] == "macro":
-            batch_key = "macro_dm" if parts[1] in ("us", "eurozone") else "macro_other"
+            batch_key = f"macro_{parts[1]}"  # macro_us, macro_eurozone, etc.
         elif parts[0] == "bonds":
-            batch_key = "bonds"
+            if parts[1] in ("global", "hy"):
+                batch_key = "bonds_dm"
+            else:
+                batch_key = "bonds_em"
+        elif parts[0] == "equity":
+            if parts[1] in ("us", "europe"):
+                batch_key = "equity_dm"
+            else:
+                batch_key = "equity_em_alts"
         else:
-            # equity.* and absolute_return.* grouped together
-            batch_key = "equity_alts"
+            # absolute_return.*
+            batch_key = "equity_em_alts"
 
         if batch_key not in groups:
             groups[batch_key] = {}
         groups[batch_key][key] = info
 
     # Return in a stable order
-    order = ["macro_dm", "macro_other", "bonds", "equity_alts"]
+    order = [
+        "macro_us", "macro_eurozone", "macro_japan", "macro_em",
+        "bonds_dm", "bonds_em",
+        "equity_dm", "equity_em_alts",
+    ]
     return [groups[k] for k in order if k in groups]
 
 
@@ -204,7 +223,7 @@ Return ONLY valid JSON (no markdown, no code fences, no explanation) with the st
     tool_def = {
         "type": "web_search_20250305",
         "name": "web_search",
-        "max_uses": 10,
+        "max_uses": 5,
     }
 
     last_error = None
@@ -339,9 +358,16 @@ async def research_defaults(
         "After researching, return ONLY valid JSON and nothing else — no markdown fences, no explanation, just the JSON object."
     )
 
-    # Split into batches to avoid rate limits (30K tokens/min on basic tier)
+    # Split into small batches to avoid rate limits (30K tokens/min on basic tier).
+    # Web search results count as input tokens, so each batch must be small.
     batches = _split_into_batches(data_sources)
-    batch_labels = ["Macro DM", "Macro Japan+EM", "Bonds", "Equity+Alts"]
+    batch_labels = [
+        "Macro US", "Macro Eurozone", "Macro Japan", "Macro EM",
+        "Bonds DM", "Bonds EM", "Equity DM", "Equity EM+Alts",
+    ]
+
+    # Delay between batches (seconds). Must be >60s to fully reset the per-minute token window.
+    BATCH_DELAY = 65
 
     try:
         import anthropic
@@ -365,8 +391,8 @@ async def research_defaults(
 
             # Wait between batches to respect rate limits (skip after last batch)
             if i < len(batches) - 1:
-                print(f"[admin] Batch {i + 1} complete. Waiting 35s before next batch...")
-                time.sleep(35)
+                print(f"[admin] Batch {i + 1} complete. Waiting {BATCH_DELAY}s before next batch...")
+                time.sleep(BATCH_DELAY)
 
         print(f"[admin] All batches complete. Total suggestions: {len(ai_suggestions)}")
 
