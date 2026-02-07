@@ -2,13 +2,18 @@
 Default values endpoint.
 
 Exposes all default input values for the frontend.
+Loads dynamically from Supabase if available, with fallback to hardcoded values.
 """
 
+import os
+import time
+import json
+from typing import Optional, Dict, Any
 from fastapi import APIRouter
 
 router = APIRouter()
 
-# Mirror INPUT_DEFAULTS from app.py - single source of truth
+# ---- Hardcoded fallback defaults (original source of truth) ----
 INPUT_DEFAULTS = {
     "macro": {
         "us": {
@@ -125,6 +130,67 @@ INPUT_DEFAULTS = {
     },
 }
 
+# ---- In-memory cache for Supabase defaults ----
+_cached_defaults: Optional[Dict[str, Any]] = None
+_cache_timestamp: float = 0.0
+_CACHE_TTL_SECONDS = 300  # 5 minutes
+
+
+def _get_supabase_client():
+    """Get a Supabase client for fetching defaults."""
+    try:
+        from supabase import create_client
+        url = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+        key = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+        if url and key:
+            return create_client(url, key)
+    except Exception as e:
+        print(f"[defaults] Could not create Supabase client: {e}")
+    return None
+
+
+def invalidate_defaults_cache():
+    """Invalidate the in-memory cache so next request fetches fresh data."""
+    global _cached_defaults, _cache_timestamp
+    _cached_defaults = None
+    _cache_timestamp = 0.0
+
+
+def get_current_defaults() -> Dict[str, Any]:
+    """
+    Get the current defaults, loading from Supabase if available.
+    Falls back to hardcoded INPUT_DEFAULTS.
+    Results are cached in memory with a 5-minute TTL.
+    """
+    global _cached_defaults, _cache_timestamp
+
+    now = time.time()
+
+    # Return cached if still valid
+    if _cached_defaults is not None and (now - _cache_timestamp) < _CACHE_TTL_SECONDS:
+        return _cached_defaults
+
+    # Try loading from Supabase
+    try:
+        client = _get_supabase_client()
+        if client:
+            result = client.table("default_assumptions").select("defaults_json").eq("id", 1).execute()
+            if result.data and len(result.data) > 0:
+                db_defaults = result.data[0]["defaults_json"]
+                if isinstance(db_defaults, str):
+                    db_defaults = json.loads(db_defaults)
+                _cached_defaults = db_defaults
+                _cache_timestamp = now
+                print("[defaults] Loaded defaults from Supabase")
+                return _cached_defaults
+    except Exception as e:
+        print(f"[defaults] Could not load from Supabase, using hardcoded: {e}")
+
+    # Fallback to hardcoded
+    _cached_defaults = INPUT_DEFAULTS
+    _cache_timestamp = now
+    return _cached_defaults
+
 
 @router.get("/all")
 async def get_all_defaults():
@@ -133,8 +199,10 @@ async def get_all_defaults():
 
     Returns the complete set of default assumptions used when no override is specified.
     Values are in percentage points (e.g., 2.29 means 2.29%).
+
+    Loads dynamically from Supabase if available, with fallback to hardcoded values.
     """
-    return INPUT_DEFAULTS
+    return get_current_defaults()
 
 
 @router.get("/macro/{region}")
@@ -145,10 +213,11 @@ async def get_macro_defaults(region: str):
     Parameters:
         region: us, eurozone, japan, or em
     """
+    defaults = get_current_defaults()
     region_lower = region.lower()
-    if region_lower not in INPUT_DEFAULTS["macro"]:
+    if region_lower not in defaults["macro"]:
         return {"error": f"Unknown region: {region}. Valid: us, eurozone, japan, em"}
-    return INPUT_DEFAULTS["macro"][region_lower]
+    return defaults["macro"][region_lower]
 
 
 @router.get("/bonds/{bond_type}")
@@ -159,9 +228,10 @@ async def get_bond_defaults(bond_type: str):
     Parameters:
         bond_type: global, hy, or em
     """
-    if bond_type not in INPUT_DEFAULTS["bonds"]:
+    defaults = get_current_defaults()
+    if bond_type not in defaults["bonds"]:
         return {"error": f"Unknown bond type: {bond_type}. Valid: global, hy, em"}
-    return INPUT_DEFAULTS["bonds"][bond_type]
+    return defaults["bonds"][bond_type]
 
 
 @router.get("/equity/{region}")
@@ -172,6 +242,7 @@ async def get_equity_defaults(region: str):
     Parameters:
         region: us, europe, japan, or em
     """
-    if region not in INPUT_DEFAULTS["equity"]:
+    defaults = get_current_defaults()
+    if region not in defaults["equity"]:
         return {"error": f"Unknown region: {region}. Valid: us, europe, japan, em"}
-    return INPUT_DEFAULTS["equity"][region]
+    return defaults["equity"][region]

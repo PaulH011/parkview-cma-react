@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -16,9 +17,48 @@ import { ActiveOverridesSummary } from '@/components/results/ActiveOverridesSumm
 import { ScenarioManager } from '@/components/scenarios/ScenarioManager';
 import { useCalculation } from '@/hooks/useCalculation';
 import { useInputStore } from '@/stores/inputStore';
+import { useAuthStore } from '@/stores/authStore';
+import { getLastRefresh } from '@/lib/api';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, AlertTriangle, X } from 'lucide-react';
+
+/**
+ * Determine the most recent calendar quarter-end relative to a given date.
+ * Quarter-end dates: March 31, June 30, September 30, December 31
+ */
+function getMostRecentQuarterEnd(date: Date): Date {
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-based
+
+  // Quarter end months: 2 (Mar), 5 (Jun), 8 (Sep), 11 (Dec)
+  const quarterEndMonths = [2, 5, 8, 11];
+  const quarterEndDays = [31, 30, 30, 31];
+
+  for (let i = quarterEndMonths.length - 1; i >= 0; i--) {
+    const qMonth = quarterEndMonths[i];
+    const qDay = quarterEndDays[i];
+    const qEnd = new Date(year, qMonth, qDay, 23, 59, 59);
+    if (date >= qEnd) {
+      return qEnd;
+    }
+  }
+
+  // If before March 31 of current year, the most recent quarter-end is Dec 31 of previous year
+  return new Date(year - 1, 11, 31, 23, 59, 59);
+}
+
+/**
+ * Get the quarter label (e.g., "Q4 2025") for a given quarter-end date.
+ */
+function getQuarterLabel(quarterEnd: Date): string {
+  const month = quarterEnd.getMonth();
+  const year = quarterEnd.getFullYear();
+  if (month === 2) return `Q1 ${year}`;
+  if (month === 5) return `Q2 ${year}`;
+  if (month === 8) return `Q3 ${year}`;
+  return `Q4 ${year}`;
+}
 
 export default function Dashboard() {
   const { results, baseResults, isLoading, error, calculate } = useCalculation();
@@ -29,6 +69,55 @@ export default function Dashboard() {
   const absoluteReturn = useInputStore((state) => state.absoluteReturn);
   const advancedMode = useInputStore((state) => state.advancedMode);
   const setAdvancedMode = useInputStore((state) => state.setAdvancedMode);
+  const fetchDefaultsFromAPI = useInputStore((state) => state.fetchDefaultsFromAPI);
+  const isSuperUser = useAuthStore((state) => state.isSuperUser);
+
+  // Quarterly refresh banner state
+  const [showRefreshBanner, setShowRefreshBanner] = useState(false);
+  const [bannerQuarter, setBannerQuarter] = useState('');
+  const [lastRefreshDate, setLastRefreshDate] = useState<string | null>(null);
+
+  // Fetch dynamic defaults from API on mount
+  useEffect(() => {
+    fetchDefaultsFromAPI();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Check quarterly refresh banner (super user only)
+  useEffect(() => {
+    if (!isSuperUser) {
+      setShowRefreshBanner(false);
+      return;
+    }
+
+    const checkQuarterlyRefresh = async () => {
+      try {
+        const { last_refresh } = await getLastRefresh();
+        setLastRefreshDate(last_refresh);
+
+        const now = new Date();
+        const mostRecentQEnd = getMostRecentQuarterEnd(now);
+        const quarterLabel = getQuarterLabel(mostRecentQEnd);
+
+        if (!last_refresh) {
+          // No refresh has ever been done
+          setShowRefreshBanner(true);
+          setBannerQuarter(quarterLabel);
+          return;
+        }
+
+        const lastRefreshDt = new Date(last_refresh);
+        if (lastRefreshDt < mostRecentQEnd) {
+          // Last refresh was before the most recent quarter-end
+          setShowRefreshBanner(true);
+          setBannerQuarter(quarterLabel);
+        }
+      } catch {
+        // Non-critical - just don't show the banner
+      }
+    };
+
+    checkQuarterlyRefresh();
+  }, [isSuperUser]);
 
   // Recalculate when inputs change (debounced)
   useEffect(() => {
@@ -39,7 +128,42 @@ export default function Dashboard() {
   }, [macro, bonds, equity, absoluteReturn, baseCurrency]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="grid grid-cols-12 gap-6">
+    <div className="space-y-6">
+      {/* Quarterly Refresh Banner (super user only) */}
+      {showRefreshBanner && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">
+                  {bannerQuarter} has ended. Default assumptions were last refreshed
+                  {lastRefreshDate
+                    ? ` on ${new Date(lastRefreshDate).toLocaleDateString()}`
+                    : ' never'}
+                  . Time to review for quarterly updates.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link href="/admin/refresh">
+                <Button size="sm" variant="default">
+                  Review Now
+                </Button>
+              </Link>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowRefreshBanner(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-12 gap-6">
       {/* Left Panel: Inputs */}
       <div className="col-span-12 lg:col-span-4">
         <Card className="sticky top-20">
@@ -193,6 +317,7 @@ export default function Dashboard() {
           </Card>
         )}
       </div>
+    </div>
     </div>
   );
 }

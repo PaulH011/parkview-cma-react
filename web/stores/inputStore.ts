@@ -1,9 +1,13 @@
 /**
  * Zustand store for managing input state
+ *
+ * Supports dynamic defaults loaded from API (Supabase-backed)
+ * with fallback to hardcoded constants.
  */
 
 import { create } from 'zustand';
 import { DEFAULT_INPUTS, DIRECT_FORECAST_KEYS } from '@/lib/constants';
+import { getDefaults } from '@/lib/api';
 import type {
   MacroInputs,
   MacroRegion,
@@ -14,6 +18,7 @@ import type {
   AbsoluteReturnInputs,
   BaseCurrency,
   Overrides,
+  AllInputs,
 } from '@/lib/types';
 
 interface InputState {
@@ -24,6 +29,9 @@ interface InputState {
   absoluteReturn: AbsoluteReturnInputs;
   baseCurrency: BaseCurrency;
 
+  // Dynamic defaults fetched from API (null until loaded)
+  fetchedDefaults: AllInputs | null;
+
   // UI state
   advancedMode: boolean;
 
@@ -32,6 +40,8 @@ interface InputState {
   _dirtyMacroFields: Record<string, boolean>;
 
   // Actions
+  fetchDefaultsFromAPI: () => Promise<void>;
+  getActiveDefaults: () => AllInputs;
   setMacroValue: (region: MacroRegion, key: keyof MacroInputs, value: number) => void;
   syncMacroComputed: (region: MacroRegion, computedValues: Partial<Record<string, number>>) => void;
   isMacroDirty: (region: MacroRegion, key: keyof MacroInputs) => boolean;
@@ -53,14 +63,38 @@ function isDifferent(value: number, defaultValue: number, tolerance = 0.001): bo
 }
 
 export const useInputStore = create<InputState>((set, get) => ({
-  // Initialize with defaults
+  // Initialize with hardcoded defaults (will be replaced by fetched defaults)
   macro: { ...DEFAULT_INPUTS.macro },
   bonds: { ...DEFAULT_INPUTS.bonds },
   equity: { ...DEFAULT_INPUTS.equity },
   absoluteReturn: { ...DEFAULT_INPUTS.absolute_return },
   baseCurrency: 'usd',
+  fetchedDefaults: null,
   advancedMode: false,
   _dirtyMacroFields: {},
+
+  fetchDefaultsFromAPI: async () => {
+    try {
+      const defaults = await getDefaults();
+      set({
+        fetchedDefaults: defaults,
+        // Also update current values to the fetched defaults (only if user hasn't customized)
+        macro: { ...defaults.macro },
+        bonds: { ...defaults.bonds },
+        equity: { ...defaults.equity },
+        absoluteReturn: { ...defaults.absolute_return },
+        _dirtyMacroFields: {},
+      });
+    } catch (err) {
+      console.warn('[inputStore] Could not fetch defaults from API, using hardcoded:', err);
+      // Keep using DEFAULT_INPUTS as fallback
+    }
+  },
+
+  getActiveDefaults: () => {
+    const state = get();
+    return state.fetchedDefaults ?? DEFAULT_INPUTS;
+  },
 
   setMacroValue: (region, key, value) => {
     const isDirect = (DIRECT_FORECAST_KEYS as readonly string[]).includes(key as string);
@@ -148,14 +182,16 @@ export const useInputStore = create<InputState>((set, get) => ({
 
   setAdvancedMode: (enabled) => set({ advancedMode: enabled }),
 
-  resetToDefaults: () =>
+  resetToDefaults: () => {
+    const defaults = get().getActiveDefaults();
     set({
-      macro: { ...DEFAULT_INPUTS.macro },
-      bonds: { ...DEFAULT_INPUTS.bonds },
-      equity: { ...DEFAULT_INPUTS.equity },
-      absoluteReturn: { ...DEFAULT_INPUTS.absolute_return },
+      macro: { ...defaults.macro },
+      bonds: { ...defaults.bonds },
+      equity: { ...defaults.equity },
+      absoluteReturn: { ...defaults.absolute_return },
       _dirtyMacroFields: {},
-    }),
+    });
+  },
 
   loadScenario: (overrides) => {
     const state = get();
@@ -227,6 +263,7 @@ export const useInputStore = create<InputState>((set, get) => ({
 
   getOverrides: () => {
     const state = get();
+    const defaults = state.getActiveDefaults();
     const overrides: Overrides = {};
 
     // Check macro differences
@@ -234,7 +271,7 @@ export const useInputStore = create<InputState>((set, get) => ({
 
     for (const region of ['us', 'eurozone', 'japan', 'em'] as MacroRegion[]) {
       const current = state.macro[region];
-      const defaults = DEFAULT_INPUTS.macro[region];
+      const regionDefaults = defaults.macro[region];
       const regionOverrides: Partial<MacroInputs> = {};
 
       for (const [key, value] of Object.entries(current)) {
@@ -244,8 +281,6 @@ export const useInputStore = create<InputState>((set, get) => ({
           // Direct forecast fields: only send if user explicitly set them
           const isDirty = state._dirtyMacroFields[`${region}.${key}`];
           if (isDirty) {
-            // Always send dirty direct fields (even if value matches default,
-            // user explicitly chose this value)
             if (key === 'my_ratio') {
               regionOverrides[key as keyof MacroInputs] = value as number;
             } else {
@@ -254,7 +289,7 @@ export const useInputStore = create<InputState>((set, get) => ({
           }
         } else {
           // Building block fields: use difference-from-default logic
-          const defaultValue = defaults[key as keyof MacroInputs];
+          const defaultValue = regionDefaults[key as keyof MacroInputs];
           if (isDifferent(value as number, defaultValue as number)) {
             if (key === 'my_ratio') {
               regionOverrides[key as keyof MacroInputs] = value as number;
@@ -274,12 +309,12 @@ export const useInputStore = create<InputState>((set, get) => ({
     // Check bond differences
     for (const type of ['global', 'hy', 'em'] as BondType[]) {
       const current = state.bonds[type];
-      const defaults = DEFAULT_INPUTS.bonds[type];
+      const bondDefaults = defaults.bonds[type];
       const bondOverrides: Partial<BondInputs> = {};
 
       for (const [key, value] of Object.entries(current)) {
         if (value === undefined) continue;
-        const defaultValue = defaults[key as keyof BondInputs];
+        const defaultValue = bondDefaults[key as keyof BondInputs];
         if (defaultValue !== undefined && isDifferent(value as number, defaultValue as number)) {
           // Duration stays as-is, others convert to decimal
           if (key === 'duration') {
@@ -299,11 +334,11 @@ export const useInputStore = create<InputState>((set, get) => ({
     // Check equity differences
     for (const region of ['us', 'europe', 'japan', 'em'] as EquityRegion[]) {
       const current = state.equity[region];
-      const defaults = DEFAULT_INPUTS.equity[region];
+      const eqDefaults = defaults.equity[region];
       const equityOverrides: Partial<EquityInputs> = {};
 
       for (const [key, value] of Object.entries(current)) {
-        const defaultValue = defaults[key as keyof EquityInputs];
+        const defaultValue = eqDefaults[key as keyof EquityInputs];
         if (isDifferent(value as number, defaultValue as number)) {
           equityOverrides[key as keyof EquityInputs] = (value as number) / 100;
         }
@@ -318,7 +353,7 @@ export const useInputStore = create<InputState>((set, get) => ({
     // Check absolute return differences
     const arOverrides: Partial<AbsoluteReturnInputs> = {};
     for (const [key, value] of Object.entries(state.absoluteReturn)) {
-      const defaultValue = DEFAULT_INPUTS.absolute_return[key as keyof AbsoluteReturnInputs];
+      const defaultValue = defaults.absolute_return[key as keyof AbsoluteReturnInputs];
       if (isDifferent(value, defaultValue)) {
         if (key === 'trading_alpha') {
           arOverrides[key as keyof AbsoluteReturnInputs] = value / 100;

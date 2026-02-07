@@ -1,0 +1,666 @@
+{
+  "macro.us.inflation_forecast": {
+    "display_name": "US Inflation Forecast",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Blended forecast: 30% current CPI + 70% long-term target. Based on BLS CPI-U YoY and Fed long-run inflation objective.",
+    "lookup_hint": "US expected inflation rate blended from current CPI YoY and Fed 2% target"
+  },
+  "macro.us.rgdp_growth": {
+    "display_name": "US Real GDP Growth",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Sum of population growth and productivity growth. BEA GDP data, Census population projections.",
+    "lookup_hint": "US expected real GDP growth rate"
+  },
+  "macro.us.tbill_forecast": {
+    "display_name": "US T-Bill Forecast",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Blended: 30% current 3-month T-Bill + 70% equilibrium rate. Federal Reserve data (FRED series DTB3).",
+    "lookup_hint": "US 3-month Treasury Bill rate forecast"
+  },
+  "macro.us.population_growth": {
+    "display_name": "US Population Growth",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "US Census Bureau population projections. Also available via World Bank.",
+    "lookup_hint": "Current US annual population growth rate"
+  },
+  "macro.us.productivity_growth": {
+    "display_name": "US Productivity Growth",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "BLS nonfarm business sector labor productivity growth. FRED series PRS85006092.",
+    "lookup_hint": "US labor productivity growth rate annual"
+  },
+  "macro.us.my_ratio": {
+    "display_name": "US MY Ratio",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "x",
+    "source_description": "Misery index ratio. Ratio of unemployment to inflation used for equilibrium rate estimation.",
+    "lookup_hint": "US misery ratio (unemployment/inflation)"
+  },
+  "macro.us.current_headline_inflation": {
+    "display_name": "US Current Headline CPI (YoY)",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "US Bureau of Labor Statistics CPI-U YoY. Also available on FRED (series CPIAUCSL).",
+    "lookup_hint": "Latest US CPI YoY annual rate"
+  },
+  "macro.us.long_term_inflation": {
+    "display_name": "US Long-Term Inflation Target",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Federal Reserve long-run inflation objective (PCE-based, typically 2%).",
+    "lookup_hint": "Federal Reserve long-run inflation target"
+  },
+  "macro.us.current_tbill": {
+    "display_name": "US Current 3-Month T-Bill",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "US Treasury 3-month T-Bill rate. FRED series DTB3.",
+    "lookup_hint": "Current US 3-month Treasury Bill yield"
+  },
+  "macro.us.country_factor": {
+    "display_name": "US Country Factor",
+    "category": "Macro",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Country-specific adjustment factor for equilibrium rate estimation. US is the base (0%).",
+    "lookup_hint": "US country factor adjustment for T-Bill equilibrium (typically 0)"
+  },
+  "macro.eurozone.inflation_forecast": {
+    "display_name": "Eurozone Inflation Forecast",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "Blended: 30% current HICP + 70% ECB target. Eurostat HICP data.",
+    "lookup_hint": "Eurozone expected inflation rate"
+  },
+  "macro.eurozone.rgdp_growth": {
+    "display_name": "Eurozone Real GDP Growth",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "Eurostat GDP data, population from Eurostat demographic projections.",
+    "lookup_hint": "Eurozone expected real GDP growth rate"
+  },
+  "macro.eurozone.tbill_forecast": {
+    "display_name": "Eurozone Short Rate Forecast",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "ECB deposit facility rate and 3-month Euribor. ECB Statistical Data Warehouse.",
+    "lookup_hint": "Eurozone short-term interest rate forecast (ECB deposit rate)"
+  },
+  "macro.eurozone.population_growth": {
+    "display_name": "Eurozone Population Growth",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "Eurostat population projections for Euro area.",
+    "lookup_hint": "Eurozone annual population growth rate"
+  },
+  "macro.eurozone.productivity_growth": {
+    "display_name": "Eurozone Productivity Growth",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "Eurostat and OECD labor productivity data for Euro area.",
+    "lookup_hint": "Eurozone labor productivity growth rate"
+  },
+  "macro.eurozone.my_ratio": {
+    "display_name": "Eurozone MY Ratio",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "x",
+    "source_description": "Misery index ratio for Eurozone.",
+    "lookup_hint": "Eurozone misery ratio"
+  },
+  "macro.eurozone.current_headline_inflation": {
+    "display_name": "Eurozone Current HICP (YoY)",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "Eurostat Harmonised Index of Consumer Prices YoY for Euro area.",
+    "lookup_hint": "Latest Eurozone HICP YoY inflation rate"
+  },
+  "macro.eurozone.long_term_inflation": {
+    "display_name": "Eurozone Long-Term Inflation Target",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "ECB inflation target (below, but close to, 2%).",
+    "lookup_hint": "ECB long-term inflation target"
+  },
+  "macro.eurozone.current_tbill": {
+    "display_name": "Eurozone Current Short Rate",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "ECB deposit facility rate or 3-month Euribor.",
+    "lookup_hint": "Current ECB deposit facility rate or 3-month Euribor"
+  },
+  "macro.eurozone.country_factor": {
+    "display_name": "Eurozone Country Factor",
+    "category": "Macro",
+    "subcategory": "Eurozone",
+    "unit": "%",
+    "source_description": "Country-specific adjustment for Eurozone equilibrium rate.",
+    "lookup_hint": "Eurozone country factor adjustment"
+  },
+  "macro.japan.inflation_forecast": {
+    "display_name": "Japan Inflation Forecast",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Blended: 30% current CPI + 70% BOJ target. Japan Statistics Bureau CPI.",
+    "lookup_hint": "Japan expected inflation rate"
+  },
+  "macro.japan.rgdp_growth": {
+    "display_name": "Japan Real GDP Growth",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Cabinet Office GDP data, National Institute of Population and Social Security Research projections.",
+    "lookup_hint": "Japan expected real GDP growth rate"
+  },
+  "macro.japan.tbill_forecast": {
+    "display_name": "Japan Short Rate Forecast",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "BOJ policy rate and Japanese Government Bond yields. Bank of Japan statistics.",
+    "lookup_hint": "Japan short-term interest rate forecast (BOJ policy rate)"
+  },
+  "macro.japan.population_growth": {
+    "display_name": "Japan Population Growth",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Japan National Institute of Population and Social Security Research.",
+    "lookup_hint": "Japan annual population growth rate"
+  },
+  "macro.japan.productivity_growth": {
+    "display_name": "Japan Productivity Growth",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Japan Productivity Center and OECD data.",
+    "lookup_hint": "Japan labor productivity growth rate"
+  },
+  "macro.japan.my_ratio": {
+    "display_name": "Japan MY Ratio",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "x",
+    "source_description": "Misery index ratio for Japan.",
+    "lookup_hint": "Japan misery ratio"
+  },
+  "macro.japan.current_headline_inflation": {
+    "display_name": "Japan Current CPI (YoY)",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Japan Statistics Bureau Consumer Price Index YoY.",
+    "lookup_hint": "Latest Japan CPI YoY inflation rate"
+  },
+  "macro.japan.long_term_inflation": {
+    "display_name": "Japan Long-Term Inflation Target",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Bank of Japan price stability target (2%).",
+    "lookup_hint": "BOJ long-term inflation target"
+  },
+  "macro.japan.current_tbill": {
+    "display_name": "Japan Current Short Rate",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "BOJ policy rate / overnight call rate. Bank of Japan statistics.",
+    "lookup_hint": "Current Bank of Japan policy rate"
+  },
+  "macro.japan.country_factor": {
+    "display_name": "Japan Country Factor",
+    "category": "Macro",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Country-specific adjustment for Japan equilibrium rate.",
+    "lookup_hint": "Japan country factor adjustment"
+  },
+  "macro.em.inflation_forecast": {
+    "display_name": "EM Inflation Forecast",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Blended EM inflation. IMF World Economic Outlook, weighted average of major EM economies.",
+    "lookup_hint": "Emerging markets expected inflation rate"
+  },
+  "macro.em.rgdp_growth": {
+    "display_name": "EM Real GDP Growth",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "IMF WEO EM GDP growth forecasts. Weighted average of major EM economies.",
+    "lookup_hint": "Emerging markets expected real GDP growth rate"
+  },
+  "macro.em.tbill_forecast": {
+    "display_name": "EM Short Rate Forecast",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Weighted average of major EM policy rates. IMF, central bank data.",
+    "lookup_hint": "Emerging markets short-term interest rate forecast"
+  },
+  "macro.em.population_growth": {
+    "display_name": "EM Population Growth",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "UN Population Division, World Bank data for emerging economies.",
+    "lookup_hint": "Emerging markets annual population growth rate"
+  },
+  "macro.em.productivity_growth": {
+    "display_name": "EM Productivity Growth",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "World Bank, IMF, and Conference Board Total Economy Database.",
+    "lookup_hint": "Emerging markets labor productivity growth rate"
+  },
+  "macro.em.my_ratio": {
+    "display_name": "EM MY Ratio",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "x",
+    "source_description": "Misery index ratio for EM aggregate.",
+    "lookup_hint": "Emerging markets misery ratio"
+  },
+  "macro.em.current_headline_inflation": {
+    "display_name": "EM Current Headline Inflation",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Weighted average of major EM CPI rates. IMF, Trading Economics.",
+    "lookup_hint": "Latest emerging markets headline CPI YoY"
+  },
+  "macro.em.long_term_inflation": {
+    "display_name": "EM Long-Term Inflation Target",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Weighted average of EM central bank inflation targets.",
+    "lookup_hint": "Emerging markets weighted average inflation target"
+  },
+  "macro.em.current_tbill": {
+    "display_name": "EM Current Short Rate",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Weighted average of major EM policy rates (China, India, Brazil, etc.).",
+    "lookup_hint": "Current emerging markets weighted policy rate"
+  },
+  "macro.em.country_factor": {
+    "display_name": "EM Country Factor",
+    "category": "Macro",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Country-specific adjustment for EM equilibrium rate.",
+    "lookup_hint": "Emerging markets country factor adjustment"
+  },
+  "bonds.global.current_yield": {
+    "display_name": "Global Bonds Current Yield",
+    "category": "Bonds",
+    "subcategory": "Global",
+    "unit": "%",
+    "source_description": "Bloomberg Global Aggregate Index yield-to-worst, or iShares AGG ETF yield.",
+    "lookup_hint": "Current Bloomberg Global Aggregate Bond Index yield"
+  },
+  "bonds.global.duration": {
+    "display_name": "Global Bonds Duration",
+    "category": "Bonds",
+    "subcategory": "Global",
+    "unit": "years",
+    "source_description": "Bloomberg Global Aggregate Index modified duration.",
+    "lookup_hint": "Bloomberg Global Aggregate Bond Index duration in years"
+  },
+  "bonds.global.fair_term_premium": {
+    "display_name": "Global Bonds Fair Term Premium",
+    "category": "Bonds",
+    "subcategory": "Global",
+    "unit": "%",
+    "source_description": "Estimated long-run fair value term premium for global investment-grade bonds.",
+    "lookup_hint": "Fair value term premium for global government bonds"
+  },
+  "bonds.global.current_term_premium": {
+    "display_name": "Global Bonds Current Term Premium",
+    "category": "Bonds",
+    "subcategory": "Global",
+    "unit": "%",
+    "source_description": "Current term premium estimate. Adrian, Crump, Moench model (NY Fed) or equivalent.",
+    "lookup_hint": "Current US Treasury term premium estimate (ACM model)"
+  },
+  "bonds.hy.current_yield": {
+    "display_name": "High Yield Current Yield",
+    "category": "Bonds",
+    "subcategory": "High Yield",
+    "unit": "%",
+    "source_description": "ICE BofA US High Yield Index yield-to-worst. FRED series BAMLH0A0HYM2EY.",
+    "lookup_hint": "Current US high yield bond index yield to worst"
+  },
+  "bonds.hy.duration": {
+    "display_name": "High Yield Duration",
+    "category": "Bonds",
+    "subcategory": "High Yield",
+    "unit": "years",
+    "source_description": "ICE BofA US High Yield Index effective duration.",
+    "lookup_hint": "US high yield bond index duration"
+  },
+  "bonds.hy.credit_spread": {
+    "display_name": "High Yield Credit Spread",
+    "category": "Bonds",
+    "subcategory": "High Yield",
+    "unit": "%",
+    "source_description": "ICE BofA US High Yield OAS. FRED series BAMLH0A0HYM2.",
+    "lookup_hint": "Current US high yield option-adjusted spread"
+  },
+  "bonds.hy.fair_credit_spread": {
+    "display_name": "High Yield Fair Credit Spread",
+    "category": "Bonds",
+    "subcategory": "High Yield",
+    "unit": "%",
+    "source_description": "Long-run average HY OAS. Historical median ~450-500bps.",
+    "lookup_hint": "Long-term average US high yield credit spread"
+  },
+  "bonds.hy.default_rate": {
+    "display_name": "High Yield Default Rate",
+    "category": "Bonds",
+    "subcategory": "High Yield",
+    "unit": "%",
+    "source_description": "Moody's trailing 12-month speculative-grade default rate.",
+    "lookup_hint": "Current US high yield trailing 12-month default rate"
+  },
+  "bonds.hy.recovery_rate": {
+    "display_name": "High Yield Recovery Rate",
+    "category": "Bonds",
+    "subcategory": "High Yield",
+    "unit": "%",
+    "source_description": "Moody's average speculative-grade recovery rate. Historical average ~40%.",
+    "lookup_hint": "Average US high yield bond recovery rate"
+  },
+  "bonds.em.current_yield": {
+    "display_name": "EM Bonds Current Yield",
+    "category": "Bonds",
+    "subcategory": "EM Bonds",
+    "unit": "%",
+    "source_description": "JPMorgan EMBI Global Diversified yield. Bloomberg or JPMorgan data.",
+    "lookup_hint": "Current JPMorgan EMBI Global Diversified yield"
+  },
+  "bonds.em.duration": {
+    "display_name": "EM Bonds Duration",
+    "category": "Bonds",
+    "subcategory": "EM Bonds",
+    "unit": "years",
+    "source_description": "JPMorgan EMBI Global Diversified modified duration.",
+    "lookup_hint": "JPMorgan EMBI Global Diversified duration"
+  },
+  "bonds.em.fair_term_premium": {
+    "display_name": "EM Bonds Fair Term Premium",
+    "category": "Bonds",
+    "subcategory": "EM Bonds",
+    "unit": "%",
+    "source_description": "Estimated fair value term/credit premium for EM sovereign bonds.",
+    "lookup_hint": "Fair value term premium for EM sovereign bonds"
+  },
+  "bonds.em.current_term_premium": {
+    "display_name": "EM Bonds Current Term Premium",
+    "category": "Bonds",
+    "subcategory": "EM Bonds",
+    "unit": "%",
+    "source_description": "Current EM term/spread premium estimate over risk-free.",
+    "lookup_hint": "Current EM bond spread over US Treasuries"
+  },
+  "bonds.em.default_rate": {
+    "display_name": "EM Bonds Default Rate",
+    "category": "Bonds",
+    "subcategory": "EM Bonds",
+    "unit": "%",
+    "source_description": "Historical EM sovereign default rate. Moody's sovereign default studies.",
+    "lookup_hint": "EM sovereign bond default rate"
+  },
+  "bonds.em.recovery_rate": {
+    "display_name": "EM Bonds Recovery Rate",
+    "category": "Bonds",
+    "subcategory": "EM Bonds",
+    "unit": "%",
+    "source_description": "Historical EM sovereign recovery rate. Moody's data, typically ~50-60%.",
+    "lookup_hint": "EM sovereign bond recovery rate"
+  },
+  "equity.us.dividend_yield": {
+    "display_name": "US Equity Dividend Yield",
+    "category": "Equity",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "S&P 500 trailing dividend yield. Available from S&P, Bloomberg, multpl.com.",
+    "lookup_hint": "Current S&P 500 dividend yield"
+  },
+  "equity.us.current_caey": {
+    "display_name": "US Equity Current CAEY",
+    "category": "Equity",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "S&P 500 cyclically adjusted earnings yield (inverse of Shiller CAPE). multpl.com or RAFI.",
+    "lookup_hint": "Current S&P 500 cyclically adjusted earnings yield (1/CAPE)"
+  },
+  "equity.us.fair_caey": {
+    "display_name": "US Equity Fair CAEY",
+    "category": "Equity",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Long-run average CAEY for US equities. Historical CAPE inverse average.",
+    "lookup_hint": "Long-term average US equity cyclically adjusted earnings yield"
+  },
+  "equity.us.real_eps_growth": {
+    "display_name": "US Real EPS Growth",
+    "category": "Equity",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Long-run real earnings per share growth for S&P 500. Based on GDP per capita growth.",
+    "lookup_hint": "Long-run US real earnings per share growth rate"
+  },
+  "equity.us.regional_eps_growth": {
+    "display_name": "US Regional EPS Growth",
+    "category": "Equity",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Regional equity dilution/accretion adjustment. Research Affiliates methodology.",
+    "lookup_hint": "US equity regional dilution-adjusted EPS growth"
+  },
+  "equity.europe.dividend_yield": {
+    "display_name": "Europe Equity Dividend Yield",
+    "category": "Equity",
+    "subcategory": "Europe",
+    "unit": "%",
+    "source_description": "MSCI Europe dividend yield. Bloomberg, MSCI factsheets.",
+    "lookup_hint": "Current MSCI Europe dividend yield"
+  },
+  "equity.europe.current_caey": {
+    "display_name": "Europe Equity Current CAEY",
+    "category": "Equity",
+    "subcategory": "Europe",
+    "unit": "%",
+    "source_description": "MSCI Europe cyclically adjusted earnings yield.",
+    "lookup_hint": "Current MSCI Europe cyclically adjusted earnings yield"
+  },
+  "equity.europe.fair_caey": {
+    "display_name": "Europe Equity Fair CAEY",
+    "category": "Equity",
+    "subcategory": "Europe",
+    "unit": "%",
+    "source_description": "Long-run average CAEY for European equities.",
+    "lookup_hint": "Long-term average European equity cyclically adjusted earnings yield"
+  },
+  "equity.europe.real_eps_growth": {
+    "display_name": "Europe Real EPS Growth",
+    "category": "Equity",
+    "subcategory": "Europe",
+    "unit": "%",
+    "source_description": "Long-run real EPS growth for European equities.",
+    "lookup_hint": "Long-run European real earnings per share growth rate"
+  },
+  "equity.europe.regional_eps_growth": {
+    "display_name": "Europe Regional EPS Growth",
+    "category": "Equity",
+    "subcategory": "Europe",
+    "unit": "%",
+    "source_description": "Regional EPS dilution/accretion adjustment for Europe.",
+    "lookup_hint": "European equity regional dilution-adjusted EPS growth"
+  },
+  "equity.japan.dividend_yield": {
+    "display_name": "Japan Equity Dividend Yield",
+    "category": "Equity",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "MSCI Japan or TOPIX dividend yield. Bloomberg, JPX data.",
+    "lookup_hint": "Current MSCI Japan dividend yield"
+  },
+  "equity.japan.current_caey": {
+    "display_name": "Japan Equity Current CAEY",
+    "category": "Equity",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "MSCI Japan cyclically adjusted earnings yield.",
+    "lookup_hint": "Current MSCI Japan cyclically adjusted earnings yield"
+  },
+  "equity.japan.fair_caey": {
+    "display_name": "Japan Equity Fair CAEY",
+    "category": "Equity",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Long-run average CAEY for Japanese equities.",
+    "lookup_hint": "Long-term average Japanese equity cyclically adjusted earnings yield"
+  },
+  "equity.japan.real_eps_growth": {
+    "display_name": "Japan Real EPS Growth",
+    "category": "Equity",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Long-run real EPS growth for Japanese equities.",
+    "lookup_hint": "Long-run Japanese real earnings per share growth rate"
+  },
+  "equity.japan.regional_eps_growth": {
+    "display_name": "Japan Regional EPS Growth",
+    "category": "Equity",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Regional EPS dilution/accretion adjustment for Japan.",
+    "lookup_hint": "Japanese equity regional dilution-adjusted EPS growth"
+  },
+  "equity.em.dividend_yield": {
+    "display_name": "EM Equity Dividend Yield",
+    "category": "Equity",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "MSCI Emerging Markets dividend yield. Bloomberg, MSCI factsheets.",
+    "lookup_hint": "Current MSCI Emerging Markets dividend yield"
+  },
+  "equity.em.current_caey": {
+    "display_name": "EM Equity Current CAEY",
+    "category": "Equity",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "MSCI EM cyclically adjusted earnings yield.",
+    "lookup_hint": "Current MSCI Emerging Markets cyclically adjusted earnings yield"
+  },
+  "equity.em.fair_caey": {
+    "display_name": "EM Equity Fair CAEY",
+    "category": "Equity",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Long-run average CAEY for EM equities.",
+    "lookup_hint": "Long-term average EM equity cyclically adjusted earnings yield"
+  },
+  "equity.em.real_eps_growth": {
+    "display_name": "EM Real EPS Growth",
+    "category": "Equity",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Long-run real EPS growth for EM equities based on GDP per capita growth.",
+    "lookup_hint": "Long-run EM real earnings per share growth rate"
+  },
+  "equity.em.regional_eps_growth": {
+    "display_name": "EM Regional EPS Growth",
+    "category": "Equity",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Regional EPS dilution/accretion adjustment for EM.",
+    "lookup_hint": "EM equity regional dilution-adjusted EPS growth"
+  },
+  "absolute_return.trading_alpha": {
+    "display_name": "Absolute Return Trading Alpha",
+    "category": "Alternatives",
+    "subcategory": "Absolute Return",
+    "unit": "%",
+    "source_description": "Expected hedge fund alpha above factor exposures. Industry estimates.",
+    "lookup_hint": "Expected hedge fund trading alpha"
+  },
+  "absolute_return.beta_market": {
+    "display_name": "Absolute Return Market Beta",
+    "category": "Alternatives",
+    "subcategory": "Absolute Return",
+    "unit": "x",
+    "source_description": "Average hedge fund market beta exposure. HFRI index analysis.",
+    "lookup_hint": "Average hedge fund market beta exposure"
+  },
+  "absolute_return.beta_size": {
+    "display_name": "Absolute Return Size Beta",
+    "category": "Alternatives",
+    "subcategory": "Absolute Return",
+    "unit": "x",
+    "source_description": "Average hedge fund size factor beta. Fama-French factor analysis.",
+    "lookup_hint": "Average hedge fund size factor beta exposure"
+  },
+  "absolute_return.beta_value": {
+    "display_name": "Absolute Return Value Beta",
+    "category": "Alternatives",
+    "subcategory": "Absolute Return",
+    "unit": "x",
+    "source_description": "Average hedge fund value factor beta. Fama-French factor analysis.",
+    "lookup_hint": "Average hedge fund value factor beta exposure"
+  },
+  "absolute_return.beta_profitability": {
+    "display_name": "Absolute Return Profitability Beta",
+    "category": "Alternatives",
+    "subcategory": "Absolute Return",
+    "unit": "x",
+    "source_description": "Average hedge fund profitability factor beta. Fama-French 5-factor model.",
+    "lookup_hint": "Average hedge fund profitability factor beta exposure"
+  },
+  "absolute_return.beta_investment": {
+    "display_name": "Absolute Return Investment Beta",
+    "category": "Alternatives",
+    "subcategory": "Absolute Return",
+    "unit": "x",
+    "source_description": "Average hedge fund investment factor beta. Fama-French 5-factor model.",
+    "lookup_hint": "Average hedge fund investment factor beta exposure"
+  },
+  "absolute_return.beta_momentum": {
+    "display_name": "Absolute Return Momentum Beta",
+    "category": "Alternatives",
+    "subcategory": "Absolute Return",
+    "unit": "x",
+    "source_description": "Average hedge fund momentum factor beta. Carhart 4-factor model.",
+    "lookup_hint": "Average hedge fund momentum factor beta exposure"
+  }
+}

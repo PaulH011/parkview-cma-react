@@ -24,3 +24,9 @@ if _frontend_url:
     _cors_origins.append(_frontend_url)
 
 CORS_ORIGINS = _cors_origins
+
+# Super User
+SUPER_USER_EMAIL = os.getenv("SUPER_USER_EMAIL", "")
+
+# Anthropic Claude (for AI-powered market research)
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")

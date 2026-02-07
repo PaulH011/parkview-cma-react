@@ -15,6 +15,9 @@ interface AuthState {
   isConfigured: boolean;
   error: string | null;
 
+  // Computed
+  isSuperUser: boolean;
+
   // Actions
   initialize: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -23,12 +26,20 @@ interface AuthState {
   clearError: () => void;
 }
 
+const SUPER_USER_EMAIL = process.env.NEXT_PUBLIC_SUPER_USER_EMAIL || '';
+
+function checkIsSuperUser(user: User | null): boolean {
+  if (!user || !SUPER_USER_EMAIL) return false;
+  return user.email?.toLowerCase() === SUPER_USER_EMAIL.toLowerCase();
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
   isLoading: true,
   isConfigured: false,
   error: null,
+  isSuperUser: false,
 
   initialize: async () => {
     const supabase = getSupabaseClient();
@@ -50,17 +61,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
+      const currentUser = session?.user ?? null;
       set({
         session,
-        user: session?.user ?? null,
+        user: currentUser,
         isLoading: false,
+        isSuperUser: checkIsSuperUser(currentUser),
       });
 
       // Listen for auth changes
       supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+        const changedUser = session?.user ?? null;
         set({
           session,
-          user: session?.user ?? null,
+          user: changedUser,
+          isSuperUser: checkIsSuperUser(changedUser),
         });
       });
     } catch (err) {
@@ -92,6 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         session: data.session,
         user: data.user,
         isLoading: false,
+        isSuperUser: checkIsSuperUser(data.user),
       });
 
       return { success: true };
@@ -126,6 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         session: data.session,
         user: data.user,
         isLoading: false,
+        isSuperUser: checkIsSuperUser(data.user),
       });
 
       return { success: true };
@@ -144,7 +161,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       await supabase.auth.signOut();
-      set({ user: null, session: null, isLoading: false });
+      set({ user: null, session: null, isLoading: false, isSuperUser: false });
     } catch (err) {
       console.error('Sign out error:', err);
       set({ isLoading: false });

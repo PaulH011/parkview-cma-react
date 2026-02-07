@@ -18,7 +18,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from api.routes import calculate, scenarios, defaults
+from api.routes import calculate, scenarios, defaults, admin
 from api.config import CORS_ORIGINS, DEBUG
 
 # Create FastAPI app
@@ -69,6 +69,11 @@ app.include_router(
     scenarios.router,
     prefix="/api/scenarios",
     tags=["Scenarios"]
+)
+app.include_router(
+    admin.router,
+    prefix="/api/admin",
+    tags=["Admin"]
 )
 
 

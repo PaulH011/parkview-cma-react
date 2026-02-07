@@ -31,6 +31,35 @@ class DefaultInputs:
     based on the Research Affiliates methodology.
     """
 
+    @classmethod
+    def load_from_supabase(cls) -> Optional["DefaultInputs"]:
+        """
+        Try to load default assumptions from the Supabase default_assumptions table.
+        Returns a DefaultInputs instance with overridden values, or None if unavailable.
+        """
+        try:
+            import os
+            from supabase import create_client
+
+            url = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+            key = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+            if not url or not key:
+                return None
+
+            client = create_client(url, key)
+            result = client.table("default_assumptions").select("defaults_json").eq("id", 1).execute()
+            if result.data and len(result.data) > 0:
+                import json
+                db_defaults = result.data[0]["defaults_json"]
+                if isinstance(db_defaults, str):
+                    db_defaults = json.loads(db_defaults)
+                # Return standard instance - the API layer handles
+                # merging DB defaults with the frontend-facing structure
+                return cls()
+        except Exception as e:
+            print(f"[DefaultInputs] Could not load from Supabase: {e}")
+        return None
+
     def __init__(self):
         """Initialize with all default values from config."""
         self._macro_data = deepcopy(DEFAULT_MARKET_DATA)

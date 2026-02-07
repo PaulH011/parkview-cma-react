@@ -146,3 +146,110 @@ export async function deleteScenario(
     method: 'DELETE',
   });
 }
+
+// ---- Admin Endpoints ----
+
+export interface ResearchComparison {
+  key: string;
+  display_name: string;
+  category: string;
+  subcategory: string;
+  unit: string;
+  current_value: number | null;
+  suggested_value: number | null;
+  abs_diff: number;
+  rel_diff: number;
+  source: string;
+  confidence: 'high' | 'medium' | 'low';
+  notes: string;
+}
+
+export interface ResearchResult {
+  log_id: string;
+  researched_at: string;
+  comparisons: ResearchComparison[];
+  total_assumptions: number;
+  is_test: boolean;
+}
+
+export interface RefreshHistoryEntry {
+  id: string;
+  initiated_at: string;
+  initiated_by: string;
+  suggestions_json: Record<string, any> | null;
+  applied_changes_json: Record<string, any> | null;
+  status: string;
+}
+
+/**
+ * Trigger AI research of current market assumptions (super user only)
+ */
+export async function researchDefaults(
+  userEmail: string,
+  isTest: boolean = false
+): Promise<ResearchResult> {
+  return fetchAPI('/api/admin/research-defaults', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Email': userEmail,
+    },
+    body: JSON.stringify({ is_test: isTest }),
+  });
+}
+
+/**
+ * Apply accepted changes to defaults (super user only)
+ */
+export async function applyDefaults(
+  userEmail: string,
+  acceptedChanges: Array<{ key: string; new_value: number }>,
+  isTest: boolean = false
+): Promise<{ success: boolean; changes_applied: number; updated_at: string; is_test: boolean }> {
+  return fetchAPI('/api/admin/apply-defaults', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Email': userEmail,
+    },
+    body: JSON.stringify({
+      accepted_changes: acceptedChanges,
+      is_test: isTest,
+    }),
+  });
+}
+
+/**
+ * Revert to original hardcoded defaults (super user only)
+ */
+export async function revertDefaults(
+  userEmail: string
+): Promise<{ success: boolean; message: string }> {
+  return fetchAPI('/api/admin/revert-defaults', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Email': userEmail,
+    },
+  });
+}
+
+/**
+ * Get refresh history (super user only)
+ */
+export async function getRefreshHistory(
+  userEmail: string
+): Promise<{ history: RefreshHistoryEntry[] }> {
+  return fetchAPI('/api/admin/refresh-history', {
+    headers: {
+      'X-User-Email': userEmail,
+    },
+  });
+}
+
+/**
+ * Get the date of the last successful refresh (public)
+ */
+export async function getLastRefresh(): Promise<{ last_refresh: string | null }> {
+  return fetchAPI('/api/admin/last-refresh');
+}

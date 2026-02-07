@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useInputStore } from '@/stores/inputStore';
+import { useAuthStore } from '@/stores/authStore';
 import {
   Select,
   SelectContent,
@@ -11,11 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Shield } from 'lucide-react';
 import { AuthButton } from '@/components/auth/AuthButton';
 
 export function Header() {
   const { baseCurrency, setBaseCurrency, resetToDefaults } = useInputStore();
+  const isSuperUser = useAuthStore((state) => state.isSuperUser);
 
   return (
     <header className="border-b bg-white sticky top-0 z-50">
@@ -51,6 +53,15 @@ export function Header() {
           >
             Methodology
           </Link>
+          {isSuperUser && (
+            <Link
+              href="/admin/refresh"
+              className="text-sm font-medium text-amber-600 hover:text-amber-800 flex items-center gap-1"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Controls */}
