@@ -94,6 +94,7 @@ export const DEFAULT_INPUTS: AllInputs = {
       fair_caey: 5.00,
       real_eps_growth: 1.80,
       regional_eps_growth: 1.60,
+      reversion_speed: 100,
     },
     europe: {
       dividend_yield: 3.00,
@@ -101,6 +102,7 @@ export const DEFAULT_INPUTS: AllInputs = {
       fair_caey: 5.50,
       real_eps_growth: 1.20,
       regional_eps_growth: 1.60,
+      reversion_speed: 100,
     },
     japan: {
       dividend_yield: 2.20,
@@ -108,6 +110,7 @@ export const DEFAULT_INPUTS: AllInputs = {
       fair_caey: 5.00,
       real_eps_growth: 0.80,
       regional_eps_growth: 1.60,
+      reversion_speed: 100,
     },
     em: {
       dividend_yield: 3.00,
@@ -115,6 +118,7 @@ export const DEFAULT_INPUTS: AllInputs = {
       fair_caey: 6.00,
       real_eps_growth: 3.00,
       regional_eps_growth: 2.80,
+      reversion_speed: 100,
     },
   },
   absolute_return: {

@@ -167,8 +167,13 @@ class EquityModel:
         Forecast valuation change from CAEY mean reversion.
 
         CAEY (Cyclically Adjusted Earnings Yield) reverts to fair value
-        over 20 years. We average the valuation effect over the 10-year
-        forecast horizon.
+        over 20 years. The reversion speed (lambda) controls how much
+        of the reversion actually occurs:
+          lambda = 1.0 → full reversion (default)
+          lambda = 0.5 → half-speed reversion
+          lambda = 0.0 → no reversion
+
+        Formula: caey_annual_change = (fair/current)^(lambda/20) - 1
 
         Parameters
         ----------
@@ -190,18 +195,22 @@ class EquityModel:
         # Fair CAEY (long-term average)
         fair_caey = inputs.get('fair_caey', TrackedValue(0.05, InputSource.DEFAULT))
 
+        # Reversion speed (lambda): 1.0 = full reversion, 0.0 = no reversion
+        reversion_speed = inputs.get('reversion_speed', TrackedValue(1.0, InputSource.DEFAULT))
+
         # Full reversion period (typically 20 years)
         full_reversion_years = self._params.get('valuation_reversion_years', 20)
 
-        # Calculate annual valuation change
+        # Calculate annual valuation change with dampening
         # If CAEY rises from 4% to 5% over 20 years, that's a price decline
         # CAEY = E/P, so P = E/CAEY
         # If CAEY goes from 4% to 5% (25% increase), P goes down by 20%
-        # Annual effect = (fair/current)^(1/20) - 1
+        # Annual effect = (fair/current)^(lambda/20) - 1
+        # With lambda < 1, reversion is dampened (partial convergence)
 
-        if current_caey.value > 0:
-            # Annual percentage change in CAEY
-            caey_annual_change = (fair_caey.value / current_caey.value) ** (1 / full_reversion_years) - 1
+        if current_caey.value > 0 and reversion_speed.value > 0:
+            # Annual percentage change in CAEY (dampened by reversion_speed)
+            caey_annual_change = (fair_caey.value / current_caey.value) ** (reversion_speed.value / full_reversion_years) - 1
 
             # Valuation return = negative of CAEY change
             # Higher CAEY = lower prices = negative valuation return
@@ -226,6 +235,7 @@ class EquityModel:
             'valuation_change': TrackedValue(avg_valuation, InputSource.COMPUTED),
             'current_caey': current_caey,
             'fair_caey': fair_caey,
+            'reversion_speed': reversion_speed,
             'caey_annual_change': TrackedValue(caey_annual_change, InputSource.COMPUTED),
             'full_reversion_years': TrackedValue(full_reversion_years, InputSource.DEFAULT),
         }

@@ -548,6 +548,15 @@
     "lookup_hint": "US equity regional dilution-adjusted EPS growth",
     "source_url": "https://www.researchaffiliates.com/asset-allocation-interactive"
   },
+  "equity.us.reversion_speed": {
+    "display_name": "US Valuation Reversion Speed",
+    "category": "Equity",
+    "subcategory": "US",
+    "unit": "%",
+    "source_description": "Model parameter controlling CAEY mean-reversion dampening. 100% = full reversion.",
+    "lookup_hint": "Valuation reversion dampener for US equity CAEY mean reversion",
+    "source_url": null
+  },
   "equity.europe.dividend_yield": {
     "display_name": "Europe Equity Dividend Yield",
     "category": "Equity",
@@ -592,6 +601,15 @@
     "source_description": "Regional EPS dilution/accretion adjustment for Europe.",
     "lookup_hint": "European equity regional dilution-adjusted EPS growth",
     "source_url": "https://www.researchaffiliates.com/asset-allocation-interactive"
+  },
+  "equity.europe.reversion_speed": {
+    "display_name": "Europe Valuation Reversion Speed",
+    "category": "Equity",
+    "subcategory": "Europe",
+    "unit": "%",
+    "source_description": "Model parameter controlling CAEY mean-reversion dampening. 100% = full reversion.",
+    "lookup_hint": "Valuation reversion dampener for European equity CAEY mean reversion",
+    "source_url": null
   },
   "equity.japan.dividend_yield": {
     "display_name": "Japan Equity Dividend Yield",
@@ -638,6 +656,15 @@
     "lookup_hint": "Japanese equity regional dilution-adjusted EPS growth",
     "source_url": "https://www.researchaffiliates.com/asset-allocation-interactive"
   },
+  "equity.japan.reversion_speed": {
+    "display_name": "Japan Valuation Reversion Speed",
+    "category": "Equity",
+    "subcategory": "Japan",
+    "unit": "%",
+    "source_description": "Model parameter controlling CAEY mean-reversion dampening. 100% = full reversion.",
+    "lookup_hint": "Valuation reversion dampener for Japanese equity CAEY mean reversion",
+    "source_url": null
+  },
   "equity.em.dividend_yield": {
     "display_name": "EM Equity Dividend Yield",
     "category": "Equity",
@@ -682,6 +709,15 @@
     "source_description": "Regional EPS dilution/accretion adjustment for EM.",
     "lookup_hint": "EM equity regional dilution-adjusted EPS growth",
     "source_url": "https://www.researchaffiliates.com/asset-allocation-interactive"
+  },
+  "equity.em.reversion_speed": {
+    "display_name": "EM Valuation Reversion Speed",
+    "category": "Equity",
+    "subcategory": "Emerging Markets",
+    "unit": "%",
+    "source_description": "Model parameter controlling CAEY mean-reversion dampening. 100% = full reversion.",
+    "lookup_hint": "Valuation reversion dampener for EM equity CAEY mean reversion",
+    "source_url": null
   },
   "absolute_return.trading_alpha": {
     "display_name": "Absolute Return Trading Alpha",

@@ -111,6 +111,43 @@ function EquityRegionInputs({ region }: { region: EquityRegion }) {
               </div>
             </div>
           </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-slate-700">Valuation Reversion</h4>
+            <p className="text-xs text-slate-500">
+              Controls how much CAEY reverts to fair value. 100% = full reversion, lower = dampened.
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Label className="text-xs whitespace-nowrap">Reversion Speed</Label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={inputs.reversion_speed}
+                  onChange={(e) => handleChange('reversion_speed', e.target.value)}
+                  className="flex-1 h-2 accent-slate-700 cursor-pointer"
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={inputs.reversion_speed}
+                  onChange={(e) => handleChange('reversion_speed', e.target.value)}
+                  className="h-8 text-sm w-20"
+                />
+                <span className="text-xs text-slate-500">%</span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Default: {defaults.reversion_speed}% (full mean reversion)
+              </p>
+            </div>
+          </div>
         </>
       )}
     </div>

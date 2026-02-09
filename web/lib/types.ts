@@ -55,6 +55,7 @@ export interface EquityInputs {
   fair_caey: number;
   real_eps_growth: number;
   regional_eps_growth: number;
+  reversion_speed: number;
 }
 
 // Absolute return input structure
