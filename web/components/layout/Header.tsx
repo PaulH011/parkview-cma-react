@@ -34,7 +34,7 @@ export function Header() {
             />
             <div>
               <h1 className="text-xl font-bold text-slate-800">Parkview CMA Tool</h1>
-              <p className="text-xs text-slate-500">Capital Market Expectations</p>
+              <p className="text-xs text-slate-500">Capital Market Assumptions</p>
             </div>
           </Link>
         </div>

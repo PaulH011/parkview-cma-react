@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Parkview CMA Tool",
-  description: "Capital Market Expectations Calculator",
+  description: "Capital Market Assumptions",
 };
 
 export default function RootLayout({
