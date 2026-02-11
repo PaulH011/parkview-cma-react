@@ -62,24 +62,3 @@ class MacroPreviewRequest(BaseModel):
         }
 
 
-class ScenarioCreateRequest(BaseModel):
-    """Request model for saving a scenario."""
-    name: str = Field(description="Scenario name")
-    overrides: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Override values"
-    )
-    base_currency: str = Field(default="usd")
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "My Bull Case",
-                "overrides": {
-                    "macro": {
-                        "us": {"rgdp_growth": 0.02}
-                    }
-                },
-                "base_currency": "usd"
-            }
-        }

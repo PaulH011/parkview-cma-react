@@ -8,7 +8,7 @@ expectations across all asset classes, with support for user overrides.
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
-from .inputs.overrides import OverrideManager, extract_values
+from .inputs.overrides import OverrideManager
 from .models.macro import MacroModel, compute_global_rgdp_growth
 from .models.bonds import GovernmentBondModel, HighYieldBondModel, EMBondModel
 from .models.equities import EquityModel, EquityRegion

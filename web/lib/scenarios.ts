@@ -98,46 +98,6 @@ export async function saveScenario(
 }
 
 /**
- * Update an existing scenario
- */
-export async function updateScenario(
-  userId: string | null,
-  id: string,
-  updates: Partial<SavedScenario>
-): Promise<boolean> {
-  const supabase = getSupabaseClient();
-
-  if (userId && supabase) {
-    try {
-      const { error } = await supabase
-        .from('react_scenarios')
-        .update({
-          name: updates.name,
-          description: updates.description,
-          overrides: updates.overrides,
-          base_currency: updates.base_currency,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error updating scenario:', error);
-        return false;
-      }
-
-      return true;
-    } catch (err) {
-      console.error('Supabase error:', err);
-      return false;
-    }
-  }
-
-  // Local update
-  return updateLocalScenario(id, updates);
-}
-
-/**
  * Delete a scenario
  */
 export async function deleteScenario(userId: string | null, id: string): Promise<boolean> {
@@ -205,21 +165,6 @@ function saveLocalScenario(
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(scenarios));
 
   return newScenario;
-}
-
-function updateLocalScenario(id: string, updates: Partial<SavedScenario>): boolean {
-  const scenarios = getLocalScenariosMap();
-
-  if (!scenarios[id]) return false;
-
-  scenarios[id] = {
-    ...scenarios[id],
-    ...updates,
-    updated_at: new Date().toISOString(),
-  };
-
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(scenarios));
-  return true;
 }
 
 function deleteLocalScenario(id: string): boolean {

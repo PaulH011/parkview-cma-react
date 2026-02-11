@@ -8,7 +8,6 @@ import type {
   Overrides,
   BaseCurrency,
   AllInputs,
-  Scenario,
 } from './types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -39,24 +38,10 @@ async function fetchAPI<T>(
 }
 
 /**
- * Health check
- */
-export async function checkHealth(): Promise<{ status: string; version: string }> {
-  return fetchAPI('/health');
-}
-
-/**
  * Get all default values
  */
 export async function getDefaults(): Promise<AllInputs> {
   return fetchAPI('/api/defaults/all');
-}
-
-/**
- * Get macro defaults for a specific region
- */
-export async function getMacroDefaults(region: string): Promise<Record<string, number>> {
-  return fetchAPI(`/api/defaults/macro/${region}`);
 }
 
 /**
@@ -90,60 +75,6 @@ export async function calculateMacroPreview(
       region,
       building_blocks: buildingBlocks,
     }),
-  });
-}
-
-/**
- * Compare multiple scenarios
- */
-export async function compareScenarios(
-  scenarios: Array<{
-    overrides?: Overrides;
-    base_currency: BaseCurrency;
-    scenario_name: string;
-  }>
-): Promise<{ scenarios: CalculateResponse[] }> {
-  return fetchAPI('/api/calculate/compare', {
-    method: 'POST',
-    body: JSON.stringify(scenarios),
-  });
-}
-
-/**
- * List user's scenarios
- */
-export async function listScenarios(userId: string): Promise<{ scenarios: Scenario[] }> {
-  return fetchAPI(`/api/scenarios?user_id=${userId}`);
-}
-
-/**
- * Create a new scenario
- */
-export async function createScenario(
-  userId: string,
-  name: string,
-  overrides: Overrides,
-  baseCurrency: BaseCurrency
-): Promise<{ success: boolean; scenario: Scenario }> {
-  return fetchAPI(`/api/scenarios?user_id=${userId}`, {
-    method: 'POST',
-    body: JSON.stringify({
-      name,
-      overrides,
-      base_currency: baseCurrency,
-    }),
-  });
-}
-
-/**
- * Delete a scenario
- */
-export async function deleteScenario(
-  scenarioId: string,
-  userId: string
-): Promise<{ success: boolean }> {
-  return fetchAPI(`/api/scenarios/${scenarioId}?user_id=${userId}`, {
-    method: 'DELETE',
   });
 }
 

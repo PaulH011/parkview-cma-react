@@ -127,17 +127,6 @@ export interface MacroPreviewResponse {
   };
 }
 
-// Scenario
-export interface Scenario {
-  id: string;
-  name: string;
-  user_id: string;
-  overrides: Record<string, any>;
-  base_currency: string;
-  created_at: string;
-  updated_at: string;
-}
-
 // Override structure (matches backend)
 export interface Overrides {
   macro?: Partial<Record<MacroRegion, Partial<MacroInputs>>>;

@@ -86,7 +86,7 @@ export const useInputStore = create<InputState>((set, get) => ({
         _dirtyMacroFields: {},
       });
     } catch (err) {
-      console.warn('[inputStore] Could not fetch defaults from API, using hardcoded:', err);
+      if (process.env.NODE_ENV === 'development') console.warn('[inputStore] Could not fetch defaults from API, using hardcoded:', err);
       // Keep using DEFAULT_INPUTS as fallback
     }
   },

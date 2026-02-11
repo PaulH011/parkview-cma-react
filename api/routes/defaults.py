@@ -8,8 +8,11 @@ Loads dynamically from Supabase if available, with fallback to hardcoded values.
 import os
 import time
 import json
+import logging
 from typing import Optional, Dict, Any
 from fastapi import APIRouter
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -149,7 +152,7 @@ def _get_supabase_client():
         if url and key:
             return create_client(url, key)
     except Exception as e:
-        print(f"[defaults] Could not create Supabase client: {e}")
+        logger.warning("Could not create Supabase client: %s", e)
     return None
 
 
@@ -185,10 +188,10 @@ def get_current_defaults() -> Dict[str, Any]:
                     db_defaults = json.loads(db_defaults)
                 _cached_defaults = db_defaults
                 _cache_timestamp = now
-                print("[defaults] Loaded defaults from Supabase")
+                logger.info("Loaded defaults from Supabase")
                 return _cached_defaults
     except Exception as e:
-        print(f"[defaults] Could not load from Supabase, using hardcoded: {e}")
+        logger.warning("Could not load from Supabase, using hardcoded: %s", e)
 
     # Fallback to hardcoded
     _cached_defaults = INPUT_DEFAULTS

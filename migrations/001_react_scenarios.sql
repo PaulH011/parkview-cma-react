@@ -80,14 +80,3 @@ CREATE POLICY "Users can insert own preferences"
 CREATE POLICY "Users can update own preferences"
   ON react_user_preferences FOR UPDATE
   USING (auth.uid() = user_id);
-
--- =============================================================================
--- Instructions:
--- 1. Create a NEW Supabase project (separate from Streamlit app)
--- 2. Go to SQL Editor in the Supabase dashboard
--- 3. Paste and run this entire script
--- 4. Copy your project URL and anon key from Settings > API
--- 5. Add them to web/.env.local:
---    NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
---    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
--- =============================================================================

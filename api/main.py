@@ -18,7 +18,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from api.routes import calculate, scenarios, defaults, admin
+from api.routes import calculate, defaults, admin
 from api.config import CORS_ORIGINS, DEBUG
 
 # Create FastAPI app
@@ -34,11 +34,8 @@ using the Research Affiliates methodology.
 - `/api/calculate/full` - Run full CME calculation
 - `/api/calculate/macro-preview` - Lightweight macro preview (for real-time UI)
 - `/api/defaults/all` - Get all default input values
-- `/api/scenarios` - CRUD for saved scenarios
-
 ### Authentication:
-Most endpoints require authentication via Supabase. Pass the JWT token
-in the Authorization header: `Bearer <token>`
+Admin endpoints require the super-user email header.
     """,
     version="1.0.0",
     docs_url="/docs" if DEBUG else None,  # Disable Swagger in production
@@ -64,11 +61,6 @@ app.include_router(
     defaults.router,
     prefix="/api/defaults",
     tags=["Defaults"]
-)
-app.include_router(
-    scenarios.router,
-    prefix="/api/scenarios",
-    tags=["Scenarios"]
 )
 app.include_router(
     admin.router,

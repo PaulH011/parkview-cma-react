@@ -177,7 +177,7 @@ export default function AdminRefreshPage() {
           // Still running — loop continues
         } catch (pollErr: any) {
           // Transient poll error — keep trying
-          console.warn('Poll error:', pollErr.message);
+          if (process.env.NODE_ENV === 'development') console.warn('Poll error:', pollErr.message);
         }
       }
 

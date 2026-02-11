@@ -13,12 +13,15 @@ import re
 import json
 import time
 import uuid
+import logging
 import threading
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 from api.config import SUPER_USER_EMAIL, ANTHROPIC_API_KEY
 
@@ -66,7 +69,7 @@ def _get_supabase_client():
         if url and key:
             return create_client(url, key)
     except Exception as e:
-        print(f"[admin] Could not create Supabase client: {e}")
+        logger.warning("Could not create Supabase client: %s", e)
     return None
 
 
@@ -253,7 +256,7 @@ Return ONLY valid JSON (no markdown, no code fences, no explanation) with the st
 
                 # Log response structure for debugging
                 block_types = [getattr(b, "type", "unknown") for b in response.content]
-                print(f"[admin]   Response blocks: {block_types}, stop_reason={response.stop_reason}")
+                logger.info("Response blocks: %s, stop_reason=%s", block_types, response.stop_reason)
 
                 # Collect text from this response
                 for block in response.content:
@@ -296,7 +299,7 @@ Return ONLY valid JSON (no markdown, no code fences, no explanation) with the st
 
             # Extract JSON from collected text
             ai_response_text = "\n".join(all_text_parts)
-            print(f"[admin]   Collected text length: {len(ai_response_text)} chars")
+            logger.info("Collected text length: %d chars", len(ai_response_text))
 
             if not ai_response_text.strip():
                 raise ValueError("No text content returned from Claude — response may have been empty or all search blocks")
@@ -320,13 +323,13 @@ Return ONLY valid JSON (no markdown, no code fences, no explanation) with the st
                     cleaned = cleaned[: brace_end + 1]
 
             result = json.loads(cleaned)
-            print(f"[admin]   Parsed {len(result)} keys from response")
+            logger.info("Parsed %d keys from response", len(result))
             return result
 
         except Exception as e:
             last_error = e
             error_str = str(e)
-            print(f"[admin]   Batch attempt {attempt + 1} failed: {error_str[:200]}")
+            logger.warning("Batch attempt %d failed: %s", attempt + 1, error_str[:200])
             # Retry on rate limit errors OR empty responses (may be transient)
             is_retryable = (
                 "rate_limit" in error_str
@@ -335,7 +338,7 @@ Return ONLY valid JSON (no markdown, no code fences, no explanation) with the st
             )
             if is_retryable and attempt < max_retries:
                 wait = 70 if "rate_limit" in error_str or "429" in error_str else 30
-                print(f"[admin]   Waiting {wait}s before retry...")
+                logger.info("Waiting %ds before retry...", wait)
                 time.sleep(wait)
                 continue
             # Non-retryable error or retries exhausted — raise
@@ -404,7 +407,7 @@ def _run_research_job(job_id: str, email: str, is_test: bool):
             job["progress"]["current_batch"] = i + 1
             job["progress"]["current_label"] = label
             job["progress"]["phase"] = "researching"
-            print(f"[admin] Job {job_id[:8]}: Batch {i + 1}/{len(batches)}: {label} ({len(batch)} assumptions)...")
+            logger.info("Job %s: Batch %d/%d: %s (%d assumptions)...", job_id[:8], i + 1, len(batches), label, len(batch))
 
             try:
                 batch_result = _research_single_batch(
@@ -416,19 +419,19 @@ def _run_research_job(job_id: str, email: str, is_test: bool):
                 )
                 ai_suggestions.update(batch_result)
                 job["progress"]["completed_batches"].append(label)
-                print(f"[admin] Job {job_id[:8]}: Batch {i + 1} ({label}) succeeded: {len(batch_result)} keys")
+                logger.info("Job %s: Batch %d (%s) succeeded: %d keys", job_id[:8], i + 1, label, len(batch_result))
             except Exception as batch_err:
-                print(f"[admin] Job {job_id[:8]}: Batch {i + 1} ({label}) FAILED: {str(batch_err)[:200]}")
+                logger.error("Job %s: Batch %d (%s) FAILED: %s", job_id[:8], i + 1, label, str(batch_err)[:200])
                 failed_batches.append(label)
                 job["progress"]["failed_batches"].append(label)
 
             # Wait between batches (skip after last)
             if i < len(batches) - 1:
                 job["progress"]["phase"] = "waiting"
-                print(f"[admin] Job {job_id[:8]}: Waiting {BATCH_DELAY}s before next batch...")
+                logger.info("Job %s: Waiting %ds before next batch...", job_id[:8], BATCH_DELAY)
                 time.sleep(BATCH_DELAY)
 
-        print(f"[admin] Job {job_id[:8]}: All batches done. Suggestions: {len(ai_suggestions)}, Failed: {len(failed_batches)}")
+        logger.info("Job %s: All batches done. Suggestions: %d, Failed: %d", job_id[:8], len(ai_suggestions), len(failed_batches))
 
         if not ai_suggestions:
             job["status"] = "failed"
@@ -481,7 +484,7 @@ def _run_research_job(job_id: str, email: str, is_test: bool):
                     "status": "pending" if not is_test else "test",
                 }).execute()
             except Exception as e:
-                print(f"[admin] Could not log research to Supabase: {e}")
+                logger.warning("Could not log research to Supabase: %s", e)
 
         # Store final result
         job["status"] = "completed"
@@ -492,12 +495,12 @@ def _run_research_job(job_id: str, email: str, is_test: bool):
             "total_assumptions": len(comparisons),
             "is_test": is_test,
         }
-        print(f"[admin] Job {job_id[:8]}: COMPLETED with {len(comparisons)} comparisons")
+        logger.info("Job %s: COMPLETED with %d comparisons", job_id[:8], len(comparisons))
 
     except Exception as e:
         job["status"] = "failed"
         job["error"] = str(e)
-        print(f"[admin] Job {job_id[:8]}: FAILED with error: {str(e)[:300]}")
+        logger.error("Job %s: FAILED with error: %s", job_id[:8], str(e)[:300])
 
 
 # ---- Endpoints ----
@@ -544,7 +547,7 @@ async def research_defaults(
     )
     thread.start()
 
-    print(f"[admin] Started research job {job_id[:8]} for {email} (test={request.is_test})")
+    logger.info("Started research job %s for %s (test=%s)", job_id[:8], email, request.is_test)
 
     return {"job_id": job_id}
 
@@ -626,7 +629,7 @@ async def apply_defaults(
             "status": status,
         }).execute()
     except Exception as e:
-        print(f"[admin] Could not log application to Supabase: {e}")
+        logger.warning("Could not log application to Supabase: %s", e)
 
     # Invalidate cache so next request picks up new defaults
     invalidate_defaults_cache()
@@ -676,7 +679,7 @@ async def revert_defaults(
             "status": "applied",
         }).execute()
     except Exception as e:
-        print(f"[admin] Could not log revert to Supabase: {e}")
+        logger.warning("Could not log revert to Supabase: %s", e)
 
     return {
         "success": True,
@@ -708,7 +711,7 @@ async def refresh_history(
         )
         return {"history": result.data or []}
     except Exception as e:
-        print(f"[admin] Could not fetch refresh history: {e}")
+        logger.warning("Could not fetch refresh history: %s", e)
         return {"history": []}
 
 
@@ -735,5 +738,5 @@ async def last_refresh():
             return {"last_refresh": result.data[0]["initiated_at"]}
         return {"last_refresh": None}
     except Exception as e:
-        print(f"[admin] Could not fetch last refresh: {e}")
+        logger.warning("Could not fetch last refresh: %s", e)
         return {"last_refresh": None}
