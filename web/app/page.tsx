@@ -66,6 +66,8 @@ export default function Dashboard() {
   const macro = useInputStore((state) => state.macro);
   const bonds = useInputStore((state) => state.bonds);
   const equity = useInputStore((state) => state.equity);
+  const equityGK = useInputStore((state) => state.equityGK);
+  const equityModelType = useInputStore((state) => state.equityModelType);
   const absoluteReturn = useInputStore((state) => state.absoluteReturn);
   const advancedMode = useInputStore((state) => state.advancedMode);
   const setAdvancedMode = useInputStore((state) => state.setAdvancedMode);
@@ -125,7 +127,7 @@ export default function Dashboard() {
       calculate();
     }, 500);
     return () => clearTimeout(timeout);
-  }, [macro, bonds, equity, absoluteReturn, baseCurrency]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [macro, bonds, equity, equityGK, equityModelType, absoluteReturn, baseCurrency]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
