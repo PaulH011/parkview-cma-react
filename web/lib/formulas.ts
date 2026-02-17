@@ -489,7 +489,6 @@ export const INPUT_DISPLAY_NAMES: Record<string, string> = {
   trading_alpha: 'Trading Alpha',
   // RA equity-specific input names
   real_eps_growth: 'Real EPS Growth',
-  regional_eps_growth: 'Regional EPS Growth',
   reversion_speed: 'Reversion Speed',
   // Macro building-block input names
   population_growth: 'Population Growth',
