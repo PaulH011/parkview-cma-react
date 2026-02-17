@@ -5,7 +5,12 @@
  * Uses react_scenarios table (separate from Streamlit app).
  */
 
-import { getSupabaseClient, type ReactScenario } from './supabase';
+import {
+  getSupabaseClient,
+  type ReactScenario,
+  type ShareRecipient,
+  type ShareScenarioResult,
+} from './supabase';
 
 const LOCAL_STORAGE_KEY = 'react-cma-scenarios';
 
@@ -13,8 +18,12 @@ export interface SavedScenario {
   id: string;
   name: string;
   description?: string;
-  overrides: Record<string, any>;
+  overrides: Record<string, unknown>;
   base_currency: string;
+  is_shared_copy?: boolean;
+  shared_from_scenario_id?: string | null;
+  shared_by_user_id?: string | null;
+  shared_by_email?: string | null;
   created_at: string;
   updated_at: string;
   is_local?: boolean; // True if saved to localStorage (not synced)
@@ -63,7 +72,6 @@ export async function saveScenario(
   scenario: Omit<SavedScenario, 'id' | 'created_at' | 'updated_at'>
 ): Promise<SavedScenario | null> {
   const supabase = getSupabaseClient();
-  const now = new Date().toISOString();
 
   // If authenticated, save to Supabase
   if (userId && supabase) {
@@ -127,6 +135,60 @@ export async function deleteScenario(userId: string | null, id: string): Promise
   return deleteLocalScenario(id);
 }
 
+/**
+ * Search authenticated users by email for sharing.
+ */
+export async function searchShareRecipients(
+  userId: string | null,
+  query: string
+): Promise<ShareRecipient[]> {
+  const supabase = getSupabaseClient();
+  const normalized = query.trim();
+
+  if (!userId || !supabase || normalized.length < 2) {
+    return [];
+  }
+
+  const { data, error } = await supabase.rpc('react_search_users_by_email', {
+    query_text: normalized,
+  });
+
+  if (error) {
+    console.error('Error searching recipients:', error);
+    return [];
+  }
+
+  return (data || []) as ShareRecipient[];
+}
+
+/**
+ * Share an owned cloud scenario to another user by email.
+ */
+export async function shareScenario(
+  userId: string | null,
+  sourceScenarioId: string,
+  recipientEmail: string
+): Promise<ShareScenarioResult | null> {
+  const supabase = getSupabaseClient();
+
+  if (!userId || !supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc('react_share_scenario', {
+    source_scenario_id: sourceScenarioId,
+    recipient_email_input: recipientEmail.trim().toLowerCase(),
+  });
+
+  if (error) {
+    console.error('Error sharing scenario:', error);
+    throw new Error(error.message || 'Failed to share scenario');
+  }
+
+  const rows = (data || []) as ShareScenarioResult[];
+  return rows.length > 0 ? rows[0] : null;
+}
+
 // ============= Local Storage Helpers =============
 
 function getLocalScenarios(): SavedScenario[] {
@@ -136,8 +198,8 @@ function getLocalScenarios(): SavedScenario[] {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!stored) return [];
 
-    const parsed = JSON.parse(stored);
-    return Object.values(parsed).map((s: any) => ({
+    const parsed = JSON.parse(stored) as Record<string, SavedScenario>;
+    return Object.values(parsed).map((s) => ({
       ...s,
       is_local: true,
     }));

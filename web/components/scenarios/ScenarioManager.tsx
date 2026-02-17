@@ -3,9 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useInputStore } from '@/stores/inputStore';
 import { useAuthStore } from '@/stores/authStore';
-import { getScenarios, saveScenario, deleteScenario, type SavedScenario } from '@/lib/scenarios';
+import {
+  getScenarios,
+  saveScenario,
+  deleteScenario,
+  searchShareRecipients,
+  shareScenario,
+  type SavedScenario,
+} from '@/lib/scenarios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -28,7 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Save, FolderOpen, Trash2, Cloud, HardDrive, Loader2 } from 'lucide-react';
+import { Save, FolderOpen, Trash2, Cloud, HardDrive, Loader2, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Predefined scenario templates
@@ -89,8 +97,15 @@ export function ScenarioManager() {
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
   const [isLoadingScenarios, setIsLoadingScenarios] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [scenarioToShare, setScenarioToShare] = useState<SavedScenario | null>(null);
+  const [shareQuery, setShareQuery] = useState('');
+  const [recipientResults, setRecipientResults] = useState<Array<{ user_id: string; email: string }>>([]);
+  const [selectedRecipientEmail, setSelectedRecipientEmail] = useState('');
+  const [isSearchingRecipients, setIsSearchingRecipients] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
-  const { loadScenario, resetToDefaults, getOverrides, baseCurrency } = useInputStore();
+  const { loadScenario, resetToDefaults, getOverrides, baseCurrency, setBaseCurrency } = useInputStore();
   const { user } = useAuthStore();
 
   // Load saved scenarios
@@ -104,6 +119,25 @@ export function ScenarioManager() {
     loadSavedScenarios();
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!shareDialogOpen) return;
+
+    const query = shareQuery.trim();
+    if (query.length < 2) {
+      setRecipientResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setIsSearchingRecipients(true);
+      const results = await searchShareRecipients(user?.id || null, query);
+      setRecipientResults(results);
+      setIsSearchingRecipients(false);
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [shareQuery, shareDialogOpen, user?.id]);
+
   const handleLoadTemplate = (templateKey: string) => {
     if (templateKey === 'default') {
       resetToDefaults();
@@ -114,7 +148,7 @@ export function ScenarioManager() {
     const template = SCENARIO_TEMPLATES[templateKey as keyof typeof SCENARIO_TEMPLATES];
     if (template) {
       // Convert percentage values back to store format
-      const convertedOverrides: any = { macro: {} };
+      const convertedOverrides: { macro: Record<string, Record<string, number>> } = { macro: {} };
       if (template.overrides.macro) {
         for (const [region, values] of Object.entries(template.overrides.macro)) {
           convertedOverrides.macro[region] = {};
@@ -131,6 +165,10 @@ export function ScenarioManager() {
   };
 
   const handleLoadSavedScenario = (scenario: SavedScenario) => {
+    const normalizedBase = scenario.base_currency?.toLowerCase();
+    if (normalizedBase === 'usd' || normalizedBase === 'eur') {
+      setBaseCurrency(normalizedBase);
+    }
     resetToDefaults();
     loadScenario(scenario.overrides);
     toast.success(`Loaded "${scenario.name}"`);
@@ -174,6 +212,47 @@ export function ScenarioManager() {
       setScenarioName('');
     } else {
       toast.error('Failed to save scenario');
+    }
+  };
+
+  const handleOpenShareDialog = (scenario: SavedScenario) => {
+    setScenarioToShare(scenario);
+    setShareQuery('');
+    setRecipientResults([]);
+    setSelectedRecipientEmail('');
+    setShareDialogOpen(true);
+  };
+
+  const handleShareScenario = async () => {
+    if (!scenarioToShare || !selectedRecipientEmail) {
+      toast.error('Please select a recipient');
+      return;
+    }
+
+    if (!user?.email) {
+      toast.error('You must be logged in to share scenarios');
+      return;
+    }
+
+    if (selectedRecipientEmail.toLowerCase() === user.email.toLowerCase()) {
+      toast.error('You cannot share a scenario to yourself');
+      return;
+    }
+
+    try {
+      setIsSharing(true);
+      const shared = await shareScenario(user.id, scenarioToShare.id, selectedRecipientEmail);
+      if (shared) {
+        toast.success(`Shared "${scenarioToShare.name}" with ${shared.recipient_email}`);
+        setShareDialogOpen(false);
+      } else {
+        toast.error('Failed to share scenario');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to share scenario';
+      toast.error(message);
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -226,19 +305,41 @@ export function ScenarioManager() {
                     <HardDrive className="h-3 w-3 inline mr-1 text-slate-400" />
                   )}
                   {scenario.name}
+                  {scenario.is_shared_copy && scenario.shared_by_email && (
+                    <Badge variant="outline" className="ml-2 text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                      Shared by {scenario.shared_by_email}
+                    </Badge>
+                  )}
                 </span>
-                <div
-                  role="button"
-                  tabIndex={-1}
-                  className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleDeleteScenario(scenario);
-                  }}
-                >
-                  <Trash2 className="h-3 w-3 text-slate-400 hover:text-red-500" />
+                <div className="flex items-center gap-1">
+                  {!!user && !scenario.is_local && (
+                    <div
+                      role="button"
+                      tabIndex={-1}
+                      className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-blue-100 transition-opacity"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleOpenShareDialog(scenario);
+                      }}
+                    >
+                      <Share2 className="h-3 w-3 text-slate-400 hover:text-blue-600" />
+                    </div>
+                  )}
+                  <div
+                    role="button"
+                    tabIndex={-1}
+                    className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleDeleteScenario(scenario);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3 text-slate-400 hover:text-red-500" />
+                  </div>
                 </div>
               </DropdownMenuItem>
             ))}
@@ -290,6 +391,66 @@ export function ScenarioManager() {
                 <Save className="h-4 w-4 mr-1" />
               )}
               Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle>Share Scenario</DialogTitle>
+            <DialogDescription>
+              {scenarioToShare
+                ? `Share "${scenarioToShare.name}" with another user by email.`
+                : 'Share this scenario with another user by email.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Input
+              placeholder="Search user by email"
+              value={shareQuery}
+              onChange={(e) => setShareQuery(e.target.value)}
+            />
+            <div className="max-h-44 overflow-y-auto border rounded-md">
+              {isSearchingRecipients ? (
+                <div className="p-3 text-xs text-slate-500 flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Searching...
+                </div>
+              ) : recipientResults.length > 0 ? (
+                recipientResults.map((recipient) => (
+                  <button
+                    key={recipient.user_id}
+                    type="button"
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${
+                      selectedRecipientEmail === recipient.email ? 'bg-blue-50' : ''
+                    }`}
+                    onClick={() => setSelectedRecipientEmail(recipient.email)}
+                  >
+                    {recipient.email}
+                  </button>
+                ))
+              ) : (
+                <div className="p-3 text-xs text-slate-500">
+                  Type at least 2 characters to search by email.
+                </div>
+              )}
+            </div>
+            {selectedRecipientEmail && (
+              <div className="text-xs text-slate-600">
+                Recipient: <span className="font-medium">{selectedRecipientEmail}</span>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleShareScenario} disabled={!selectedRecipientEmail || isSharing}>
+              {isSharing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Share2 className="h-4 w-4 mr-1" />}
+              Share
             </Button>
           </DialogFooter>
         </DialogContent>

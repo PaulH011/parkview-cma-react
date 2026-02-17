@@ -31,8 +31,12 @@ export interface ReactScenario {
   user_id: string;
   name: string;
   description?: string;
-  overrides: Record<string, any>;
+  overrides: Record<string, unknown>;
   base_currency: string;
+  is_shared_copy?: boolean;
+  shared_from_scenario_id?: string | null;
+  shared_by_user_id?: string | null;
+  shared_by_email?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -43,4 +47,16 @@ export interface ReactUserPreferences {
   theme: 'light' | 'dark' | 'system';
   created_at: string;
   updated_at: string;
+}
+
+export interface ShareRecipient {
+  user_id: string;
+  email: string;
+}
+
+export interface ShareScenarioResult {
+  shared_scenario_id: string;
+  shared_scenario_name: string;
+  recipient_user_id: string;
+  recipient_email: string;
 }
