@@ -406,33 +406,33 @@ export function ScenarioManager() {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-72">
             {savedScenarios.map((scenario) => (
               <DropdownMenuItem
                 key={scenario.id}
-                className="flex items-center justify-between group"
+                className="flex items-center gap-2 group"
                 onSelect={() => handleLoadSavedScenario(scenario)}
               >
-                <span className="flex-1">
+                <span className="flex-1 min-w-0 flex items-center flex-wrap gap-1">
                   {scenario.is_local && (
-                    <HardDrive className="h-3 w-3 inline mr-1 text-slate-400" />
+                    <HardDrive className="h-3 w-3 shrink-0 text-slate-400" />
                   )}
-                  {scenario.name}
-                  <Badge variant="outline" className={`ml-2 text-[10px] ${scenario.is_local ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                  <span className="truncate">{scenario.name}</span>
+                  <Badge variant="outline" className={`shrink-0 text-[10px] ${scenario.is_local ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                     {scenario.is_local ? 'Local' : 'Cloud'}
                   </Badge>
                   {scenario.is_shared_copy && scenario.shared_by_email && (
-                    <Badge variant="outline" className="ml-2 text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                    <Badge variant="outline" className="shrink-0 text-[10px] bg-blue-50 text-blue-700 border-blue-200">
                       Shared by {scenario.shared_by_email}
                     </Badge>
                   )}
                 </span>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   {!!user && (
                     <div
                       role="button"
                       tabIndex={-1}
-                      className={`h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity ${scenario.is_local ? 'hover:bg-slate-100' : 'hover:bg-blue-100'}`}
+                      className={`h-6 w-6 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity ${scenario.is_local ? 'hover:bg-slate-100' : 'hover:bg-blue-100'}`}
                       title={scenario.is_local ? 'Local scenarios are not shareable' : 'Share scenario'}
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
@@ -445,13 +445,13 @@ export function ScenarioManager() {
                         handleOpenShareDialog(scenario);
                       }}
                     >
-                      <Share2 className={`h-3 w-3 ${scenario.is_local ? 'text-slate-300' : 'text-slate-400 hover:text-blue-600'}`} />
+                      <Share2 className={`h-3.5 w-3.5 ${scenario.is_local ? 'text-slate-300' : 'text-slate-400 hover:text-blue-600'}`} />
                     </div>
                   )}
                   <div
                     role="button"
                     tabIndex={-1}
-                    className="h-5 w-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
+                    className="h-6 w-6 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -459,7 +459,7 @@ export function ScenarioManager() {
                       handleDeleteScenario(scenario);
                     }}
                   >
-                    <Trash2 className="h-3 w-3 text-slate-400 hover:text-red-500" />
+                    <Trash2 className="h-3.5 w-3.5 text-slate-400 hover:text-red-500" />
                   </div>
                 </div>
               </DropdownMenuItem>
