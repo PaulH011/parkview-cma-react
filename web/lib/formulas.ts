@@ -487,6 +487,17 @@ export const INPUT_DISPLAY_NAMES: Record<string, string> = {
   beta_investment: 'Investment β',
   beta_momentum: 'Momentum β',
   trading_alpha: 'Trading Alpha',
+  // RA equity-specific input names
+  real_eps_growth: 'Real EPS Growth',
+  regional_eps_growth: 'Regional EPS Growth',
+  reversion_speed: 'Reversion Speed',
+  // Macro building-block input names
+  population_growth: 'Population Growth',
+  productivity_growth: 'Productivity Growth',
+  my_ratio: 'MY Ratio',
+  current_headline_inflation: 'Current Headline Inflation',
+  long_term_inflation: 'Long-Term Inflation Target',
+  rgdp_growth: 'E[Real GDP Growth]',
   // GK-specific input names
   net_buyback_yield: 'Net Buyback Yield',
   revenue_growth: 'Revenue Growth',

@@ -15,6 +15,7 @@ import { RiskReturnChart } from '@/components/results/RiskReturnChart';
 import { ExportButton } from '@/components/results/ExportButton';
 import { ActiveOverridesSummary } from '@/components/results/ActiveOverridesSummary';
 import { FxExplanation } from '@/components/results/FxExplanation';
+import { InputChangeSummary } from '@/components/results/InputChangeSummary';
 import { ScenarioManager } from '@/components/scenarios/ScenarioManager';
 import { useCalculation } from '@/hooks/useCalculation';
 import { useInputStore } from '@/stores/inputStore';
@@ -334,6 +335,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* Active Input Changes Summary */}
+        <InputChangeSummary />
       </div>
     </div>
     </div>
