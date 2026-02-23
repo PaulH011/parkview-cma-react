@@ -53,6 +53,10 @@ const INFLATION_LINKED_RAW_KEYS = new Set(['duration', 'inflation_beta']);
 const BOND_RAW_KEYS = new Set(['duration']);
 const MACRO_RAW_KEYS = new Set(['my_ratio']);
 const GK_RAW_KEYS = new Set(['current_pe', 'target_pe']);
+const GK_ALL_KEYS = new Set([
+  'current_pe', 'target_pe', 'revenue_gdp_wedge', 'margin_change',
+  'net_buyback_yield', 'revenue_growth',
+]);
 
 function convertNumberForUi(
   key: string,
@@ -109,7 +113,7 @@ function convertSavedOverridesToUiUnits(overrides: Overrides): Overrides {
   const convertEquityGroup = (group?: Record<string, unknown>) => {
     if (!group) return undefined;
     const out: Record<string, number> = {};
-    const isGk = Object.keys(group).some((k) => k === 'current_pe' || k === 'target_pe');
+    const isGk = Object.keys(group).some((k) => GK_ALL_KEYS.has(k));
     for (const [key, value] of Object.entries(group)) {
       if (typeof value !== 'number') continue;
       if (isGk) {

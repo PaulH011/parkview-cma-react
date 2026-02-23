@@ -292,12 +292,17 @@ export const useInputStore = create<InputState>((set, get) => ({
       };
     }
 
-    // Apply equity overrides
+    // Apply equity overrides (to both RA and GK stores)
+    const newEquityGK = { ...state.equityGK };
     for (const region of ['us', 'europe', 'japan', 'em'] as EquityRegion[]) {
       const key = `equity_${region}` as keyof Overrides;
       if (overrides[key]) {
         newEquity[region] = {
           ...newEquity[region],
+          ...overrides[key],
+        };
+        newEquityGK[region] = {
+          ...newEquityGK[region],
           ...overrides[key],
         };
       }
@@ -315,6 +320,7 @@ export const useInputStore = create<InputState>((set, get) => ({
       macro: newMacro,
       bonds: newBonds,
       equity: newEquity,
+      equityGK: newEquityGK,
       absoluteReturn: newAbsoluteReturn,
       _dirtyMacroFields: newDirtyFields,
     });
