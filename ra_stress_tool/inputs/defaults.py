@@ -10,6 +10,7 @@ from copy import deepcopy
 from ..config import (
     DEFAULT_MARKET_DATA,
     DEFAULT_ASSET_DATA,
+    DEFAULT_ASSET_DATA_GK,
     CREDIT_PARAMS,
     EWMA_PARAMS,
     MEAN_REVERSION_PARAMS,
@@ -60,10 +61,22 @@ class DefaultInputs:
             print(f"[DefaultInputs] Could not load from Supabase: {e}")
         return None
 
-    def __init__(self):
-        """Initialize with all default values from config."""
+    def __init__(self, equity_model_type: str = 'ra'):
+        """Initialize with all default values from config.
+
+        Parameters
+        ----------
+        equity_model_type : str
+            'ra' for Research Affiliates defaults, 'gk' for Grinold-Kroner.
+            When 'gk', equity asset classes use DEFAULT_ASSET_DATA_GK overlays.
+        """
         self._macro_data = deepcopy(DEFAULT_MARKET_DATA)
         self._asset_data = deepcopy(DEFAULT_ASSET_DATA)
+        # Overlay GK-specific equity defaults when using GK model
+        if equity_model_type == 'gk':
+            for asset_class, gk_defaults in DEFAULT_ASSET_DATA_GK.items():
+                if asset_class in self._asset_data:
+                    self._asset_data[asset_class].update(deepcopy(gk_defaults))
         self._credit_params = deepcopy(CREDIT_PARAMS)
         self._ewma_params = deepcopy(EWMA_PARAMS)
         self._mean_reversion = deepcopy(MEAN_REVERSION_PARAMS)

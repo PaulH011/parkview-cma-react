@@ -172,7 +172,8 @@ async def compare_scenarios(scenarios: list[CalculateRequest]):
         try:
             engine = CMEEngine(
                 overrides=scenario.overrides,
-                base_currency=scenario.base_currency.lower()
+                base_currency=scenario.base_currency.lower(),
+                equity_model_type=scenario.equity_model,
             )
             calc_results = engine.compute_all_returns(scenario.scenario_name)
 

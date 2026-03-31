@@ -59,7 +59,7 @@ class CMEEngine:
         equity_model_type : str, optional
             Equity model to use: 'ra' (Research Affiliates) or 'gk' (Grinold-Kroner).
         """
-        self.override_manager = OverrideManager(overrides)
+        self.override_manager = OverrideManager(overrides, equity_model_type=equity_model_type)
         self.base_currency = BaseCurrency(base_currency.lower())
         self.equity_model_type = equity_model_type
 

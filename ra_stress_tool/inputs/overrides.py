@@ -45,7 +45,7 @@ class OverrideManager:
     defaults or user overrides.
     """
 
-    def __init__(self, overrides: Optional[Dict[str, Any]] = None):
+    def __init__(self, overrides: Optional[Dict[str, Any]] = None, equity_model_type: str = 'ra'):
         """
         Initialize the override manager.
 
@@ -63,8 +63,11 @@ class OverrideManager:
                 'equity_us': {...},
                 ...
             }
+        equity_model_type : str, optional
+            Equity model type ('ra' or 'gk'). Passed to DefaultInputs to
+            select the correct equity defaults.
         """
-        self._defaults = DefaultInputs()
+        self._defaults = DefaultInputs(equity_model_type=equity_model_type)
         self._overrides = overrides or {}
         self._value_cache: Dict[str, TrackedValue] = {}
 
