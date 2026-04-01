@@ -173,6 +173,12 @@ function ComponentDetail({
 
       <p className="text-xs text-slate-500">{description}</p>
 
+      {name === 'FX Return' && (
+        <p className="text-xs text-slate-500 italic">
+          Reflects expected currency movement from inflation and rate differentials between regions.
+        </p>
+      )}
+
       {inputs.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {inputs.map((inputKey) => {

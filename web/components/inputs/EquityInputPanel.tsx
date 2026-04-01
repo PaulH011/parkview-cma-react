@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Info } from 'lucide-react';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import type { EquityRegion, EquityInputs, EquityInputsGK, EquityModelType } from '@/lib/types';
 
 const EQUITY_REGIONS: { key: EquityRegion; label: string; flag: string }[] = [
@@ -60,7 +62,18 @@ function EquityRegionInputsRA({ region }: { region: EquityRegion }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Fair CAEY (%)</Label>
+              <Label className="text-xs flex items-center gap-1">
+                Fair CAEY (%)
+                <HoverCard openDelay={200}>
+                  <HoverCardTrigger asChild>
+                    <Info className="h-3 w-3 text-slate-400 cursor-help" />
+                  </HoverCardTrigger>
+                  <HoverCardContent className="text-xs w-64">
+                    <p>Higher fair CAEY means the market is <strong>more overvalued</strong> relative to fair value.</p>
+                    <p className="mt-1 text-slate-500">Valuation drag increases as prices need to fall further to reach fair value.</p>
+                  </HoverCardContent>
+                </HoverCard>
+              </Label>
               <Input
                 type="number"
                 step="0.1"
@@ -80,9 +93,9 @@ function EquityRegionInputsRA({ region }: { region: EquityRegion }) {
 
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-slate-700">Building Blocks (EPS Growth)</h4>
-            <p className="text-xs text-slate-500">
-              Final EPS = 50% Country + 50% Regional, capped at Global GDP
-            </p>
+            <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
+              Final EPS = 50% Country + 50% Regional, capped at Global GDP growth. If your blended EPS exceeds global GDP, it will be silently capped.
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

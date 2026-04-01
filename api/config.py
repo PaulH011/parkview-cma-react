@@ -20,6 +20,15 @@ _cors_origins = [
     "http://127.0.0.1:3001",
 ]
 
+# In debug mode, allow any localhost port (for preview tools that assign dynamic ports)
+if os.getenv("DEBUG", "true").lower() == "true":
+    import re as _re
+    _LOCALHOST_RE = _re.compile(r"^http://(localhost|127\.0\.0\.1):\d+$")
+    class _LocalhostList(list):
+        def __contains__(self, item):
+            return super().__contains__(item) or bool(_LOCALHOST_RE.match(str(item)))
+    _cors_origins = _LocalhostList(_cors_origins)
+
 # Add production frontend URL from environment
 _frontend_url = os.getenv("FRONTEND_URL", "")
 if _frontend_url:

@@ -4,12 +4,29 @@ import { useEffect, useRef } from 'react';
 import { useInputStore } from '@/stores/inputStore';
 import { useMacroPreview } from '@/hooks/useMacroPreview';
 import { DEFAULT_INPUTS, MACRO_FIELD_NAMES } from '@/lib/constants';
+import { BUILDING_BLOCK_CASCADE } from '@/lib/formulas';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ComputedPreviewTooltip } from './ComputedPreviewTooltip';
 import type { MacroRegion, MacroInputs } from '@/lib/types';
+
+function CascadeNote({ fields, inputs, defaults }: { fields: string[]; inputs: MacroInputs; defaults: MacroInputs }) {
+  const changedFields = fields.filter(f => {
+    const val = inputs[f as keyof MacroInputs] as number;
+    const def = defaults[f as keyof MacroInputs] as number;
+    return Math.abs(val - def) > 0.001;
+  });
+  if (changedFields.length === 0) return null;
+  const cascade = BUILDING_BLOCK_CASCADE[changedFields[0]];
+  if (!cascade) return null;
+  return (
+    <p className="text-xs text-blue-600 mt-2">
+      Cascades to: {cascade.affects.join(' \u2192 ')}
+    </p>
+  );
+}
 
 const REGIONS: { key: MacroRegion; label: string }[] = [
   { key: 'us', label: 'US' },
@@ -236,6 +253,11 @@ function MacroRegionInputs({ region }: { region: MacroRegion }) {
                 />
               </div>
             </div>
+            <CascadeNote
+              fields={['population_growth', 'productivity_growth', 'my_ratio']}
+              inputs={inputs}
+              defaults={defaults}
+            />
           </div>
 
           <Separator />
@@ -271,6 +293,11 @@ function MacroRegionInputs({ region }: { region: MacroRegion }) {
                 />
               </div>
             </div>
+            <CascadeNote
+              fields={['current_headline_inflation', 'long_term_inflation']}
+              inputs={inputs}
+              defaults={defaults}
+            />
           </div>
 
           <Separator />
@@ -306,6 +333,11 @@ function MacroRegionInputs({ region }: { region: MacroRegion }) {
                 />
               </div>
             </div>
+            <CascadeNote
+              fields={['current_tbill', 'country_factor']}
+              inputs={inputs}
+              defaults={defaults}
+            />
           </div>
         </>
       )}

@@ -827,13 +827,20 @@ class CMEEngine:
         base_region = self._get_base_currency_region()
         base_macro = macro[base_region]
 
-        # Still use US equity return for market premium calculation
+        # Use the active equity model for market premium calculation
         us_macro = macro['us']
-        equity_forecast = self.equity_model.compute_return(
-            region=EquityRegion.US,
-            inflation_forecast=us_macro['inflation'],
-            global_rgdp_growth=macro['global']['rgdp_growth'],
-        )
+        if self.equity_model_type == 'gk' and self.equity_model_gk is not None:
+            equity_forecast = self.equity_model_gk.compute_return(
+                region=EquityRegion.US,
+                macro_inflation=us_macro['inflation'],
+                macro_rgdp=us_macro['rgdp_growth'],
+            )
+        else:
+            equity_forecast = self.equity_model.compute_return(
+                region=EquityRegion.US,
+                inflation_forecast=us_macro['inflation'],
+                global_rgdp_growth=macro['global']['rgdp_growth'],
+            )
 
         forecast = self.hf_model.compute_return(
             tbill_forecast=base_macro['tbill_rate'],

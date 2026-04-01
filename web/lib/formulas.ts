@@ -513,3 +513,31 @@ export const INPUT_DISPLAY_NAMES: Record<string, string> = {
   fx_home_inflation: 'EUR Inflation',
   fx_foreign_inflation: 'Foreign Inflation',
 };
+
+/**
+ * Maps building block fields to the downstream calculations they cascade into.
+ * Shown as info text when a building block value differs from its default.
+ */
+export const BUILDING_BLOCK_CASCADE: Record<string, { affects: string[] }> = {
+  population_growth: {
+    affects: ['E[RGDP]', 'E[T-Bill]', 'Liquidity', 'Bonds', 'Abs. Return'],
+  },
+  productivity_growth: {
+    affects: ['E[RGDP]', 'E[T-Bill]', 'Liquidity', 'Bonds', 'Abs. Return'],
+  },
+  my_ratio: {
+    affects: ['E[RGDP]', 'E[T-Bill]', 'Liquidity', 'Bonds', 'Abs. Return'],
+  },
+  current_headline_inflation: {
+    affects: ['E[Inflation]', 'E[T-Bill]', 'Liquidity', 'Bonds', 'Equity (FX)', 'Abs. Return'],
+  },
+  long_term_inflation: {
+    affects: ['E[Inflation]', 'E[T-Bill]', 'Liquidity', 'Bonds', 'Equity (FX)', 'Abs. Return'],
+  },
+  current_tbill: {
+    affects: ['E[T-Bill]', 'Liquidity', 'Bonds', 'Abs. Return'],
+  },
+  country_factor: {
+    affects: ['E[T-Bill]', 'Liquidity', 'Bonds', 'Abs. Return'],
+  },
+};

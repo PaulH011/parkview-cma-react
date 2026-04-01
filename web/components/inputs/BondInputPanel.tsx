@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Info } from 'lucide-react';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import type { BondType, BondInputs } from '@/lib/types';
 
 const BOND_TYPES: { key: BondType; label: string; description: string }[] = [
@@ -136,7 +138,18 @@ function BondTypeInputs({ bondType }: { bondType: Exclude<BondType, 'inflation_l
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Fair Credit Spread (%)</Label>
+                  <Label className="text-xs flex items-center gap-1">
+                    Fair Credit Spread (%)
+                    <HoverCard openDelay={200}>
+                      <HoverCardTrigger asChild>
+                        <Info className="h-3 w-3 text-slate-400 cursor-help" />
+                      </HoverCardTrigger>
+                      <HoverCardContent className="text-xs w-64">
+                        <p>If fair spread &gt; current spread, spreads are expected to <strong>widen</strong>, reducing bond prices.</p>
+                        <p className="mt-1 text-slate-500">Higher fair spread = more negative valuation return.</p>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </Label>
                   <Input
                     type="number"
                     step="0.1"

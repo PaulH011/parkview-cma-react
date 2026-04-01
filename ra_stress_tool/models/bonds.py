@@ -67,7 +67,6 @@ class BondModel(ABC):
         self,
         current_yield: float,
         current_yield_source: InputSource,
-        default_current_yield: float,
         tbill_forecast: float,
         duration: float,
         forecast_horizon: int = 10
@@ -85,9 +84,7 @@ class BondModel(ABC):
         current_yield : float
             Current yield to maturity.
         current_yield_source : InputSource
-            Source of the current yield value (DEFAULT or OVERRIDE).
-        default_current_yield : float
-            The default current yield for this asset class.
+            Source of the current yield value.
         tbill_forecast : float
             Expected T-Bill rate.
         duration : float
@@ -102,17 +99,18 @@ class BondModel(ABC):
         """
         inputs = self.get_inputs()
 
-        # Get the base current_term_premium from inputs
+        # Get current term premium from inputs
         base_term_premium = inputs.get('current_term_premium',
                                        TrackedValue(0.015, InputSource.DEFAULT))
-        
-        # If current_yield was overridden, adjust term premium by the same delta
-        # This ensures that changing yield by X% changes the term premium by X%
-        if current_yield_source == InputSource.OVERRIDE:
-            yield_delta = current_yield - default_current_yield
-            adjusted_tp = base_term_premium.value + yield_delta
-            current_term_premium = TrackedValue(adjusted_tp, InputSource.COMPUTED)
+
+        # If yield was overridden but TP was NOT directly overridden,
+        # derive implied TP from the overridden yield: TP = yield - T-Bill
+        if (current_yield_source == InputSource.OVERRIDE
+                and base_term_premium.source != InputSource.OVERRIDE):
+            implied_tp = current_yield - tbill_forecast
+            current_term_premium = TrackedValue(implied_tp, InputSource.COMPUTED)
         else:
+            # TP was directly overridden (or nothing was overridden) — use as-is
             current_term_premium = base_term_premium
 
         # Fair term premium (long-term average)
@@ -297,14 +295,8 @@ class BondModel(ABC):
         """
         inputs = self.get_inputs()
 
-        # Get default current_yield for this asset class from defaults
-        from ..inputs.defaults import DefaultInputs
-        defaults = DefaultInputs()
-        default_inputs = defaults.get_asset_inputs(self.asset_class)
-        default_current_yield = default_inputs.get('current_yield', 0.04)
-
         # Extract key inputs with source tracking
-        current_yield_tv = inputs.get('current_yield', TrackedValue(default_current_yield, InputSource.DEFAULT))
+        current_yield_tv = inputs.get('current_yield', TrackedValue(0.04, InputSource.DEFAULT))
         current_yield = current_yield_tv.value
         current_yield_source = current_yield_tv.source
         duration_tv = inputs.get('duration', TrackedValue(7.0, InputSource.DEFAULT))
@@ -313,7 +305,7 @@ class BondModel(ABC):
 
         # Yield component
         yield_result = self.forecast_yield_component(
-            current_yield, current_yield_source, default_current_yield, tbill_forecast, duration, forecast_horizon
+            current_yield, current_yield_source, tbill_forecast, duration, forecast_horizon
         )
         avg_yield = yield_result['avg_yield'].value
         current_tp = yield_result['current_term_premium'].value

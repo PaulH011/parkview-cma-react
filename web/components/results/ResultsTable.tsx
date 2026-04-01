@@ -10,7 +10,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info } from 'lucide-react';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { ASSET_DISPLAY_INFO } from '@/lib/types';
 import type { AssetClass, CalculateResponse } from '@/lib/types';
 import { AssetBreakdown } from './AssetBreakdown';
@@ -54,7 +55,19 @@ export function ResultsTable({ results, baseResults, isLoading }: ResultsTablePr
           <TableRow>
             <TableHead className="w-[200px]">Asset Class</TableHead>
             <TableHead className="text-right">Nominal Return</TableHead>
-            <TableHead className="text-right">Real Return</TableHead>
+            <TableHead className="text-right">
+              <HoverCard openDelay={200}>
+                <HoverCardTrigger asChild>
+                  <span className="cursor-help border-b border-dotted border-slate-400 inline-flex items-center gap-1">
+                    Real Return
+                    <Info className="h-3 w-3 text-slate-400" />
+                  </span>
+                </HoverCardTrigger>
+                <HoverCardContent className="text-xs w-56 font-normal text-left">
+                  Real returns use each region&apos;s local inflation rate, not base currency inflation.
+                </HoverCardContent>
+              </HoverCard>
+            </TableHead>
             <TableHead className="text-right">Volatility</TableHead>
             <TableHead className="text-right">vs Default</TableHead>
           </TableRow>
