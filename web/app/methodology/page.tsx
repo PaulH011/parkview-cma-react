@@ -563,9 +563,9 @@ export default function MethodologyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Dividend Yield</td><td className="p-2 text-right">1.13%</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.20%</td><td className="p-2 text-right">3.00%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Current CAEY</td><td className="p-2 text-right">2.48%</td><td className="p-2 text-right">5.50%</td><td className="p-2 text-right">5.50%</td><td className="p-2 text-right">6.50%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Fair CAEY</td><td className="p-2 text-right">5.00%</td><td className="p-2 text-right">5.50%</td><td className="p-2 text-right">5.00%</td><td className="p-2 text-right">6.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Dividend Yield</td><td className="p-2 text-right">1.10%</td><td className="p-2 text-right">2.80%</td><td className="p-2 text-right">1.90%</td><td className="p-2 text-right">2.20%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Current CAEY</td><td className="p-2 text-right">2.50%</td><td className="p-2 text-right">4.40%</td><td className="p-2 text-right">3.70%</td><td className="p-2 text-right">3.80%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Fair CAEY</td><td className="p-2 text-right">4.30%</td><td className="p-2 text-right">4.30%</td><td className="p-2 text-right">3.70%</td><td className="p-2 text-right">5.80%</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Country EPS Growth</td><td className="p-2 text-right">1.80%</td><td className="p-2 text-right">1.20%</td><td className="p-2 text-right">0.80%</td><td className="p-2 text-right">3.00%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Regional EPS Growth</td><td className="p-2 text-right">1.60%</td><td className="p-2 text-right">1.60%</td><td className="p-2 text-right">1.60%</td><td className="p-2 text-right">2.80%</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Reversion Speed</td><td className="p-2 text-right">100%</td><td className="p-2 text-right">100%</td><td className="p-2 text-right">100%</td><td className="p-2 text-right">100%</td></tr>
@@ -576,9 +576,10 @@ export default function MethodologyPage() {
                 <Card className="bg-green-50 border-green-200 mt-4">
                   <CardContent className="pt-4">
                     <p className="text-sm text-green-700">
-                      <strong>Valuation Impact:</strong> US equities have the largest valuation headwind (Current CAEY 2.48% vs Fair 5.00%),
-                      implying the market expects CAPE to compress from ~40x to ~20x over 20 years.
-                      Europe is at fair value (no headwind/tailwind). EM has a slight tailwind (6.50% vs fair 6.00%).
+                      <strong>Valuation Impact:</strong> US equities still have a material valuation headwind (Current CAEY 2.50% vs Fair 4.30%),
+                      implying CAPE compresses from ~40x toward ~23x over 20 years.
+                      Europe and Japan are essentially at fair value (no headwind/tailwind).
+                      EM has flipped to a headwind (Current 3.80% vs Fair 5.80% — CAPE ~26x compressing toward ~17x).
                     </p>
                   </CardContent>
                 </Card>

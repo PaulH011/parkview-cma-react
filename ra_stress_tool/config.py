@@ -290,10 +290,10 @@ DEFAULT_ASSET_DATA = {
     },
 
     AssetClass.EQUITY_US: {
-        # RA model defaults
-        'dividend_yield': 0.0113,              # 1.13% (S&P 500 TTM)
-        'current_caey': 0.0248,                # 2.48% (CAPE ~40)
-        'fair_caey': 0.05,                     # 5.0% (CAPE ~20)
+        # Q2 2026 RA model defaults
+        'dividend_yield': 0.011,               # 1.1% (S&P 500 TTM)
+        'current_caey': 0.025,                 # 2.5% (CAPE ~40)
+        'fair_caey': 0.043,                    # 4.3% (CAPE ~23)
         'real_eps_growth': 0.018,              # 1.8%
         'regional_eps_growth': 0.016,          # DM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion
@@ -307,10 +307,10 @@ DEFAULT_ASSET_DATA = {
     },
 
     AssetClass.EQUITY_EUROPE: {
-        # RA model defaults
-        'dividend_yield': 0.030,               # 3.0%
-        'current_caey': 0.055,                 # 5.5%
-        'fair_caey': 0.055,                    # 5.5%
+        # Q2 2026 RA model defaults
+        'dividend_yield': 0.028,               # 2.8%
+        'current_caey': 0.044,                 # 4.4%
+        'fair_caey': 0.043,                    # 4.3% (basically at fair value)
         'real_eps_growth': 0.012,              # 1.2%
         'regional_eps_growth': 0.016,          # DM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion
@@ -324,10 +324,10 @@ DEFAULT_ASSET_DATA = {
     },
 
     AssetClass.EQUITY_JAPAN: {
-        # RA model defaults
-        'dividend_yield': 0.022,               # 2.2%
-        'current_caey': 0.055,                 # 5.5%
-        'fair_caey': 0.05,                     # 5.0%
+        # Q2 2026 RA model defaults
+        'dividend_yield': 0.019,               # 1.9%
+        'current_caey': 0.037,                 # 3.7%
+        'fair_caey': 0.037,                    # 3.7% (at fair value, no valuation drift)
         'real_eps_growth': 0.008,              # 0.8%
         'regional_eps_growth': 0.016,          # DM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion
@@ -341,10 +341,10 @@ DEFAULT_ASSET_DATA = {
     },
 
     AssetClass.EQUITY_EM: {
-        # RA model defaults
-        'dividend_yield': 0.030,               # 3.0%
-        'current_caey': 0.065,                 # 6.5%
-        'fair_caey': 0.06,                     # 6.0%
+        # Q2 2026 RA model defaults
+        'dividend_yield': 0.022,               # 2.2%
+        'current_caey': 0.038,                 # 3.8% (CAPE ~26 — currently rich vs fair)
+        'fair_caey': 0.058,                    # 5.8% (CAPE ~17)
         'real_eps_growth': 0.030,              # 3.0%
         'regional_eps_growth': 0.028,          # EM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion

@@ -120,34 +120,35 @@ export const DEFAULT_INPUTS: AllInputs = {
     },
   },
   equity: {
+    // Q2 2026 RA equity defaults
     us: {
-      dividend_yield: 1.13,
-      current_caey: 2.48,
-      fair_caey: 5.00,
+      dividend_yield: 1.10,
+      current_caey: 2.50,             // CAPE ~40
+      fair_caey: 4.30,                // CAPE ~23
       real_eps_growth: 1.80,
       regional_eps_growth: 1.60,
       reversion_speed: 100,
     },
     europe: {
-      dividend_yield: 3.00,
-      current_caey: 5.50,
-      fair_caey: 5.50,
+      dividend_yield: 2.80,
+      current_caey: 4.40,
+      fair_caey: 4.30,                // basically at fair value
       real_eps_growth: 1.20,
       regional_eps_growth: 1.60,
       reversion_speed: 100,
     },
     japan: {
-      dividend_yield: 2.20,
-      current_caey: 5.50,
-      fair_caey: 5.00,
+      dividend_yield: 1.90,
+      current_caey: 3.70,
+      fair_caey: 3.70,                // at fair value
       real_eps_growth: 0.80,
       regional_eps_growth: 1.60,
       reversion_speed: 100,
     },
     em: {
-      dividend_yield: 3.00,
-      current_caey: 6.50,
-      fair_caey: 6.00,
+      dividend_yield: 2.20,
+      current_caey: 3.80,             // CAPE ~26 — currently rich vs fair
+      fair_caey: 5.80,                // CAPE ~17
       real_eps_growth: 3.00,
       regional_eps_growth: 2.80,
       reversion_speed: 100,
