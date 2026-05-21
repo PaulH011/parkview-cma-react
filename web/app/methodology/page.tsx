@@ -307,7 +307,7 @@ export default function MethodologyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Current T-Bill</td><td className="p-2">Today's 3-month T-Bill rate</td><td className="p-2">US: 3.53%, EU: 1.80%, JP: 1.62%, EM: 4.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current T-Bill</td><td className="p-2">Today's 3-month T-Bill rate</td><td className="p-2">US: 3.60%, EU: 2.10%, JP: 1.62%, EM: 4.00%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Country Factor</td><td className="p-2">Liquidity/risk premium</td><td className="p-2">US: 0%, EU: -0.2%, JP: -0.5%, EM: -3.4%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Rate Floor</td><td className="p-2">Minimum possible rate</td><td className="p-2">-0.75%</td></tr>
                     </tbody>
@@ -812,7 +812,7 @@ export default function MethodologyPage() {
                     <tbody>
                       <tr className="border-b"><td className="p-2 font-medium">Current Headline Inflation</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Long-Term Inflation Target</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Current T-Bill Rate</td><td className="p-2 text-right">3.53%</td><td className="p-2 text-right">1.80%</td><td className="p-2 text-right">1.62%</td><td className="p-2 text-right">4.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current T-Bill Rate</td><td className="p-2 text-right">3.60%</td><td className="p-2 text-right">2.10%</td><td className="p-2 text-right">1.62%</td><td className="p-2 text-right">4.00%</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Country Factor</td><td className="p-2 text-right">0.00%</td><td className="p-2 text-right">-0.20%</td><td className="p-2 text-right">-0.50%</td><td className="p-2 text-right">-3.40%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Population Growth</td><td className="p-2 text-right">0.40%</td><td className="p-2 text-right">0.10%</td><td className="p-2 text-right">-0.20%</td><td className="p-2 text-right">1.00%</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Productivity Growth</td><td className="p-2 text-right">1.20%</td><td className="p-2 text-right">1.49%</td><td className="p-2 text-right">1.59%</td><td className="p-2 text-right">2.44%</td></tr>
@@ -836,7 +836,7 @@ export default function MethodologyPage() {
                     <tbody>
                       <tr className="border-b"><td className="p-2 font-medium">E[Inflation] (10yr avg)</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td></tr>
                       <tr className="border-b bg-blue-50"><td className="p-2 font-medium">E[Real GDP Growth] (10yr avg)</td><td className="p-2 text-right">1.20%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.80%</td><td className="p-2 text-right">3.40%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">E[T-Bill Rate] (10yr avg)</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">2.50%</td><td className="p-2 text-right">1.75%</td><td className="p-2 text-right">4.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">E[T-Bill Rate] (10yr avg)</td><td className="p-2 text-right">4.02%</td><td className="p-2 text-right">2.59%</td><td className="p-2 text-right">1.75%</td><td className="p-2 text-right">4.00%</td></tr>
                     </tbody>
                   </table>
                 </div>

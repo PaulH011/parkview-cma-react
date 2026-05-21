@@ -16,26 +16,26 @@ export const DEFAULT_INPUTS: AllInputs = {
       // E[T-Bill] = 30% × Current + 70% × max(-0.75%, CF + GDP + Inflation)
       inflation_forecast: 3.00,
       rgdp_growth: 1.20,
-      tbill_forecast: 4.00,
+      tbill_forecast: 4.02,         // 0.3*3.60 + 0.7*4.20
       // Building blocks
       population_growth: 0.40,
       productivity_growth: 1.20,
       my_ratio: 2.1,
       current_headline_inflation: 3.00,
       long_term_inflation: 3.00,
-      current_tbill: 3.53,
+      current_tbill: 3.60,
       country_factor: 0.00,
     },
     eurozone: {
       inflation_forecast: 2.00,
       rgdp_growth: 1.00,
-      tbill_forecast: 2.50,
+      tbill_forecast: 2.59,         // 0.3*2.10 + 0.7*2.80
       population_growth: 0.10,
       productivity_growth: 1.49,
       my_ratio: 2.3,
       current_headline_inflation: 2.00,
       long_term_inflation: 2.00,
-      current_tbill: 1.80,
+      current_tbill: 2.10,
       country_factor: -0.20,
     },
     japan: {

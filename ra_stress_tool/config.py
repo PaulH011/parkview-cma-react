@@ -193,7 +193,7 @@ DEFAULT_MARKET_DATA = {
     # US Macro
     'us': {
         'current_headline_inflation': 0.030,   # 3.0%
-        'current_tbill': 0.0353,               # 3.53% (back-solves E[T-Bill] to 4.0%)
+        'current_tbill': 0.0360,               # 3.60% (E[T-Bill] = 4.02%)
         'population_growth': 0.004,            # 0.4%
         'productivity_growth': 0.012,          # 1.2%
         'my_ratio': 2.1,                       # Middle/Young ratio
@@ -201,7 +201,7 @@ DEFAULT_MARKET_DATA = {
     # Eurozone Macro
     'eurozone': {
         'current_headline_inflation': 0.020,   # 2.0%
-        'current_tbill': 0.0180,               # 1.80%
+        'current_tbill': 0.0210,               # 2.10% (E[T-Bill] = 2.59%)
         'population_growth': 0.001,            # 0.1%
         'productivity_growth': 0.0149,         # 1.49% (back-solves E[RGDP] to 1.0%)
         'my_ratio': 2.3,
