@@ -477,8 +477,8 @@ export default function MethodologyPage() {
                   <div className="bg-slate-50 p-4 rounded-lg">
                     <h4 className="font-semibold mb-2">USD (TIPS) Defaults</h4>
                     <ul className="text-sm space-y-1">
-                      <li>Current Real Yield: 1.80%</li>
-                      <li>Duration: 6.4 years</li>
+                      <li>Current Real Yield: 2.10%</li>
+                      <li>Duration: 4.3 years</li>
                       <li>Index Lag Drag: 0.10%</li>
                     </ul>
                   </div>
@@ -871,15 +871,15 @@ export default function MethodologyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Yield</td><td className="p-2 text-right">3.50%</td><td className="p-2 text-right">7.50%</td><td className="p-2 text-right">5.77%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Duration (years)</td><td className="p-2 text-right">7.0</td><td className="p-2 text-right">4.0</td><td className="p-2 text-right">5.5</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Term Premium</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">--</td><td className="p-2 text-right">1.50%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Term Premium</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">--</td><td className="p-2 text-right">2.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Yield</td><td className="p-2 text-right">4.60%</td><td className="p-2 text-right">7.10%</td><td className="p-2 text-right">6.00%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Duration (years)</td><td className="p-2 text-right">8.0</td><td className="p-2 text-right">3.0</td><td className="p-2 text-right">5.8</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Term Premium</td><td className="p-2 text-right">0.60%</td><td className="p-2 text-right">3.10%</td><td className="p-2 text-right">0.00%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Term Premium</td><td className="p-2 text-right">0.60%</td><td className="p-2 text-right">3.10%</td><td className="p-2 text-right">0.00%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Credit Spread</td><td className="p-2 text-right">--</td><td className="p-2 text-right">2.71%</td><td className="p-2 text-right">--</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Credit Spread</td><td className="p-2 text-right">--</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">--</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Default Rate</td><td className="p-2 text-right">--</td><td className="p-2 text-right">5.50%</td><td className="p-2 text-right">2.80%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Default Rate</td><td className="p-2 text-right">--</td><td className="p-2 text-right">3.40%</td><td className="p-2 text-right">3.40%</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Recovery Rate</td><td className="p-2 text-right">--</td><td className="p-2 text-right">40.0%</td><td className="p-2 text-right">55.0%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Annual Credit Loss</td><td className="p-2 text-right">0.00%</td><td className="p-2 text-right">3.30%</td><td className="p-2 text-right">1.26%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Annual Credit Loss</td><td className="p-2 text-right">0.00%</td><td className="p-2 text-right">2.04%</td><td className="p-2 text-right">1.53%</td></tr>
                     </tbody>
                   </table>
                 </div>

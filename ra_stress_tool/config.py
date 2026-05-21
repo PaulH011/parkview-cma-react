@@ -234,28 +234,35 @@ DEFAULT_ASSET_DATA = {
         'region': Region.US,
     },
 
+    # Q2 2026 bond defaults — term premium back-solved so avg_yield = current_yield
     AssetClass.BONDS_GLOBAL: {
-        'current_yield': 0.035,                # 3.5%
-        'duration': 7.0,                       # 7 years
-        'current_term_premium': 0.01,          # 1.0%
-        'fair_term_premium': 0.015,            # 1.5%
+        'current_yield': 0.046,                # 4.6% (US 10y UST proxy)
+        'duration': 8.0,                       # 8 years
+        'current_term_premium': 0.006,         # 0.60% (= 4.6 - US E[T-Bill] 4.0)
+        'fair_term_premium': 0.006,            # 0.60%
     },
 
     AssetClass.BONDS_HY: {
-        'current_yield': 0.075,                # 7.5%
-        'duration': 4.0,                       # 4 years
-        'credit_spread': 0.0271,               # 2.71% (ICE BofA HY OAS)
+        'current_yield': 0.071,                # 7.1%
+        'duration': 3.0,                       # 3 years
+        # Explicit TP so yield component = current_yield exactly.
+        # Encompasses the full HY spread over UST (yield - E[T-Bill]).
+        'current_term_premium': 0.031,         # 3.1% (= 7.1 - US E[T-Bill] 4.0)
+        'fair_term_premium': 0.031,            # 3.1%
+        'credit_spread': 0.0271,               # 2.71% (kept; user did not respecify)
         'fair_credit_spread': 0.04,            # 4.0%
-        'default_rate': 0.055,                 # 5.5%
+        'default_rate': 0.034,                 # 3.4%
         'recovery_rate': 0.40,                 # 40%
     },
 
     AssetClass.BONDS_EM: {
-        'current_yield': 0.0577,               # 5.77% (BBG EM USD Aggregate Index YTM)
-        'duration': 5.5,                       # 5.5 years
-        'current_term_premium': 0.015,         # 1.5%
-        'fair_term_premium': 0.02,             # 2.0%
-        'default_rate': 0.028,                 # 2.8% (EM hard currency)
+        'current_yield': 0.060,                # 6.0% (EM USD sovereign aggregate)
+        'duration': 5.8,                       # 5.8 years
+        # EM model adds em_spread=2% on top of US T-Bill; base rate = 6%.
+        # TP = 0 keeps avg_yield = 6%.
+        'current_term_premium': 0.0,
+        'fair_term_premium': 0.0,
+        'default_rate': 0.034,                 # 3.4%
         'recovery_rate': 0.55,                 # 55%
     },
 
@@ -263,8 +270,8 @@ DEFAULT_ASSET_DATA = {
         # Regime selected by base currency at runtime
         # USD = US TIPS assumptions, EUR = Euro inflation-linked sovereign assumptions
         'usd': {
-            'current_real_yield': 0.0180,          # 1.80%
-            'duration': 6.4,                       # Years
+            'current_real_yield': 0.0210,          # 2.10% (10y TIPS)
+            'duration': 4.3,                       # Years
             'current_real_term_premium': 0.0030,   # 0.30%
             'fair_real_term_premium': 0.0020,      # 0.20%
             'inflation_beta': 1.0,                 # Unitless

@@ -67,32 +67,41 @@ export const DEFAULT_INPUTS: AllInputs = {
     },
   },
   bonds: {
+    // Q2 2026 defaults. Term-premium fields are set so the model's
+    // avg_yield = E[T-Bill] + avg_TP equals the stated current_yield
+    // (current_TP = fair_TP = current_yield - E[T-Bill]).
     global: {
-      current_yield: 3.50,
-      duration: 7.0,
-      fair_term_premium: 1.50,
-      current_term_premium: 1.00,
+      current_yield: 4.60,             // US 10y UST proxy
+      duration: 8.0,
+      fair_term_premium: 0.60,         // = current_yield - US E[T-Bill] (4.6 - 4.0)
+      current_term_premium: 0.60,
     },
     hy: {
-      current_yield: 7.50,
-      duration: 4.0,
-      credit_spread: 2.71,
-      fair_credit_spread: 4.00,
-      default_rate: 5.50,
+      current_yield: 7.10,
+      duration: 3.0,
+      // Explicit TP so yield component = current_yield exactly.
+      // Encompasses the full HY spread over UST (yield - E[T-Bill]).
+      current_term_premium: 3.10,      // = 7.1 - US E[T-Bill] 4.0
+      fair_term_premium: 3.10,
+      credit_spread: 2.71,             // ICE BofA HY OAS, kept (user did not respecify)
+      fair_credit_spread: 4.00,        // long-run avg, kept
+      default_rate: 3.40,
       recovery_rate: 40.0,
     },
     em: {
-      current_yield: 5.77,
-      duration: 5.5,
-      fair_term_premium: 2.00,
-      current_term_premium: 1.50,
-      default_rate: 2.80,
+      current_yield: 6.00,             // EM USD-denominated sovereign aggregate
+      duration: 5.8,
+      // EM model adds em_spread=2% on top of US T-Bill internally, so
+      // base rate = 4 + 2 = 6%. Setting TP = 0 keeps avg_yield = 6%.
+      fair_term_premium: 0.00,
+      current_term_premium: 0.00,
+      default_rate: 3.40,
       recovery_rate: 55.0,
     },
     inflation_linked: {
       usd: {
-        current_real_yield: 1.80,
-        duration: 6.4,
+        current_real_yield: 2.10,      // 10y TIPS
+        duration: 4.3,
         current_real_term_premium: 0.30,
         fair_real_term_premium: 0.20,
         inflation_beta: 1.00,
