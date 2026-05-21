@@ -170,41 +170,42 @@ INPUT_DEFAULTS = {
 
 # ---- Grinold-Kroner equity defaults (values in percentage points / ratios) ----
 INPUT_DEFAULTS_GK_EQUITY = {
+    # Q2 2026 GK equity defaults
     "us": {
-        "dividend_yield": 1.30,
-        "net_buyback_yield": 1.50,
-        "revenue_growth": 5.50,        # auto-computed: inflation 2.3 + GDP 1.2 + wedge 2.0
+        "dividend_yield": 1.10,
+        "net_buyback_yield": 1.30,
+        "revenue_growth": 6.20,        # auto-computed: inflation 3.0 + GDP 1.2 + wedge 2.0
         "revenue_gdp_wedge": 2.00,
         "margin_change": -0.50,
-        "current_pe": 22.0,
-        "target_pe": 20.0,
+        "current_pe": 21.3,
+        "target_pe": 22.7,
     },
     "europe": {
-        "dividend_yield": 3.00,
-        "net_buyback_yield": 0.50,
-        "revenue_growth": 3.40,        # inflation 2.1 + GDP 0.8 + wedge 0.5
+        "dividend_yield": 2.80,
+        "net_buyback_yield": 0.70,
+        "revenue_growth": 3.50,        # inflation 2.0 + GDP 1.0 + wedge 0.5
         "revenue_gdp_wedge": 0.50,
         "margin_change": 0.00,
-        "current_pe": 14.0,
-        "target_pe": 14.0,
+        "current_pe": 14.9,
+        "target_pe": 16.4,
     },
     "japan": {
-        "dividend_yield": 2.20,
-        "net_buyback_yield": 0.80,
-        "revenue_growth": 2.50,        # inflation 1.7 + GDP 0.3 + wedge 0.5
+        "dividend_yield": 1.90,
+        "net_buyback_yield": 1.40,
+        "revenue_growth": 2.80,        # inflation 1.5 + GDP 0.8 + wedge 0.5
         "revenue_gdp_wedge": 0.50,
         "margin_change": 0.30,
-        "current_pe": 15.0,
-        "target_pe": 14.5,
+        "current_pe": 21.9,
+        "target_pe": 22.1,
     },
     "em": {
-        "dividend_yield": 3.00,
-        "net_buyback_yield": -1.50,
-        "revenue_growth": 7.30,        # inflation 3.8 + GDP 3.0 + wedge 0.5
+        "dividend_yield": 2.20,
+        "net_buyback_yield": -0.60,
+        "revenue_growth": 7.90,        # inflation 4.0 + GDP 3.4 + wedge 0.5
         "revenue_gdp_wedge": 0.50,
         "margin_change": 0.00,
-        "current_pe": 12.0,
-        "target_pe": 12.0,
+        "current_pe": 11.7,
+        "target_pe": 15.0,
     },
 }
 

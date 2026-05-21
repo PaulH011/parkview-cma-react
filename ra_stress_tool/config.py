@@ -297,13 +297,13 @@ DEFAULT_ASSET_DATA = {
         'real_eps_growth': 0.018,              # 1.8%
         'regional_eps_growth': 0.016,          # DM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion
-        # GK model defaults (coexist; each model reads only its own keys)
-        'net_buyback_yield': 0.015,            # 1.5%
+        # Q2 2026 GK model defaults (coexist; each model reads only its own keys)
+        'net_buyback_yield': 0.013,            # 1.3%
         'revenue_gdp_wedge': 0.020,            # 2.0%
-        'revenue_growth': 0.055,               # 5.5% (computed from macro)
+        'revenue_growth': 0.062,               # 6.2% display (auto = inflation 3.0 + GDP 1.2 + wedge 2.0)
         'margin_change': -0.005,               # -0.5%
-        'current_pe': 22.0,                    # Forward P/E
-        'target_pe': 20.0,                     # Equilibrium P/E
+        'current_pe': 21.3,                    # Forward P/E
+        'target_pe': 22.7,                     # Equilibrium P/E
     },
 
     AssetClass.EQUITY_EUROPE: {
@@ -314,13 +314,13 @@ DEFAULT_ASSET_DATA = {
         'real_eps_growth': 0.012,              # 1.2%
         'regional_eps_growth': 0.016,          # DM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion
-        # GK model defaults
-        'net_buyback_yield': 0.005,            # 0.5%
+        # Q2 2026 GK model defaults
+        'net_buyback_yield': 0.007,            # 0.7%
         'revenue_gdp_wedge': 0.005,            # 0.5%
-        'revenue_growth': 0.034,               # 3.4%
+        'revenue_growth': 0.035,               # 3.5% display (auto = 2.0 + 1.0 + 0.5)
         'margin_change': 0.000,                # 0.0%
-        'current_pe': 14.0,
-        'target_pe': 14.0,
+        'current_pe': 14.9,
+        'target_pe': 16.4,
     },
 
     AssetClass.EQUITY_JAPAN: {
@@ -331,13 +331,13 @@ DEFAULT_ASSET_DATA = {
         'real_eps_growth': 0.008,              # 0.8%
         'regional_eps_growth': 0.016,          # DM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion
-        # GK model defaults
-        'net_buyback_yield': 0.008,            # 0.8%
+        # Q2 2026 GK model defaults
+        'net_buyback_yield': 0.014,            # 1.4%
         'revenue_gdp_wedge': 0.005,            # 0.5%
-        'revenue_growth': 0.025,               # 2.5%
+        'revenue_growth': 0.028,               # 2.8% display (auto = 1.5 + 0.8 + 0.5)
         'margin_change': 0.003,                # 0.3%
-        'current_pe': 15.0,
-        'target_pe': 14.5,
+        'current_pe': 21.9,
+        'target_pe': 22.1,
     },
 
     AssetClass.EQUITY_EM: {
@@ -348,13 +348,13 @@ DEFAULT_ASSET_DATA = {
         'real_eps_growth': 0.030,              # 3.0%
         'regional_eps_growth': 0.028,          # EM average
         'reversion_speed': 1.0,                # 100% = full CAEY mean reversion
-        # GK model defaults
-        'net_buyback_yield': -0.015,           # -1.5%
+        # Q2 2026 GK model defaults
+        'net_buyback_yield': -0.006,           # -0.6%
         'revenue_gdp_wedge': 0.005,            # 0.5%
-        'revenue_growth': 0.073,               # 7.3%
+        'revenue_growth': 0.079,               # 7.9% display (auto = 4.0 + 3.4 + 0.5)
         'margin_change': 0.000,                # 0.0%
-        'current_pe': 12.0,
-        'target_pe': 12.0,
+        'current_pe': 11.7,
+        'target_pe': 15.0,
     },
 
     AssetClass.ABSOLUTE_RETURN: {
@@ -375,40 +375,41 @@ DEFAULT_ASSET_DATA = {
 # =============================================================================
 
 DEFAULT_ASSET_DATA_GK = {
+    # Q2 2026 GK defaults
     AssetClass.EQUITY_US: {
-        'dividend_yield': 0.013,               # 1.3% (S&P 500 trailing)
-        'net_buyback_yield': 0.015,            # 1.5% (gross ~3% minus ~1.5% dilution)
+        'dividend_yield': 0.011,               # 1.1% (S&P 500)
+        'net_buyback_yield': 0.013,            # 1.3%
         'revenue_gdp_wedge': 0.020,            # 2.0% (S&P global revenue exposure)
         'margin_change': -0.005,               # -0.5% (mild compression from peak)
-        'current_pe': 22.0,                    # Forward P/E
-        'target_pe': 20.0,                     # Long-run equilibrium P/E
+        'current_pe': 21.3,                    # Forward P/E
+        'target_pe': 22.7,                     # Equilibrium P/E
     },
 
     AssetClass.EQUITY_EUROPE: {
-        'dividend_yield': 0.030,               # 3.0% (MSCI Europe)
-        'net_buyback_yield': 0.005,            # 0.5% (lower buyback culture)
+        'dividend_yield': 0.028,               # 2.8% (MSCI Europe)
+        'net_buyback_yield': 0.007,            # 0.7%
         'revenue_gdp_wedge': 0.005,            # 0.5%
-        'margin_change': 0.000,                # 0.0% (flat)
-        'current_pe': 14.0,                    # Forward P/E
-        'target_pe': 14.0,                     # Near fair value
+        'margin_change': 0.000,                # 0.0%
+        'current_pe': 14.9,                    # Forward P/E
+        'target_pe': 16.4,                     # Slight expansion
     },
 
     AssetClass.EQUITY_JAPAN: {
-        'dividend_yield': 0.022,               # 2.2% (MSCI Japan)
-        'net_buyback_yield': 0.008,            # 0.8% (growing buyback trend)
+        'dividend_yield': 0.019,               # 1.9% (MSCI Japan)
+        'net_buyback_yield': 0.014,            # 1.4%
         'revenue_gdp_wedge': 0.005,            # 0.5%
         'margin_change': 0.003,                # 0.3% (corporate governance reform)
-        'current_pe': 15.0,                    # Forward P/E
-        'target_pe': 14.5,                     # Slight contraction
+        'current_pe': 21.9,                    # Forward P/E
+        'target_pe': 22.1,                     # Near fair value
     },
 
     AssetClass.EQUITY_EM: {
-        'dividend_yield': 0.030,               # 3.0% (MSCI EM)
-        'net_buyback_yield': -0.015,           # -1.5% (net dilution from issuance)
+        'dividend_yield': 0.022,               # 2.2% (MSCI EM)
+        'net_buyback_yield': -0.006,           # -0.6% (net dilution from issuance)
         'revenue_gdp_wedge': 0.005,            # 0.5%
-        'margin_change': 0.000,                # 0.0% (flat)
-        'current_pe': 12.0,                    # Forward P/E
-        'target_pe': 12.0,                     # Near fair value
+        'margin_change': 0.000,                # 0.0%
+        'current_pe': 11.7,                    # Forward P/E
+        'target_pe': 15.0,                     # Expected re-rating higher
     },
 }
 

@@ -669,12 +669,12 @@ export default function MethodologyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Dividend Yield</td><td className="p-2 text-right">1.30%</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.20%</td><td className="p-2 text-right">3.00%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Net Buyback Yield</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">0.50%</td><td className="p-2 text-right">0.80%</td><td className="p-2 text-right">-1.50%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Dividend Yield</td><td className="p-2 text-right">1.10%</td><td className="p-2 text-right">2.80%</td><td className="p-2 text-right">1.90%</td><td className="p-2 text-right">2.20%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Net Buyback Yield</td><td className="p-2 text-right">1.30%</td><td className="p-2 text-right">0.70%</td><td className="p-2 text-right">1.40%</td><td className="p-2 text-right">-0.60%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Revenue-GDP Wedge</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">0.50%</td><td className="p-2 text-right">0.50%</td><td className="p-2 text-right">0.50%</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Margin Change</td><td className="p-2 text-right">-0.50%</td><td className="p-2 text-right">0.00%</td><td className="p-2 text-right">0.30%</td><td className="p-2 text-right">0.00%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Forward P/E</td><td className="p-2 text-right">22.0x</td><td className="p-2 text-right">14.0x</td><td className="p-2 text-right">15.0x</td><td className="p-2 text-right">12.0x</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Target P/E</td><td className="p-2 text-right">20.0x</td><td className="p-2 text-right">14.0x</td><td className="p-2 text-right">14.5x</td><td className="p-2 text-right">12.0x</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Forward P/E</td><td className="p-2 text-right">21.3x</td><td className="p-2 text-right">14.9x</td><td className="p-2 text-right">21.9x</td><td className="p-2 text-right">11.7x</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Target P/E</td><td className="p-2 text-right">22.7x</td><td className="p-2 text-right">16.4x</td><td className="p-2 text-right">22.1x</td><td className="p-2 text-right">15.0x</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -954,12 +954,12 @@ export default function MethodologyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Dividend Yield</td><td className="p-2 text-right">1.30%</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.20%</td><td className="p-2 text-right">3.00%</td></tr>
-                      <tr className="border-b bg-purple-50"><td className="p-2 font-medium">Net Buyback Yield</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">0.50%</td><td className="p-2 text-right">0.80%</td><td className="p-2 text-right">-1.50%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Dividend Yield</td><td className="p-2 text-right">1.10%</td><td className="p-2 text-right">2.80%</td><td className="p-2 text-right">1.90%</td><td className="p-2 text-right">2.20%</td></tr>
+                      <tr className="border-b bg-purple-50"><td className="p-2 font-medium">Net Buyback Yield</td><td className="p-2 text-right">1.30%</td><td className="p-2 text-right">0.70%</td><td className="p-2 text-right">1.40%</td><td className="p-2 text-right">-0.60%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Revenue-GDP Wedge</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">0.50%</td><td className="p-2 text-right">0.50%</td><td className="p-2 text-right">0.50%</td></tr>
                       <tr className="border-b bg-purple-50"><td className="p-2 font-medium">Margin Change</td><td className="p-2 text-right">-0.50%</td><td className="p-2 text-right">0.00%</td><td className="p-2 text-right">+0.30%</td><td className="p-2 text-right">0.00%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Forward P/E</td><td className="p-2 text-right">22.0x</td><td className="p-2 text-right">14.0x</td><td className="p-2 text-right">15.0x</td><td className="p-2 text-right">12.0x</td></tr>
-                      <tr className="border-b bg-purple-50"><td className="p-2 font-medium">Target P/E</td><td className="p-2 text-right">20.0x</td><td className="p-2 text-right">14.0x</td><td className="p-2 text-right">14.5x</td><td className="p-2 text-right">12.0x</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Forward P/E</td><td className="p-2 text-right">21.3x</td><td className="p-2 text-right">14.9x</td><td className="p-2 text-right">21.9x</td><td className="p-2 text-right">11.7x</td></tr>
+                      <tr className="border-b bg-purple-50"><td className="p-2 font-medium">Target P/E</td><td className="p-2 text-right">22.7x</td><td className="p-2 text-right">16.4x</td><td className="p-2 text-right">22.1x</td><td className="p-2 text-right">15.0x</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -968,7 +968,7 @@ export default function MethodologyPage() {
                   <CardContent className="pt-4">
                     <p className="text-sm text-purple-700">
                       <strong>Revenue Growth</strong> is not listed above because it is auto-computed from macro:
-                      Revenue Growth = Regional Inflation + Regional GDP + Wedge. For example, US default ≈ 2.29% + 1.20% + 2.00% = 5.49%.
+                      Revenue Growth = Regional Inflation + Regional GDP + Wedge. For example, US default ≈ 3.00% + 1.20% + 2.00% = 6.20%.
                       The Revenue-GDP Wedge captures how corporate revenue growth differs from nominal GDP (e.g., US companies have global revenue exposure).
                     </p>
                   </CardContent>
