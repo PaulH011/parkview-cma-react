@@ -154,12 +154,12 @@ class MacroModel:
             long_term_inflation = long_term_override.value
             long_term_source = InputSource.OVERRIDE
         else:
-            # Default long-term inflation by region
+            # Q2 2026 long-term inflation defaults by region
             long_term_defaults = {
-                'us': 0.022,        # 2.2% (Fed target + small buffer)
+                'us': 0.030,        # 3.0%
                 'eurozone': 0.020,  # 2.0% (ECB target)
                 'japan': 0.015,     # 1.5%
-                'em': 0.035,        # 3.5% (higher for EM)
+                'em': 0.040,        # 4.0%
             }
             long_term_inflation = long_term_defaults.get(region.lower(), 0.025)
             long_term_source = InputSource.DEFAULT
@@ -242,12 +242,14 @@ class MacroModel:
             country_factor = country_factor_override.value
             country_factor_source = InputSource.OVERRIDE
         else:
-            # Default country factors
+            # Q2 2026 country factor defaults
+            # EM is structurally negative (financial repression / capital
+            # controls suppress short rates below RGDP + Inflation theoretical).
             country_factors = {
                 'us': 0.0,
                 'eurozone': -0.002,
                 'japan': -0.005,
-                'em': 0.005,
+                'em': -0.034,
             }
             country_factor = country_factors.get(region.lower(), 0.0)
             country_factor_source = InputSource.DEFAULT

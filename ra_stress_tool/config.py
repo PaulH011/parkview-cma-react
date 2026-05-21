@@ -188,36 +188,38 @@ HEDGE_FUND_PARAMS = {
 # =============================================================================
 
 DEFAULT_MARKET_DATA = {
+    # Q2 2026 defaults — back-solved so direct forecasts land on
+    # US 3/1.2/4, EZ 2/1/2.5, JP 1.5/0.8/1.75, EM 4/3.4/4
     # US Macro
     'us': {
-        'current_headline_inflation': 0.025,   # 2.5%
-        'current_tbill': 0.0367,               # 3.67% (3-month UST yield)
+        'current_headline_inflation': 0.030,   # 3.0%
+        'current_tbill': 0.0353,               # 3.53% (back-solves E[T-Bill] to 4.0%)
         'population_growth': 0.004,            # 0.4%
         'productivity_growth': 0.012,          # 1.2%
         'my_ratio': 2.1,                       # Middle/Young ratio
     },
     # Eurozone Macro
     'eurozone': {
-        'current_headline_inflation': 0.022,   # 2.2%
-        'current_tbill': 0.0204,               # 2.04% (3m Euribor)
+        'current_headline_inflation': 0.020,   # 2.0%
+        'current_tbill': 0.0180,               # 1.80%
         'population_growth': 0.001,            # 0.1%
-        'productivity_growth': 0.010,          # 1.0%
+        'productivity_growth': 0.0149,         # 1.49% (back-solves E[RGDP] to 1.0%)
         'my_ratio': 2.3,
     },
     # Japan Macro
     'japan': {
-        'current_headline_inflation': 0.020,   # 2.0%
-        'current_tbill': 0.0075,               # 0.75% (BOJ policy rate)
-        'population_growth': -0.005,           # -0.5%
-        'productivity_growth': 0.008,          # 0.8%
-        'my_ratio': 2.5,
+        'current_headline_inflation': 0.015,   # 1.5%
+        'current_tbill': 0.0162,               # 1.62%
+        'population_growth': -0.002,           # -0.2%
+        'productivity_growth': 0.0159,         # 1.59%
+        'my_ratio': 2.3,
     },
     # Emerging Markets Macro (aggregate)
     'em': {
-        'current_headline_inflation': 0.045,   # 4.5%
-        'current_tbill': 0.060,                # 6.0%
+        'current_headline_inflation': 0.040,   # 4.0%
+        'current_tbill': 0.040,                # 4.0%
         'population_growth': 0.010,            # 1.0%
-        'productivity_growth': 0.025,          # 2.5%
+        'productivity_growth': 0.0244,         # 2.44%
         'my_ratio': 1.5,
     },
 }

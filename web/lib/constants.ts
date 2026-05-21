@@ -10,57 +10,60 @@ import type { AllInputs, EquityInputsGK, EquityRegion } from './types';
 export const DEFAULT_INPUTS: AllInputs = {
   macro: {
     us: {
-      // Direct forecasts: computed from building blocks below
+      // Q2 2026 defaults — direct forecasts back-solved through building blocks
       // E[RGDP] = Output-per-Capita + Population = (Prod + Demo + Adj) + Pop
       // E[Inflation] = 30% × Current + 70% × Long-Term
       // E[T-Bill] = 30% × Current + 70% × max(-0.75%, CF + GDP + Inflation)
-      inflation_forecast: 2.29,
+      inflation_forecast: 3.00,
       rgdp_growth: 1.20,
-      tbill_forecast: 3.54,
+      tbill_forecast: 4.00,
       // Building blocks
       population_growth: 0.40,
       productivity_growth: 1.20,
       my_ratio: 2.1,
-      current_headline_inflation: 2.50,
-      long_term_inflation: 2.20,
-      current_tbill: 3.67,
+      current_headline_inflation: 3.00,
+      long_term_inflation: 3.00,
+      current_tbill: 3.53,
       country_factor: 0.00,
     },
     eurozone: {
-      inflation_forecast: 2.06,
-      rgdp_growth: 0.51,
-      tbill_forecast: 2.27,
+      inflation_forecast: 2.00,
+      rgdp_growth: 1.00,
+      tbill_forecast: 2.50,
       population_growth: 0.10,
-      productivity_growth: 1.00,
+      productivity_growth: 1.49,
       my_ratio: 2.3,
-      current_headline_inflation: 2.20,
+      current_headline_inflation: 2.00,
       long_term_inflation: 2.00,
-      current_tbill: 2.04,
+      current_tbill: 1.80,
       country_factor: -0.20,
     },
     japan: {
-      inflation_forecast: 1.65,
-      rgdp_growth: -0.46,
-      tbill_forecast: 0.71,
-      population_growth: -0.50,
-      productivity_growth: 0.80,
-      my_ratio: 2.5,
-      current_headline_inflation: 2.00,
+      inflation_forecast: 1.50,
+      rgdp_growth: 0.80,
+      tbill_forecast: 1.75,
+      population_growth: -0.20,
+      productivity_growth: 1.59,
+      my_ratio: 2.3,
+      current_headline_inflation: 1.50,
       long_term_inflation: 1.50,
-      current_tbill: 0.75,
+      current_tbill: 1.62,
       country_factor: -0.50,
     },
     em: {
-      inflation_forecast: 3.80,
-      rgdp_growth: 3.46,
-      tbill_forecast: 7.23,
+      inflation_forecast: 4.00,
+      rgdp_growth: 3.40,
+      tbill_forecast: 4.00,
       population_growth: 1.00,
-      productivity_growth: 2.50,
+      productivity_growth: 2.44,
       my_ratio: 1.5,
-      current_headline_inflation: 4.50,
-      long_term_inflation: 3.50,
-      current_tbill: 6.00,
-      country_factor: 0.50,
+      current_headline_inflation: 4.00,
+      long_term_inflation: 4.00,
+      current_tbill: 4.00,
+      // Negative country factor reflects structurally suppressed EM short rates
+      // (financial repression / capital controls) — needed so the 10y avg lands
+      // on 4% rather than the ~7% implied by RGDP + Inflation.
+      country_factor: -3.40,
     },
   },
   bonds: {
