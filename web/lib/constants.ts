@@ -73,28 +73,29 @@ export const DEFAULT_INPUTS: AllInputs = {
     global: {
       current_yield: 4.60,             // US 10y UST proxy
       duration: 8.0,
-      fair_term_premium: 0.60,         // = current_yield - US E[T-Bill] (4.6 - 4.0)
-      current_term_premium: 0.60,
+      // TP normalizes upward (0.81 -> 1.00) over horizon — slight yield drift
+      current_term_premium: 0.81,
+      fair_term_premium: 1.00,
     },
     hy: {
       current_yield: 7.10,
       duration: 3.0,
-      // Explicit TP so yield component = current_yield exactly.
-      // Encompasses the full HY spread over UST (yield - E[T-Bill]).
-      current_term_premium: 3.10,      // = 7.1 - US E[T-Bill] 4.0
-      fair_term_premium: 3.10,
-      credit_spread: 2.71,             // ICE BofA HY OAS, kept (user did not respecify)
-      fair_credit_spread: 4.00,        // long-run avg, kept
+      // TP now represents duration risk only (credit risk captured by
+      // credit_spread + credit_loss). Yield component will be ~5% (T-Bill + TP).
+      current_term_premium: 1.00,
+      fair_term_premium: 1.00,
+      credit_spread: 2.60,
+      fair_credit_spread: 4.00,
       default_rate: 3.40,
       recovery_rate: 40.0,
     },
     em: {
       current_yield: 6.00,             // EM USD-denominated sovereign aggregate
       duration: 5.8,
-      // EM model adds em_spread=2% on top of US T-Bill internally, so
-      // base rate = 4 + 2 = 6%. Setting TP = 0 keeps avg_yield = 6%.
-      fair_term_premium: 0.00,
-      current_term_premium: 0.00,
+      // EM model adds em_spread=2% on top of US T-Bill internally.
+      // Base rate = 4+2 = 6%. TP rises from 0.81 -> 1.00 over horizon.
+      current_term_premium: 0.81,
+      fair_term_premium: 1.00,
       default_rate: 3.40,
       recovery_rate: 55.0,
     },
@@ -102,8 +103,8 @@ export const DEFAULT_INPUTS: AllInputs = {
       usd: {
         current_real_yield: 2.10,      // 10y TIPS
         duration: 4.3,
-        current_real_term_premium: 0.30,
-        fair_real_term_premium: 0.20,
+        current_real_term_premium: 0.80,
+        fair_real_term_premium: 0.80,
         inflation_beta: 1.00,
         index_lag_drag: 0.10,
         liquidity_technical: 0.05,

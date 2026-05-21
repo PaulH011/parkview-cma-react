@@ -238,18 +238,19 @@ DEFAULT_ASSET_DATA = {
     AssetClass.BONDS_GLOBAL: {
         'current_yield': 0.046,                # 4.6% (US 10y UST proxy)
         'duration': 8.0,                       # 8 years
-        'current_term_premium': 0.006,         # 0.60% (= 4.6 - US E[T-Bill] 4.0)
-        'fair_term_premium': 0.006,            # 0.60%
+        # TP normalizes upward (0.81 -> 1.00) over horizon
+        'current_term_premium': 0.0081,        # 0.81%
+        'fair_term_premium': 0.010,            # 1.00%
     },
 
     AssetClass.BONDS_HY: {
         'current_yield': 0.071,                # 7.1%
         'duration': 3.0,                       # 3 years
-        # Explicit TP so yield component = current_yield exactly.
-        # Encompasses the full HY spread over UST (yield - E[T-Bill]).
-        'current_term_premium': 0.031,         # 3.1% (= 7.1 - US E[T-Bill] 4.0)
-        'fair_term_premium': 0.031,            # 3.1%
-        'credit_spread': 0.0271,               # 2.71% (kept; user did not respecify)
+        # TP now represents duration risk only (credit risk captured by
+        # credit_spread + credit_loss). Yield component will be ~5%.
+        'current_term_premium': 0.010,         # 1.0%
+        'fair_term_premium': 0.010,            # 1.0%
+        'credit_spread': 0.026,                # 2.6%
         'fair_credit_spread': 0.04,            # 4.0%
         'default_rate': 0.034,                 # 3.4%
         'recovery_rate': 0.40,                 # 40%
@@ -259,9 +260,9 @@ DEFAULT_ASSET_DATA = {
         'current_yield': 0.060,                # 6.0% (EM USD sovereign aggregate)
         'duration': 5.8,                       # 5.8 years
         # EM model adds em_spread=2% on top of US T-Bill; base rate = 6%.
-        # TP = 0 keeps avg_yield = 6%.
-        'current_term_premium': 0.0,
-        'fair_term_premium': 0.0,
+        # TP rises 0.81 -> 1.00 over horizon.
+        'current_term_premium': 0.0081,        # 0.81%
+        'fair_term_premium': 0.010,            # 1.00%
         'default_rate': 0.034,                 # 3.4%
         'recovery_rate': 0.55,                 # 55%
     },
@@ -272,8 +273,8 @@ DEFAULT_ASSET_DATA = {
         'usd': {
             'current_real_yield': 0.0210,          # 2.10% (10y TIPS)
             'duration': 4.3,                       # Years
-            'current_real_term_premium': 0.0030,   # 0.30%
-            'fair_real_term_premium': 0.0020,      # 0.20%
+            'current_real_term_premium': 0.0080,   # 0.80%
+            'fair_real_term_premium': 0.0080,      # 0.80%
             'inflation_beta': 1.0,                 # Unitless
             'index_lag_drag': 0.0010,              # 0.10%
             'liquidity_technical': 0.0005,         # 0.05%
