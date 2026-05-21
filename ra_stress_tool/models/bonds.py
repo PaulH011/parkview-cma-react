@@ -359,11 +359,35 @@ class GovernmentBondModel(BondModel):
     """
     Government bond model (Bonds Global - Developed Government).
 
+    Regime-based: uses USD-centric (US Treasury / Global Agg) assumptions when
+    base currency is USD, EUR sovereign (Bund / EUR Agg) assumptions when EUR.
     Assumes zero credit losses for sovereign developed market bonds.
     """
 
-    def __init__(self, override_manager: OverrideManager):
+    def __init__(self, override_manager: OverrideManager, base_currency: str = 'usd'):
         super().__init__(override_manager, AssetClass.BONDS_GLOBAL)
+        self.base_currency = str(base_currency).lower()
+
+    def _active_regime(self) -> str:
+        return 'eur' if self.base_currency == 'eur' else 'usd'
+
+    def get_inputs(self) -> Dict[str, TrackedValue]:
+        """Return regime-specific inputs (USD or EUR) as TrackedValues."""
+        # pylint: disable=protected-access
+        regime = self._active_regime()
+        all_defaults = self.overrides._defaults.get_asset_inputs(self.asset_class)
+        regime_defaults = all_defaults.get(regime, {})
+
+        result: Dict[str, TrackedValue] = {}
+        for key, default_value in regime_defaults.items():
+            override_value, found = self.overrides._get_override_value(
+                'bonds_global', regime, key
+            )
+            if found:
+                result[key] = TrackedValue(override_value, InputSource.OVERRIDE)
+            else:
+                result[key] = TrackedValue(default_value, InputSource.DEFAULT)
+        return result
 
     def compute_credit_loss(self, inputs: Dict[str, TrackedValue]) -> Dict[str, TrackedValue]:
         """Government bonds have zero credit losses."""

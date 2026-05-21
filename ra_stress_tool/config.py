@@ -236,11 +236,23 @@ DEFAULT_ASSET_DATA = {
 
     # Q2 2026 bond defaults — term premium back-solved so avg_yield = current_yield
     AssetClass.BONDS_GLOBAL: {
-        'current_yield': 0.046,                # 4.6% (US 10y UST proxy)
-        'duration': 8.0,                       # 8 years
-        # TP normalizes upward (0.81 -> 1.00) over horizon
-        'current_term_premium': 0.0081,        # 0.81%
-        'fair_term_premium': 0.010,            # 1.00%
+        # Regime selected by base currency at runtime
+        # USD = US Treasury / Global Aggregate USD-centric assumptions
+        # EUR = Bund / EUR sovereign aggregate assumptions
+        'usd': {
+            'current_yield': 0.046,                # 4.6% (US 10y UST proxy)
+            'duration': 8.0,                       # 8 years
+            # TP normalizes upward (0.81 -> 1.00) over horizon
+            'current_term_premium': 0.0081,        # 0.81%
+            'fair_term_premium': 0.010,            # 1.00%
+        },
+        'eur': {
+            'current_yield': 0.025,                # 2.5% (10y Bund / EUR sovereign agg)
+            'duration': 7.5,                       # 7.5 years
+            # Flat EUR yield curve currently — TP near zero
+            'current_term_premium': 0.000,         # 0.00%
+            'fair_term_premium': 0.000,            # 0.00%
+        },
     },
 
     AssetClass.BONDS_HY: {
@@ -427,7 +439,7 @@ DEFAULT_ASSET_DATA_GK = {
 # Defines what currency each asset class is denominated in
 ASSET_LOCAL_CURRENCY = {
     AssetClass.LIQUIDITY: 'base',       # Uses base currency T-Bill
-    AssetClass.BONDS_GLOBAL: 'usd',     # USD-hedged developed bonds
+    AssetClass.BONDS_GLOBAL: 'base',    # Regime-based (USD/EUR sovereign); no FX adjustment
     AssetClass.BONDS_HY: 'usd',         # US High Yield
     AssetClass.BONDS_EM: 'usd',         # USD hard currency (EM sovereign bonds issued in USD)
     AssetClass.INFLATION_LINKED: 'base',# Uses base currency regime directly (USD TIPS or EUR ILBs)

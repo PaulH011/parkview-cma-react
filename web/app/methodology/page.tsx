@@ -872,10 +872,10 @@ export default function MethodologyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Yield</td><td className="p-2 text-right">4.60%</td><td className="p-2 text-right">7.10%</td><td className="p-2 text-right">6.00%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Duration (years)</td><td className="p-2 text-right">8.0</td><td className="p-2 text-right">3.0</td><td className="p-2 text-right">5.8</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Term Premium</td><td className="p-2 text-right">0.81%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.81%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Term Premium</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">1.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Yield</td><td className="p-2 text-right">4.60% / 2.50%</td><td className="p-2 text-right">7.10%</td><td className="p-2 text-right">6.00%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Duration (years)</td><td className="p-2 text-right">8.0 / 7.5</td><td className="p-2 text-right">3.0</td><td className="p-2 text-right">5.8</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Term Premium</td><td className="p-2 text-right">0.81% / 0.00%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.81%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Term Premium</td><td className="p-2 text-right">1.00% / 0.00%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">1.00%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Credit Spread</td><td className="p-2 text-right">--</td><td className="p-2 text-right">2.60%</td><td className="p-2 text-right">--</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Credit Spread</td><td className="p-2 text-right">--</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">--</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Default Rate</td><td className="p-2 text-right">--</td><td className="p-2 text-right">3.40%</td><td className="p-2 text-right">3.40%</td></tr>
@@ -891,6 +891,12 @@ export default function MethodologyPage() {
                       <strong>Credit Loss Formula:</strong> Annual Credit Loss = Default Rate x (1 - Recovery Rate).
                       Bonds Global (government bonds) are assumed default-free.
                       Bonds EM uses US macro assumptions since they are USD-denominated hard currency bonds.
+                    </p>
+                    <p className="text-sm text-amber-700 mt-2">
+                      <strong>Bonds Global is regime-based:</strong> values shown as "USD / EUR".
+                      In USD mode the engine uses US Treasury / Global Aggregate assumptions and US macro;
+                      in EUR mode it switches to Bund / EUR sovereign aggregate assumptions and Eurozone macro.
+                      No FX adjustment is applied — Bonds Global is treated as a native-currency asset on both sides.
                     </p>
                   </CardContent>
                 </Card>

@@ -49,6 +49,19 @@ export interface BondInputs {
   recovery_rate?: number;
 }
 
+// Regime-based Bonds Global (USD = UST/Global Agg, EUR = Bund/EUR sovereign agg)
+export interface BondGlobalRegimeInputs {
+  current_yield: number;
+  duration: number;
+  current_term_premium: number;
+  fair_term_premium: number;
+}
+
+export interface BondGlobalInputs {
+  usd: BondGlobalRegimeInputs;
+  eur: BondGlobalRegimeInputs;
+}
+
 export interface InflationLinkedRegimeInputs {
   current_real_yield: number;
   duration: number;
@@ -103,7 +116,7 @@ export interface AbsoluteReturnInputs {
 export interface AllInputs {
   macro: Record<MacroRegion, MacroInputs>;
   bonds: {
-    global: BondInputs;
+    global: BondGlobalInputs;
     hy: BondInputs;
     em: BondInputs;
     inflation_linked: InflationLinkedInputs;
@@ -170,7 +183,10 @@ export interface MacroPreviewResponse {
 // Override structure (matches backend)
 export interface Overrides {
   macro?: Partial<Record<MacroRegion, Partial<MacroInputs>>>;
-  bonds_global?: Partial<BondInputs>;
+  bonds_global?: {
+    usd?: Partial<BondGlobalRegimeInputs>;
+    eur?: Partial<BondGlobalRegimeInputs>;
+  };
   bonds_hy?: Partial<BondInputs>;
   bonds_em?: Partial<BondInputs>;
   inflation_linked?: {

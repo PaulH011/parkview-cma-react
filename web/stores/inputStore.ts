@@ -12,6 +12,7 @@ import type {
   MacroInputs,
   MacroRegion,
   BondInputs,
+  BondGlobalRegimeInputs,
   BondType,
   InflationLinkedInputs,
   InflationLinkedRegimeInputs,
@@ -53,7 +54,12 @@ interface InputState {
   setMacroValue: (region: MacroRegion, key: keyof MacroInputs, value: number) => void;
   syncMacroComputed: (region: MacroRegion, computedValues: Partial<Record<string, number>>) => void;
   isMacroDirty: (region: MacroRegion, key: keyof MacroInputs) => boolean;
-  setBondValue: (type: Exclude<BondType, 'inflation_linked'>, key: keyof BondInputs, value: number) => void;
+  setBondValue: (type: Exclude<BondType, 'global' | 'inflation_linked'>, key: keyof BondInputs, value: number) => void;
+  setBondGlobalValue: (
+    regime: 'usd' | 'eur',
+    key: keyof BondGlobalRegimeInputs,
+    value: number
+  ) => void;
   setInflationLinkedValue: (
     regime: keyof InflationLinkedInputs,
     key: keyof InflationLinkedRegimeInputs,
@@ -176,6 +182,20 @@ export const useInputStore = create<InputState>((set, get) => ({
       },
     })),
 
+  setBondGlobalValue: (regime, key, value) =>
+    set((state) => ({
+      bonds: {
+        ...state.bonds,
+        global: {
+          ...state.bonds.global,
+          [regime]: {
+            ...state.bonds.global[regime],
+            [key]: value,
+          },
+        },
+      },
+    })),
+
   setInflationLinkedValue: (regime, key, value) =>
     set((state) => ({
       bonds: {
@@ -267,8 +287,8 @@ export const useInputStore = create<InputState>((set, get) => ({
       }
     }
 
-    // Apply bond overrides
-    for (const type of ['global', 'hy', 'em'] as Exclude<BondType, 'inflation_linked'>[]) {
+    // Apply bond overrides (HY, EM — flat structure)
+    for (const type of ['hy', 'em'] as Exclude<BondType, 'global' | 'inflation_linked'>[]) {
       const key = `bonds_${type}` as keyof Overrides;
       if (overrides[key]) {
         newBonds[type] = {
@@ -276,6 +296,21 @@ export const useInputStore = create<InputState>((set, get) => ({
           ...overrides[key],
         };
       }
+    }
+
+    // Bonds Global is regime-based — apply per-regime
+    if (overrides.bonds_global) {
+      newBonds.global = {
+        ...newBonds.global,
+        usd: {
+          ...newBonds.global.usd,
+          ...(overrides.bonds_global.usd || {}),
+        },
+        eur: {
+          ...newBonds.global.eur,
+          ...(overrides.bonds_global.eur || {}),
+        },
+      };
     }
 
     if (overrides.inflation_linked) {
@@ -371,8 +406,8 @@ export const useInputStore = create<InputState>((set, get) => ({
       }
     }
 
-    // Check bond differences
-    for (const type of ['global', 'hy', 'em'] as Exclude<BondType, 'inflation_linked'>[]) {
+    // Check bond differences (HY and EM)
+    for (const type of ['hy', 'em'] as Exclude<BondType, 'global' | 'inflation_linked'>[]) {
       const current = state.bonds[type];
       const bondDefaults = defaults.bonds[type];
       const bondOverrides: Partial<BondInputs> = {};
@@ -391,10 +426,35 @@ export const useInputStore = create<InputState>((set, get) => ({
       }
 
       if (Object.keys(bondOverrides).length > 0) {
-        if (type === 'global') overrides.bonds_global = bondOverrides;
         if (type === 'hy') overrides.bonds_hy = bondOverrides;
         if (type === 'em') overrides.bonds_em = bondOverrides;
       }
+    }
+
+    // Bonds Global is regime-based — nest under bonds_global.{usd,eur}
+    const globalOverrides: NonNullable<Overrides['bonds_global']> = {};
+    for (const regime of ['usd', 'eur'] as const) {
+      const currentRegime = state.bonds.global[regime];
+      const defaultRegime = defaults.bonds.global[regime];
+      const regimeOverrides: Partial<BondGlobalRegimeInputs> = {};
+
+      for (const [key, value] of Object.entries(currentRegime)) {
+        const defaultValue = defaultRegime[key as keyof BondGlobalRegimeInputs];
+        if (isDifferent(value as number, defaultValue as number)) {
+          if (key === 'duration') {
+            regimeOverrides[key as keyof BondGlobalRegimeInputs] = value as number;
+          } else {
+            regimeOverrides[key as keyof BondGlobalRegimeInputs] = (value as number) / 100;
+          }
+        }
+      }
+
+      if (Object.keys(regimeOverrides).length > 0) {
+        globalOverrides[regime] = regimeOverrides;
+      }
+    }
+    if (Object.keys(globalOverrides).length > 0) {
+      overrides.bonds_global = globalOverrides;
     }
 
     // Inflation-linked nested overrides

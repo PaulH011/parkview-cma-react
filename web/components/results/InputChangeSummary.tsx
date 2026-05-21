@@ -113,8 +113,32 @@ function buildSections(overrides: Overrides): Section[] {
     }
   }
 
-  // Bond overrides (global, hy, em)
-  for (const type of ['bonds_global', 'bonds_hy', 'bonds_em'] as const) {
+  // Bonds Global overrides — regime-based (usd/eur)
+  if (overrides.bonds_global) {
+    for (const regime of ['usd', 'eur'] as const) {
+      const regimeValues = overrides.bonds_global[regime];
+      if (!regimeValues) continue;
+      const entries: OverrideEntry[] = [];
+      for (const [key, value] of Object.entries(regimeValues)) {
+        if (typeof value !== 'number') continue;
+        entries.push({
+          key,
+          displayName: displayName(key),
+          formattedValue: formatValue(key, value),
+        });
+      }
+      if (entries.length > 0) {
+        sections.push({
+          sectionKey: `bonds_global.${regime}`,
+          label: `${SECTION_NAMES['bonds_global']} (${regime.toUpperCase()})`,
+          entries,
+        });
+      }
+    }
+  }
+
+  // Bond overrides (hy, em — flat structure)
+  for (const type of ['bonds_hy', 'bonds_em'] as const) {
     const group = overrides[type];
     if (!group) continue;
     const entries: OverrideEntry[] = [];

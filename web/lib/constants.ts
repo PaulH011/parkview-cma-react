@@ -71,11 +71,21 @@ export const DEFAULT_INPUTS: AllInputs = {
     // avg_yield = E[T-Bill] + avg_TP equals the stated current_yield
     // (current_TP = fair_TP = current_yield - E[T-Bill]).
     global: {
-      current_yield: 4.60,             // US 10y UST proxy
-      duration: 8.0,
-      // TP normalizes upward (0.81 -> 1.00) over horizon — slight yield drift
-      current_term_premium: 0.81,
-      fair_term_premium: 1.00,
+      // Regime-based: USD = US Treasury / Global Agg, EUR = Bund / EUR sovereign agg
+      usd: {
+        current_yield: 4.60,           // US 10y UST proxy
+        duration: 8.0,
+        // TP normalizes upward (0.81 -> 1.00) over horizon
+        current_term_premium: 0.81,
+        fair_term_premium: 1.00,
+      },
+      eur: {
+        current_yield: 2.50,           // 10y Bund / EUR sovereign agg
+        duration: 7.5,
+        // Flat EUR yield curve currently — TP near zero
+        current_term_premium: 0.00,
+        fair_term_premium: 0.00,
+      },
     },
     hy: {
       current_yield: 7.10,

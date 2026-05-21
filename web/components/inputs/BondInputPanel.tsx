@@ -8,16 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Info } from 'lucide-react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
-import type { BondType, BondInputs } from '@/lib/types';
+import type { BondType, BondInputs, BondGlobalRegimeInputs } from '@/lib/types';
 
 const BOND_TYPES: { key: BondType; label: string; description: string }[] = [
-  { key: 'global', label: 'Global Gov', description: 'Developed market government bonds' },
+  { key: 'global', label: 'Global Gov', description: 'USD = US Treasury / Global Agg, EUR = Bund / EUR sovereign agg (by base currency)' },
   { key: 'hy', label: 'High Yield', description: 'US high yield corporate bonds' },
   { key: 'em', label: 'EM Hard', description: 'EM USD-denominated sovereign bonds' },
   { key: 'inflation_linked', label: 'Bonds Inflation Linked', description: 'USD TIPS or EUR inflation-linked sovereigns (by base currency)' },
 ];
 
-function BondTypeInputs({ bondType }: { bondType: Exclude<BondType, 'inflation_linked'> }) {
+function BondTypeInputs({ bondType }: { bondType: Exclude<BondType, 'global' | 'inflation_linked'> }) {
   const { bonds, setBondValue, advancedMode } = useInputStore();
   const inputs = bonds[bondType];
   const defaults = DEFAULT_INPUTS.bonds[bondType];
@@ -167,6 +167,89 @@ function BondTypeInputs({ bondType }: { bondType: Exclude<BondType, 'inflation_l
   );
 }
 
+function BondGlobalInputs() {
+  const { bonds, setBondGlobalValue, advancedMode, baseCurrency } = useInputStore();
+  const activeRegime = baseCurrency === 'eur' ? 'eur' : 'usd';
+  const inputs = bonds.global[activeRegime];
+  const defaults = DEFAULT_INPUTS.bonds.global[activeRegime];
+
+  const handleChange = (key: keyof BondGlobalRegimeInputs, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setBondGlobalValue(activeRegime, key, numValue);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border bg-blue-50 border-blue-200 px-3 py-2 text-xs text-blue-800">
+        {activeRegime === 'usd'
+          ? 'USD mode: using US Treasury / Global Aggregate assumptions'
+          : 'EUR mode: using Bund / EUR sovereign aggregate assumptions'}
+      </div>
+
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-slate-700">Primary Inputs</h4>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Current Yield (%)</Label>
+            <Input
+              type="number"
+              step="0.1"
+              value={inputs.current_yield}
+              onChange={(e) => handleChange('current_yield', e.target.value)}
+              className="h-8 text-sm"
+            />
+            <p className="text-xs text-slate-400">Default: {defaults.current_yield}%</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Duration (years)</Label>
+            <Input
+              type="number"
+              step="0.5"
+              value={inputs.duration}
+              onChange={(e) => handleChange('duration', e.target.value)}
+              className="h-8 text-sm"
+            />
+            <p className="text-xs text-slate-400">Default: {defaults.duration} yrs</p>
+          </div>
+        </div>
+      </div>
+
+      {advancedMode && (
+        <>
+          <Separator />
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-slate-700">Building Blocks</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Current Term Premium (%)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={inputs.current_term_premium}
+                  onChange={(e) => handleChange('current_term_premium', e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Fair Term Premium (%)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={inputs.fair_term_premium}
+                  onChange={(e) => handleChange('fair_term_premium', e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function InflationLinkedInputs() {
   const { bonds, setInflationLinkedValue, advancedMode, baseCurrency } = useInputStore();
   const activeRegime = baseCurrency === 'eur' ? 'eur' : 'usd';
@@ -296,6 +379,8 @@ export function BondInputPanel() {
             <p className="text-xs text-slate-500 mb-3">{description}</p>
             {key === 'inflation_linked' ? (
               <InflationLinkedInputs />
+            ) : key === 'global' ? (
+              <BondGlobalInputs />
             ) : (
               <BondTypeInputs bondType={key} />
             )}

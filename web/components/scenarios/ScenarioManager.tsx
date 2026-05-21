@@ -92,7 +92,20 @@ function convertSavedOverridesToUiUnits(overrides: Overrides): Overrides {
     return out;
   };
 
-  converted.bonds_global = convertBondGroup(overrides.bonds_global) as Overrides['bonds_global'];
+  // Bonds Global is regime-based (like inflation_linked) — convert per regime
+  if (overrides.bonds_global) {
+    converted.bonds_global = {};
+    for (const regime of ['usd', 'eur'] as const) {
+      const regimeValues = overrides.bonds_global[regime];
+      if (!regimeValues) continue;
+      const out: Record<string, number> = {};
+      for (const [key, value] of Object.entries(regimeValues)) {
+        if (typeof value !== 'number') continue;
+        out[key] = convertNumberForUi(key, value, BOND_RAW_KEYS);
+      }
+      converted.bonds_global[regime] = out as Partial<import('@/lib/types').BondGlobalRegimeInputs>;
+    }
+  }
   converted.bonds_hy = convertBondGroup(overrides.bonds_hy) as Overrides['bonds_hy'];
   converted.bonds_em = convertBondGroup(overrides.bonds_em) as Overrides['bonds_em'];
 

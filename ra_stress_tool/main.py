@@ -67,7 +67,7 @@ class CMEEngine:
         self.macro_model = MacroModel(self.override_manager)
         self.equity_model = EquityModel(self.override_manager)
         self.equity_model_gk = EquityModelGK(self.override_manager) if equity_model_type == 'gk' else None
-        self.gov_bond_model = GovernmentBondModel(self.override_manager)
+        self.gov_bond_model = GovernmentBondModel(self.override_manager, base_currency=self.base_currency.value)
         self.hy_bond_model = HighYieldBondModel(self.override_manager)
         self.em_bond_model = EMBondModel(self.override_manager)
         self.inflation_linked_model = InflationLinkedBondModel(self.override_manager)
@@ -464,6 +464,9 @@ class CMEEngine:
         """
         Compute expected return for global government bonds.
 
+        Regime-based: USD = US Treasury / Global Agg (US macro region),
+        EUR = Bund / EUR sovereign aggregate (Eurozone macro region).
+
         Returns
         -------
         AssetClassResult
@@ -472,19 +475,23 @@ class CMEEngine:
         macro = self.compute_macro_forecasts()
         macro_sources = self._get_macro_sources()
 
-        # Use weighted average of DM T-Bill and inflation
-        # Simplified: use US as proxy for global DM
-        us_macro = macro['us']
+        # Select regime based on base currency
+        if self.base_currency == BaseCurrency.EUR:
+            macro_region = 'eurozone'
+        else:
+            macro_region = 'us'
+
+        region_macro = macro[macro_region]
 
         forecast = self.gov_bond_model.compute_return(
-            tbill_forecast=us_macro['tbill_rate'],
-            inflation_forecast=us_macro['inflation'],
+            tbill_forecast=region_macro['tbill_rate'],
+            inflation_forecast=region_macro['inflation'],
         )
 
-        # Build macro dependencies
+        # Build macro dependencies for the regime's macro region
         macro_deps = self._build_macro_dependencies(
             asset_type='bond',
-            macro_region='us',
+            macro_region=macro_region,
             macro=macro,
             macro_sources=macro_sources,
             include_tbill=True,
