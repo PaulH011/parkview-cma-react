@@ -247,11 +247,11 @@ DEFAULT_ASSET_DATA = {
             'fair_term_premium': 0.010,            # 1.00%
         },
         'eur': {
-            'current_yield': 0.025,                # 2.5% (10y Bund / EUR sovereign agg)
+            'current_yield': 0.030,                # 3.0% (10y Bund)
             'duration': 7.5,                       # 7.5 years
-            # Flat EUR yield curve currently — TP near zero
-            'current_term_premium': 0.000,         # 0.00%
-            'fair_term_premium': 0.000,            # 0.00%
+            # TP normalizes upward 0.40 -> 0.50 over horizon
+            'current_term_premium': 0.004,         # 0.40%
+            'fair_term_premium': 0.005,            # 0.50%
         },
     },
 

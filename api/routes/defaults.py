@@ -84,11 +84,11 @@ INPUT_DEFAULTS = {
                 "fair_term_premium": 1.00,
             },
             "eur": {
-                "current_yield": 2.50,        # 10y Bund / EUR sovereign agg
+                "current_yield": 3.00,        # 10y Bund
                 "duration": 7.5,
-                # Flat EUR yield curve currently — TP near zero
-                "current_term_premium": 0.00,
-                "fair_term_premium": 0.00,
+                # TP normalizes upward 0.40 -> 0.50 over horizon
+                "current_term_premium": 0.40,
+                "fair_term_premium": 0.50,
             },
         },
         "hy": {
