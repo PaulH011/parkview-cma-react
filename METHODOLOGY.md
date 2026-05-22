@@ -44,7 +44,9 @@
 | Pure-number inputs (durations, P/E ratios, MY ratio, betas, reversion_speed) | **Unitless** — sent as-is, no /100 conversion |
 
 The pure-number fields that bypass the /100 conversion when sent as overrides:
-`my_ratio`, `duration` (for bonds), `inflation_beta` (for ILBs), `current_pe`, `target_pe`, `reversion_speed`, all `beta_*` factors (for Absolute Return).
+`my_ratio`, `duration` (for bonds), `inflation_beta` (for ILBs), `current_pe`, `target_pe`, all `beta_*` factors (for Absolute Return).
+
+**`reversion_speed`** (RA equity λ) is a special case: the UI stores it as a percentage (default 100 = 100%) and the frontend divides by 100 before sending, so the engine receives 1.0. From the spreadsheet author's perspective, treat it the same as any other percentage input — show "100%" in the cell, use 1.0 in the formula.
 
 ### 1.2 Forecast horizon
 
@@ -56,7 +58,7 @@ For each asset class the engine produces:
 - `expected_return_nominal` — annual expected return in the base currency, decimal
 - `expected_return_real` — `nominal − base-region inflation` (for cash and bonds), or computed within the model (equity RA and ILB derive real first, then add inflation)
 - `components` — the additive decomposition (yield, roll, valuation, etc.)
-- `inputs_used` — every input value with provenance tag (`default`, `override`, `computed`, `affected_by_override`)
+- `inputs_used` — every input value with provenance tag. The Python `InputSource` enum has 3 values: `default`, `override`, `computed`. A fourth string tag `affected_by_override` is attached only to macro-dependency tracking (not part of the enum) — it marks values that weren't directly overridden but were derived from something that was.
 - `macro_dependencies` — which macro inputs this asset depends on
 
 ### 1.4 Base currency switch
@@ -139,11 +141,11 @@ Result range: `±1%`. Positive when MY < 2.0 (young population, growth tailwind)
 
 **Adjustment**: hardcoded per region, intended to capture skewness / one-time factors. Currently:
 - US: `−0.003` (−0.30%)
-- Eurozone: `−0.002` (−0.20%) — *engine code says −0.003; see §3.5 note*
+- Eurozone: `−0.003` (−0.30%)
 - Japan: `−0.003` (−0.30%)
 - EM: `−0.005` (−0.50%)
 
-*Note*: the engine has `adjustment = -0.003 if region in ['us', 'eurozone', 'japan'] else -0.005` ([macro.py:101](ra_stress_tool/models/macro.py:101)). So all DM regions share `-0.003`, EM is `-0.005`. The methodology page table omits this row.
+The engine has `adjustment = -0.003 if region in ['us', 'eurozone', 'japan'] else -0.005` ([macro.py:101](ra_stress_tool/models/macro.py:101)). All DM regions share `-0.003`, EM is `-0.005`. The web UI's macro panel does not surface this row separately — it is folded into the building-block computation.
 
 ### 3.2 Inflation Forecast — `E[Inflation]`
 
@@ -160,7 +162,9 @@ The 30/70 weighting reflects the RA methodology that current inflation captures 
 ### 3.3 T-Bill Rate Forecast — `E[T-Bill]`
 
 ```
-rate_floor = −0.0075   (−0.75%, a hardcoded minimum)
+rate_floor = −0.0075   (−0.75%, a hardcoded minimum applied ONLY
+                       to the long-term T-Bill component, not to
+                       the final blended E[T-Bill])
 
 long_term_tbill_r = max(rate_floor,
                         country_factor_r + E[RGDP]_r + E[Inflation]_r)
@@ -207,8 +211,8 @@ The denominator normalises because the four explicit regions sum to 0.86 (rest-o
 |---|---|---|---|
 | US | 3.00% | 1.2003% | 4.0202% |
 | Eurozone | 2.00% | 0.9987% | 2.5891% |
-| Japan | 1.50% | 0.7987% | 1.7461% |
-| EM | 4.00% | 3.4021% | 3.9735% |
+| Japan | 1.50% | 0.7987% | 1.7451% |
+| EM | 4.00% | 3.4021% | 4.0015% |
 
 **Global RGDP**: `2.1659%` (weighted average using the 26/15/5/40 weights above, normalised by 0.86).
 
@@ -280,16 +284,16 @@ fx    = 0.30 × 1.4311 + 0.70 × 1.0000 = +0.4293 + 0.7000 = +1.1293%
 
 USD base, JPY asset (Equity Japan):
 ```
-carry = 4.0202% − 1.7461% = +2.2741%
+carry = 4.0202% − 1.7451% = +2.2751%
 ppp   = 3.0000% − 1.5000% = +1.5000%
-fx    = 0.30 × 2.2741 + 0.70 × 1.5000 = +0.6822 + 1.0500 = +1.7322%
+fx    = 0.30 × 2.2751 + 0.70 × 1.5000 = +0.6825 + 1.0500 = +1.7325%
 ```
 
 USD base, EM asset (Equity EM):
 ```
-carry = 4.0202% − 3.9735% = +0.0467%
+carry = 4.0202% − 4.0015% = +0.0187%
 ppp   = 3.0000% − 4.0000% = −1.0000%
-fx    = 0.30 × 0.0467 + 0.70 × −1.0000 = +0.0140 − 0.7000 = −0.6860%
+fx    = 0.30 × 0.0187 + 0.70 × −1.0000 = +0.0056 − 0.7000 = −0.6944%
 ```
 → USD appreciates vs EM → EM asset return is **reduced** by 0.69% in USD terms.
 
@@ -360,7 +364,8 @@ Note: uses `current_term_premium`, not the average.
 monthly_reversion       = 0.03
 reversion_fraction      = 1 − (1 − monthly_reversion)^(horizon × 12)
                         = 1 − 0.97^120
-                        ≈ 0.97552
+                        = 1 − 0.025860
+                        ≈ 0.97414
 reversion_fraction      = min(reversion_fraction, 1.0)
 
 expected_tp_change      = (fair_term_premium − current_term_premium) × reversion_fraction
@@ -432,7 +437,7 @@ Always uses **US** macro (T-Bill and inflation) regardless of base currency. FX 
 base_compute_return = standard bond framework (§5)
 
 # HY-specific spread valuation add-on
-hy_reversion_fraction = 0.5     (50% reversion over horizon, NOT the 97.55% used by TP)
+hy_reversion_fraction = 0.5     (50% reversion over horizon, NOT the 97.41% used by TP)
 spread_change         = (fair_credit_spread − credit_spread) × 0.5
 spread_valuation      = −duration × spread_change / horizon
 
@@ -481,7 +486,7 @@ E[Nominal] = (em_tbill_forecast + avg_TP)   ← appears as "yield" in output
 E[Real]    = E[Nominal] − US inflation_forecast
 ```
 
-The 2% `em_spread` is a hardcoded constant in `bonds.py:534` — not user-overridable.
+The 2% `em_spread` is a hardcoded constant in `bonds.py:558` — not user-overridable.
 
 ### 8.2 Inputs
 
@@ -515,7 +520,7 @@ This model does **not** use the §5 common framework. Its decomposition is:
 real_carry          = current_real_yield
 real_roll_return    = (current_real_term_premium / 10) × duration
 expected_rtp_change = (fair_real_term_premium − current_real_term_premium) × reversion_fraction
-                     where reversion_fraction = 1 − 0.97^120 ≈ 0.9755
+                     where reversion_fraction = 1 − 0.97^120 ≈ 0.97414
 real_valuation      = −duration × expected_rtp_change / horizon
 
 real_return         = real_carry
@@ -582,17 +587,21 @@ Else:
 full_reversion_years = 20
 reversion_speed (λ)  = input (default 1.0 = full reversion)
 
-caey_annual_change = (fair_caey / current_caey) ^ (λ / 20) − 1
+If current_caey > 0 AND reversion_speed > 0:
+    caey_annual_change = (fair_caey / current_caey) ^ (λ / 20) − 1
 
-# Average year-on-year price change over 10-year horizon
-cumulative_valuation = 0
-caey = current_caey
-For year in 0..9:
-    caey_next      = caey × (1 + caey_annual_change)
-    year_valuation = caey / caey_next − 1
-    cumulative_valuation += year_valuation
-    caey = caey_next
-valuation_change = cumulative_valuation / 10
+    # Average year-on-year price change over 10-year horizon
+    cumulative_valuation = 0
+    caey = current_caey
+    For year in 0..9:
+        caey_next      = caey × (1 + caey_annual_change)
+        year_valuation = caey / caey_next − 1
+        cumulative_valuation += year_valuation
+        caey = caey_next
+    valuation_change = cumulative_valuation / 10
+Else:
+    valuation_change   = 0
+    caey_annual_change = 0
 
 # Total real return
 E[Real Return]    = dividend_yield + real_eps_growth_capped + valuation_change
@@ -907,8 +916,8 @@ Direct-forecast display defaults (what the UI shows in the "Direct Forecast Over
 | T-Bill `long_term_weight` | 0.70 | TBILL_PARAMS |
 | Bond TP reversion_speed | 1.0 | `abs(MEAN_REVERSION_PARAMS['bond_term_premium_bounds'][0])` |
 | Bond valuation monthly reversion | 0.03 | hardcoded in bonds.py:222 |
-| HY spread reversion_fraction | 0.5 | hardcoded in bonds.py:436 |
-| EM `em_spread` | 2.00% | hardcoded in bonds.py:534 |
+| HY spread reversion_fraction | 0.5 | hardcoded in bonds.py:460 |
+| EM `em_spread` | 2.00% | hardcoded in bonds.py:558 |
 | FX `CARRY_WEIGHT` | 0.30 | currency.py:21 |
 | FX `PPP_WEIGHT` | 0.70 | currency.py:22 |
 | Equity `country_weight` | 0.50 | EQUITY_PARAMS |
@@ -978,11 +987,12 @@ If the user explicitly types into a Direct Forecast field, that value becomes a 
 
 ### 15.3 Override-source provenance
 
-Every value carries a source tag:
+The Python `InputSource` enum (in `inputs/overrides.py:17-21`) has **three** values:
 - `default` — value came from `DEFAULT_*` configs
 - `override` — user explicitly set this value
 - `computed` — value was derived (e.g., E[T-Bill] is always computed unless directly overridden)
-- `affected_by_override` — value itself wasn't overridden, but an upstream input was (so the value is no longer the original default)
+
+A fourth tag, `affected_by_override`, is **not** part of the enum — it is a free-standing string generated in `main.py` (`_get_macro_sources`, `_build_macro_dependencies`) only for macro-dependency tracking. It marks a value that wasn't itself overridden but was derived from an overridden upstream input.
 
 ---
 
@@ -997,8 +1007,8 @@ Building blocks: `pop=0.40%`, `prod=1.20%`, `my_ratio=2.1`, `curr_inf=3.00%`, `L
 ```
 # Sigmoid demographic effect
 z       = 2.0 × (2.0 − 2.1) = −0.2
-sig     = 1 / (1 + exp(0.2)) = 1 / 1.2214 = 0.4502
-demo    = (0.4502 − 0.5) × 0.02 = −0.0498 × 0.02 = −0.000997  (−0.0997%)
+sig     = 1 / (1 + exp(−z)) = 1 / (1 + exp(0.2)) = 1 / 1.22140 = 0.45017
+demo    = (0.45017 − 0.5) × 0.02 = −0.04983 × 0.02 = −0.0009967  (−0.0997%)
 
 # RGDP
 output_per_capita = 1.20 + (−0.0997) + (−0.30) = 0.8003%
@@ -1039,16 +1049,16 @@ avg_yield = 4.0202 + 0.981 = 5.0012%   ✓
 roll = (0.81 / 10) × 8.0 = 0.0081 × 8.0 = 0.0648 = 0.648%   ✓
 
 # Valuation return (TP rising → drag)
-reversion_fraction   = 1 − 0.97^120 = 1 − 0.02484 = 0.97516
-expected_tp_change   = (1.00 − 0.81) × 0.97516 = 0.19 × 0.97516 = 0.18528%
-valuation_return     = −8.0 × 0.18528 / 10 = −0.14823%   ✓ (engine: −0.1481)
+reversion_fraction   = 1 − 0.97^120 = 1 − 0.02586 = 0.97414
+expected_tp_change   = (1.00 − 0.81) × 0.97414 = 0.19 × 0.97414 = 0.18509%
+valuation_return     = −8.0 × 0.18509 / 10 = −0.14807%   ✓ (engine: −0.1481)
 
 # Credit loss (sovereign, default-free)
 credit_loss = 0
 
 # Totals
-E[Nominal] = 5.0012 + 0.648 + (−0.1482) − 0 = 5.501%   ✓
-E[Real]    = 5.501 − 3.00 = 2.501%   ✓
+E[Nominal] = 5.0012 + 0.648 + (−0.1481) − 0 = 5.5011%   ✓ (engine: 5.5012)
+E[Real]    = 5.5011 − 3.00 = 2.5011%   ✓ (engine: 2.5012)
 ```
 
 ### 16.4 Example 4 — Bonds High Yield (USD base)
@@ -1062,8 +1072,8 @@ avg_yield = 4.0202 + 1.00 = 5.0202%   ✓
 
 roll = (1.00 / 10) × 3.0 = 0.30%   ✓
 
-reversion_fraction = 0.97516
-tp_change          = (1.00 − 1.00) × 0.97516 = 0
+reversion_fraction = 0.97414
+tp_change          = (1.00 − 1.00) × 0.97414 = 0
 tp_valuation       = −3.0 × 0 / 10 = 0%
 
 credit_loss = 3.40 × (1 − 0.40) = 3.40 × 0.60 = 2.04%   ✓
@@ -1095,14 +1105,14 @@ avg_yield = 6.0202 + 0.981 = 7.0012%   ✓
 
 roll = (0.81 / 10) × 5.8 = 0.4698%   ✓
 
-reversion_fraction = 0.97516
-tp_change          = (1.00 − 0.81) × 0.97516 = 0.18528%
-tp_valuation       = −5.8 × 0.18528 / 10 = −0.10746%   ✓ (engine: −0.1074)
+reversion_fraction = 0.97414
+tp_change          = (1.00 − 0.81) × 0.97414 = 0.18509%
+tp_valuation       = −5.8 × 0.18509 / 10 = −0.10735%   ✓ (engine: −0.1074)
 
 credit_loss = 3.40 × (1 − 0.55) = 3.40 × 0.45 = 1.53%   ✓
 
-E[Nominal] = 7.0012 + 0.4698 + (−0.1074) − 1.53 = 5.8336%   ✓
-E[Real]    = 5.8336 − 3.00 = 2.8336%   ✓
+E[Nominal] = 7.0012 + 0.4698 + (−0.1074) − 1.53 = 5.8337%   ✓
+E[Real]    = 5.8337 − 3.00 = 2.8337%   ✓
 ```
 
 ### 16.6 Example 6 — Bonds Inflation Linked USD (USD base, TIPS)
@@ -1113,8 +1123,8 @@ Inputs: `current_real_yield=2.10%`, `duration=4.3`, `current_real_TP=0.80%`, `fa
 real_carry      = 2.10%
 real_roll       = (0.80 / 10) × 4.3 = 0.344%   ✓
 
-reversion_fraction = 0.97516
-expected_rtp_change = (0.80 − 0.80) × 0.97516 = 0
+reversion_fraction = 0.97414
+expected_rtp_change = (0.80 − 0.80) × 0.97414 = 0
 real_valuation     = −4.3 × 0 / 10 = 0%
 
 inflation_indexation = 3.00 × 1.00 = 3.00%
@@ -1216,16 +1226,14 @@ E[Real]_local    = 2.20 + 2.1659 + (−2.0921) = 2.2738%
 E[Nominal]_local = 2.2738 + 4.00 = 6.2738%
 
 # FX (USD base, EM asset)
-fx_change = 0.30 × (4.0202 − 3.9735) + 0.70 × (3.00 − 4.00)
-          = 0.30 × 0.0467 + 0.70 × −1.00
-          = 0.01401 − 0.700 = −0.6860%   ✓ (engine: −0.6944, small rounding)
+fx_change = 0.30 × (4.0202 − 4.0015) + 0.70 × (3.00 − 4.00)
+          = 0.30 × 0.0187 + 0.70 × −1.00
+          = 0.00561 − 0.700 = −0.6944%   ✓
 
 # USD-base total
 E[Nominal] = 6.2738 + (−0.6944) = 5.5794%   ✓
 E[Real]    = 2.2738 + (−0.6944) = 1.5794%   ✓
 ```
-
-(Tiny rounding gap in `fx_change` comes from the engine using slightly more precise macro values: `E[T-Bill]_EM = 3.97349`, `E[Inflation]_EM = 4.00000` to more decimals.)
 
 ### 16.10 Example 10 — Equity US (GK model, USD base)
 
@@ -1280,6 +1288,10 @@ contrib_inv    = 0.05 × 1.25   = 0.0625
 contrib_mom    = 0.10 × 3.00   = 0.30
 
 factor_return = 1.4159 + 0.10 + 0.075 + 0.0625 + 0.0625 + 0.30 = 2.0159%
+
+# Total (GK active)
+E[Nominal] = 4.0202 + 2.0156 + 1.00 = 7.0358%   ✓ (engine: 7.0358)
+E[Real]    = 7.0358 − 3.00 = 4.0358%            ✓ (engine: 4.0358)
 ```
 
 (Note: with the **RA** equity model active, US equity nominal is 3.1240%, market_premium becomes negative −0.8962%, and factor_return collapses to a smaller number, ~0.33%. The engine output for default RA-mode shows `factor_return: +0.3314`. This is why Abs Return differs significantly between RA and GK toggles.)
@@ -1330,7 +1342,7 @@ A reusable helper sheet with the bond framework as named formulas:
 - `avg_TP`   = `(current_TP + fair_TP*9)/10`
 - `avg_yield` = `tbill_forecast + avg_TP`
 - `roll`     = `(current_TP/10) * duration`
-- `rev_frac` = `1 - 0.97^120` (constant ≈ 0.97516)
+- `rev_frac` = `1 - 0.97^120` (constant ≈ 0.97414)
 - `tp_change` = `(fair_TP - current_TP) * rev_frac`
 - `valuation` = `-duration * tp_change / 10`
 
@@ -1361,8 +1373,8 @@ Same pattern as Sheet 5. Plus inflation-pass-through:
 For each region:
 - `blended_eps`    = `0.5*country_eps + 0.5*regional_eps`
 - `capped_eps`     = `MIN(blended_eps, Global_RGDP)`
-- `caey_annual`    = `(fair_caey/current_caey)^(reversion_speed/20) - 1`
-- `valuation`      = `1/(1+caey_annual) - 1`   (closed-form; same as engine's loop)
+- `caey_annual`    = `IF(AND(current_caey>0, reversion_speed>0), (fair_caey/current_caey)^(reversion_speed/20) - 1, 0)`
+- `valuation`      = `IF(AND(current_caey>0, reversion_speed>0), 1/(1+caey_annual) - 1, 0)`   (closed-form; same as engine's loop)
 - `real_return`    = `DY + capped_eps + valuation`
 - `nominal_return` = `real_return + regional_inflation`
 
