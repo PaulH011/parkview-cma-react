@@ -4,6 +4,8 @@ A web application for generating 10-year expected returns across asset classes u
 
 An admin panel enables quarterly AI-powered refreshes of market data assumptions using Claude with live web search.
 
+> **For a complete methodology reference** — every formula, every default, every constant, every dependency, with worked examples that match the engine to 4 decimal places — see **[METHODOLOGY.md](METHODOLOGY.md)**. That document is detailed enough to reconstruct the entire tool as a spreadsheet without reading the source code.
+
 ## Architecture
 
 ```
