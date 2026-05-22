@@ -41,7 +41,7 @@
 | Frontend display (`web/lib/constants.ts`, UI) | **Percentage points** — 2.50 means 2.5% |
 | Backend defaults endpoint (`api/routes/defaults.py`) | **Percentage points** |
 | Frontend → backend override payload | **Decimals** (the frontend divides by 100 before sending) |
-| Pure-number inputs (durations, P/E ratios, MY ratio, betas, reversion_speed) | **Unitless** — sent as-is, no /100 conversion |
+| Pure-number inputs (durations, P/E ratios, MY ratio, betas, inflation_beta) | **Unitless** — sent as-is, no /100 conversion |
 
 The pure-number fields that bypass the /100 conversion when sent as overrides:
 `my_ratio`, `duration` (for bonds), `inflation_beta` (for ILBs), `current_pe`, `target_pe`, all `beta_*` factors (for Absolute Return).
@@ -321,6 +321,13 @@ implied_TP = current_yield − tbill_forecast
 
 If current_yield is OVERRIDE and current_term_premium is NOT OVERRIDE:
     effective_current_TP = implied_TP
+    # NOTE: fair_term_premium is NOT modified by this branch — it
+    # retains whatever default or override value it had. This means
+    # if a user overrides only current_yield, the implied current TP
+    # will mean-revert toward the unchanged fair_TP over the horizon.
+    # For HY in particular, overriding current_yield to (say) 9% gives
+    # implied current_TP ~5%, but fair_TP stays at its default 1.00%
+    # → large negative valuation drag from TP mean reversion.
 Else:
     effective_current_TP = current_term_premium  (default or override)
 
@@ -973,7 +980,7 @@ Users can override any input. The override structure follows the asset-class hie
 }
 ```
 
-All percentage values are sent as **decimals** (frontend divides by 100 before sending). Unitless fields (durations, P/Es, betas, MY ratio, inflation_beta, reversion_speed) sent as-is.
+All percentage values are sent as **decimals** (frontend divides by 100 before sending). Unitless fields (durations, P/Es, betas, MY ratio, inflation_beta) sent as-is. `reversion_speed` is a special case — the UI stores it as a percentage (100 = 100%) and the frontend divides by 100 like other percentages, so the engine receives 1.0.
 
 ### 15.2 Direct vs Building-block macro overrides
 
@@ -1269,8 +1276,9 @@ Inputs: betas `(market 0.30, size 0.10, value 0.05, profitability 0.05, investme
 
 ```
 # Market premium (live from US equity in active model — GK here)
-us_equity_nominal = 8.74% (from Example 10)
-market_premium    = 8.74 − 4.0202 = 4.7198%
+# Use the precise engine value, not Example 10's rounded display
+us_equity_nominal = 8.7389% (engine value; Example 10 displays it as 8.74)
+market_premium    = 8.7389 − 4.0202 = 4.7187%
 
 # Other premia (50% of historical)
 size_prem  = 2.00 × 0.5 = 1.00%
@@ -1280,19 +1288,21 @@ inv_prem   = 2.50 × 0.5 = 1.25%
 mom_prem   = 6.00 × 0.5 = 3.00%
 
 # Factor returns
-contrib_market = 0.30 × 4.7198 = 1.4159
-contrib_size   = 0.10 × 1.00   = 0.10
-contrib_value  = 0.05 × 1.50   = 0.075
+contrib_market = 0.30 × 4.7187 = 1.4156
+contrib_size   = 0.10 × 1.00   = 0.1000
+contrib_value  = 0.05 × 1.50   = 0.0750
 contrib_prof   = 0.05 × 1.25   = 0.0625
 contrib_inv    = 0.05 × 1.25   = 0.0625
-contrib_mom    = 0.10 × 3.00   = 0.30
+contrib_mom    = 0.10 × 3.00   = 0.3000
 
-factor_return = 1.4159 + 0.10 + 0.075 + 0.0625 + 0.0625 + 0.30 = 2.0159%
+factor_return = 1.4156 + 0.1000 + 0.0750 + 0.0625 + 0.0625 + 0.3000 = 2.0156%
 
 # Total (GK active)
 E[Nominal] = 4.0202 + 2.0156 + 1.00 = 7.0358%   ✓ (engine: 7.0358)
 E[Real]    = 7.0358 − 3.00 = 4.0358%            ✓ (engine: 4.0358)
 ```
+
+(If you build the spreadsheet using Example 10's rounded `8.74%`, you will get `factor_return ≈ 2.0159%` and `E[Nominal] ≈ 7.0361%` — a 3bp drift from the engine. Use full-precision US equity in this chain.)
 
 (Note: with the **RA** equity model active, US equity nominal is 3.1240%, market_premium becomes negative −0.8962%, and factor_return collapses to a smaller number, ~0.33%. The engine output for default RA-mode shows `factor_return: +0.3314`. This is why Abs Return differs significantly between RA and GK toggles.)
 
