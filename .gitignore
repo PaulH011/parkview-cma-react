@@ -18,6 +18,12 @@ env/
 .idea/
 *.swp
 *.swo
+.claude/
+.cursor/
+.cursorignore
+
+# Stale nested checkout (duplicate repo with its own .git and .env)
+/Research Afilliates Model/
 
 # Streamlit
 .streamlit/secrets.toml
