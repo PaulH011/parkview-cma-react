@@ -86,7 +86,7 @@ export function BenchmarkComparison({
   return (
     <div className="space-y-3">
       <p className="text-xs text-slate-500">
-        Your computed 10-year <span className="font-medium">nominal</span> returns vs. the latest
+        Parkview&apos;s computed 10-year <span className="font-medium">nominal</span> returns vs. the latest
         public CMAs, {baseCurrency.toUpperCase()} base. Bases differ — hover each provider for
         method, horizon and as-of date.
       </p>
@@ -96,7 +96,7 @@ export function BenchmarkComparison({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[190px]">Asset Class</TableHead>
-              <TableHead className="text-right whitespace-nowrap">Your Tool</TableHead>
+              <TableHead className="text-right whitespace-nowrap">Parkview</TableHead>
               {BENCHMARK_PROVIDER_IDS.map((id) => {
                 const p = BENCHMARKS.providers[id];
                 return (
@@ -133,7 +133,7 @@ export function BenchmarkComparison({
                     </span>
                   </HoverCardTrigger>
                   <HoverCardContent className="text-xs w-60 font-normal text-left">
-                    Your tool minus the average of the available providers for this asset. Higher
+                    Parkview minus the average of the available providers for this asset. Higher
                     (↑) or lower (↓) than the industry mean — not a judgment of correctness.
                   </HoverCardContent>
                 </HoverCard>
