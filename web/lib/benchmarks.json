@@ -239,11 +239,11 @@
             "proxy": "Barclays US Treasury Inflation Protected"
           },
           "equity_us": {
-            "value": 6.4,
+            "value": 6.8,
             "proxy": "S&P 500"
           },
           "equity_europe": {
-            "value": 6.8,
+            "value": 5.9,
             "proxy": "MSCI Euro"
           },
           "equity_japan": {
@@ -251,7 +251,7 @@
             "proxy": "no native line in this currency"
           },
           "equity_em": {
-            "value": 7.0,
+            "value": 7.4,
             "proxy": "MSCI EM"
           },
           "absolute_return": {
@@ -285,7 +285,7 @@
             "proxy": "no native line in this currency"
           },
           "equity_europe": {
-            "value": 6.8,
+            "value": 5.9,
             "proxy": "MSCI Euro"
           },
           "equity_japan": {
