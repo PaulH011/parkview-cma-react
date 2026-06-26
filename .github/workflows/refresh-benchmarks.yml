@@ -37,8 +37,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y poppler-utils   # provides pdftotext
-          pip install openpyxl
+          sudo apt-get install -y poppler-utils   # provides pdftotext (J.P. Morgan parser)
+          pip install openpyxl pymupdf            # BlackRock xlsx / SSGA coordinate parser
 
       - name: Refresh snapshot
         run: python scripts/refresh_benchmarks.py

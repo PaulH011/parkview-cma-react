@@ -165,25 +165,27 @@ JPM_MAP = {
     },
 }
 
-# SSGA: match benchmark substring; we take the 3rd number (Long term 10+ years).
+# SSGA: anchor on the row's asset-class LABEL (or unambiguous benchmark) as an exact
+# consecutive-word run, then read the 3rd numeric column (Long term, 10+ years) by
+# coordinate. Label anchors disambiguate (e.g. "MSCI Euro" != "MSCI Europe").
 # null entries = bucket has no clean native line in that currency.
 SSGA_MAP = {
     "usd": {
-        "liquidity": "BofA 3 Month T-Bill",
-        "bonds_global": "Barclays US Aggregate Government",
-        "bonds_hy": "BofA US High Yield",
-        "bonds_em": "JPM EMBI Plus",
-        "inflation_linked": "Barclays US Treasury Inflation Protected",
-        "equity_us": "S&P 500",
+        "liquidity": "US Cash",
+        "bonds_global": "US Government Bond",
+        "bonds_hy": "US High Yield Bond",
+        "bonds_em": "Emerging Markets Bonds",
+        "inflation_linked": "US TIPS Bond",
+        "equity_us": "US Large Cap",
         "equity_europe": "MSCI Euro",        # MSCI Europe row is blank in the PDF; MSCI Euro is the clean proxy
         "equity_japan": None,                # no standalone Japan equity (MSCI Pacific only)
-        "equity_em": "MSCI EM",
-        "absolute_return": "HFRI Fund of Funds",
+        "equity_em": "Emerging Markets (EM)",
+        "absolute_return": "Hedge Funds",
     },
     "eur": {
-        "liquidity": "JPM EUR Cash Index",
-        "bonds_global": "BofA Euro Government",
-        "bonds_hy": "BofA Euro High Yield",
+        "liquidity": "EMU Cash",
+        "bonds_global": "Euro Government Bonds",
+        "bonds_hy": "Euro High Yield Bonds",
         "bonds_em": None,                    # EMBI is USD only; no native-EUR EM HC line
         "inflation_linked": None,
         "equity_us": None,                   # local-ccy only; would need FX
@@ -339,26 +341,42 @@ def parse_jpm(usd_path: Path, eur_path: Path):
 
 
 def parse_ssga(path: Path):
-    text = pdf_text(path)
-    as_of = find_date(text, [r"As of (March \d{1,2}, \d{4})", r"as of (\w+ \d{1,2}, \d{4})"])
-    lines = text.splitlines()
-    float_re = re.compile(r"-?\d+\.\d+")
+    # Coordinate-based: anchor on the row label, then read the 3rd numeric column
+    # (Long term, 10+ years) by y-row. Robust across PDF text-tool versions, unlike
+    # a -layout line heuristic (poppler vs xpdf serialize the equity rows differently).
+    import fitz
+
+    doc = fitz.open(path)
+    full_text = "".join(p.get_text() for p in doc)
+    as_of = find_date(full_text, [r"As of (March \d{1,2}, \d{4})", r"as of (\w+ \d{1,2}, \d{4})"])
+    floatre = re.compile(r"^-?\d+\.\d+$")
+    pages_words = [p.get_text("words") for p in doc]  # (x0,y0,x1,y1,text,block,line,word)
+
+    def row_value(anchor: str):
+        toks = anchor.split()
+        n = len(toks)
+        for words in pages_words:
+            for i in range(len(words) - n + 1):
+                if all(words[i + k][4] == toks[k] for k in range(n)):
+                    yc = (words[i][1] + words[i][3]) / 2
+                    floats = sorted(
+                        (w[0], float(w[4]))
+                        for w in words
+                        if floatre.match(w[4]) and abs((w[1] + w[3]) / 2 - yc) <= 3.0
+                    )
+                    vals = [v for _, v in floats]
+                    if len(vals) >= 3:
+                        return vals[2]  # Long term, 10+ years
+        return None
+
     result = {}
     for cur, mp in SSGA_MAP.items():
         result[cur] = {}
-        for bucket, sub in mp.items():
-            if sub is None:
+        for bucket, anchor in mp.items():
+            if anchor is None:
                 result[cur][bucket] = {"value": None, "proxy": "no native line in this currency"}
-                continue
-            val = None
-            for ln in lines:
-                if sub in ln:
-                    after = ln.split(sub, 1)[1]
-                    nums = float_re.findall(after)
-                    if len(nums) >= 3:           # need at least the 3 horizon columns
-                        val = float(nums[2])      # col 3 = Long term 10+ years
-                        break
-            result[cur][bucket] = {"value": val, "proxy": sub}
+            else:
+                result[cur][bucket] = {"value": row_value(anchor), "proxy": anchor}
     return result, _norm_date(as_of)
 
 
@@ -486,7 +504,7 @@ def main():
             pass
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+    args.out.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"\nWrote {args.out.relative_to(REPO_ROOT)}")
     return 1 if any("out of range" in w or "MISSING" in w for w in all_warnings) else 0
 

@@ -220,30 +220,30 @@
         "usd": {
           "liquidity": {
             "value": 3.0,
-            "proxy": "BofA 3 Month T-Bill"
+            "proxy": "US Cash"
           },
           "bonds_global": {
             "value": 4.4,
-            "proxy": "Barclays US Aggregate Government"
+            "proxy": "US Government Bond"
           },
           "bonds_hy": {
             "value": 5.5,
-            "proxy": "BofA US High Yield"
+            "proxy": "US High Yield Bond"
           },
           "bonds_em": {
             "value": 6.6,
-            "proxy": "JPM EMBI Plus"
+            "proxy": "Emerging Markets Bonds"
           },
           "inflation_linked": {
             "value": 3.7,
-            "proxy": "Barclays US Treasury Inflation Protected"
+            "proxy": "US TIPS Bond"
           },
           "equity_us": {
-            "value": 6.4,
-            "proxy": "S&P 500"
+            "value": 6.8,
+            "proxy": "US Large Cap"
           },
           "equity_europe": {
-            "value": 6.8,
+            "value": 5.8,
             "proxy": "MSCI Euro"
           },
           "equity_japan": {
@@ -251,26 +251,26 @@
             "proxy": "no native line in this currency"
           },
           "equity_em": {
-            "value": 7.0,
-            "proxy": "MSCI EM"
+            "value": 7.4,
+            "proxy": "Emerging Markets (EM)"
           },
           "absolute_return": {
             "value": 4.7,
-            "proxy": "HFRI Fund of Funds"
+            "proxy": "Hedge Funds"
           }
         },
         "eur": {
           "liquidity": {
             "value": 2.1,
-            "proxy": "JPM EUR Cash Index"
+            "proxy": "EMU Cash"
           },
           "bonds_global": {
             "value": 3.4,
-            "proxy": "BofA Euro Government"
+            "proxy": "Euro Government Bonds"
           },
           "bonds_hy": {
             "value": 5.0,
-            "proxy": "BofA Euro High Yield"
+            "proxy": "Euro High Yield Bonds"
           },
           "bonds_em": {
             "value": null,
@@ -285,7 +285,7 @@
             "proxy": "no native line in this currency"
           },
           "equity_europe": {
-            "value": 6.8,
+            "value": 5.8,
             "proxy": "MSCI Euro"
           },
           "equity_japan": {
