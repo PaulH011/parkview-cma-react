@@ -1,0 +1,86 @@
+name: Refresh CMA benchmarks
+
+# Re-extracts web/lib/benchmarks.json from the providers' latest public CMAs and,
+# if any number changed, opens a PR for review (merging deploys via Vercel).
+#
+# Cadence: monthly. BlackRock & State Street publish quarterly, J.P. Morgan
+# annually — a monthly check picks up each new edition within ~30 days and is a
+# silent no-op (no PR) in months where nothing changed.
+#
+# ONE-TIME SETUP: Settings > Actions > General > Workflow permissions must have
+# "Allow GitHub Actions to create and approve pull requests" enabled, or the
+# PR-creation step will fail with a permissions error.
+
+on:
+  schedule:
+    - cron: '0 9 15 * *'   # 09:00 UTC on the 15th of every month
+  workflow_dispatch: {}     # manual "Run workflow" button
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-benchmarks
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils   # provides pdftotext
+          pip install openpyxl
+
+      - name: Refresh snapshot
+        run: python scripts/refresh_benchmarks.py
+
+      - name: Open PR if the snapshot changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- web/lib/benchmarks.json; then
+            echo "No benchmark changes — nothing to do."
+            exit 0
+          fi
+          echo "Changes detected:"
+          git --no-pager diff -- web/lib/benchmarks.json | head -200
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          BRANCH=automated/refresh-benchmarks
+          DATE=$(date -u +%Y-%m-%d)
+          git switch -c "$BRANCH"
+          git add web/lib/benchmarks.json
+          git commit -m "Refresh CMA benchmark snapshot ($DATE)"
+          git push --force origin "$BRANCH"
+
+          BODY=$(cat <<'EOF'
+          Automated refresh of `web/lib/benchmarks.json` from the latest public CMAs
+          (BlackRock, J.P. Morgan, State Street), produced by `scripts/refresh_benchmarks.py`.
+
+          **Review before merging:** check the per-provider `as_of` dates advanced as
+          expected and that no value moved implausibly (a parser break would show as a
+          large swing, an empty cell, or a stale `as_of`). Merging deploys to production
+          via Vercel.
+
+          🤖 Generated with [Claude Code](https://claude.com/claude-code)
+          EOF
+          )
+
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --base main --head "$BRANCH" \
+              --title "Refresh CMA benchmarks ($DATE)" --body "$BODY"
+          else
+            echo "An open PR already exists for $BRANCH; force-push updated it."
+          fi
