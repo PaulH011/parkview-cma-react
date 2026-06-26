@@ -58,24 +58,54 @@ BUCKETS = [
     "equity_us", "equity_europe", "equity_japan", "equity_em", "absolute_return",
 ]
 
+# BlackRock publishes one evergreen workbook URL (always the latest quarter).
+BLACKROCK_URL = (
+    "https://www.blackrock.com/blk-inst-c-assets/images/tools/"
+    "blackrock-investment-institute/cma/blackrock-capital-market-assumptions.xlsx"
+)
+
+
+def _quarter(month: int) -> int:
+    return (month - 1) // 3 + 1
+
+
+def ssga_urls(today) -> list[str]:
+    """SSGA publishes quarterly at /{year}/...-q{n}.pdf. Newest first, walking back a
+    few quarters so an early-in-quarter run still finds the most recent edition."""
+    y, q = today.year, _quarter(today.month)
+    out = []
+    for _ in range(4):
+        out.append(
+            "https://www.ssga.com/library-content/assets/pdf/global/multi-asset/"
+            f"{y}/long-term-asset-class-forecasts-q{q}.pdf"
+        )
+        q -= 1
+        if q == 0:
+            q, y = 4, y - 1
+    return out
+
+
+def jpm_urls(today, ccy: str) -> list[str]:
+    """JPM publishes the next-year edition around October, so try the newest year
+    first (e.g. the '2026' edition shipped Oct 2025)."""
+    return [
+        "https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/"
+        f"ltcma-{yr}-us-matrix_{ccy}.pdf"
+        for yr in (today.year + 1, today.year, today.year - 1)
+    ]
+
+
+# Each source resolves to a date-derived list of candidate URLs (newest first);
+# get_file() downloads the first that returns a valid file.
 SOURCES = {
-    "blackrock": {
-        "cache": "blackrock-cma.xlsx",
-        "url": "https://www.blackrock.com/blk-inst-c-assets/images/tools/blackrock-investment-institute/cma/blackrock-capital-market-assumptions.xlsx",
-    },
-    "jpm_usd": {
-        "cache": "jpm-ltcma-usd.pdf",
-        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/ltcma-2026-us-matrix_usd.pdf",
-    },
-    "jpm_eur": {
-        "cache": "jpm-ltcma-eur.pdf",
-        "url": "https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/ltcma-2026-us-matrix_eur.pdf",
-    },
-    "ssga": {
-        "cache": "ssga-ltacf.pdf",
-        "url": "https://www.ssga.com/library-content/assets/pdf/global/multi-asset/2026/long-term-asset-class-forecasts-q2.pdf",
-    },
+    "blackrock": {"cache": "blackrock-cma.xlsx", "urls": lambda d: [BLACKROCK_URL]},
+    "jpm_usd": {"cache": "jpm-ltcma-usd.pdf", "urls": lambda d: jpm_urls(d, "usd")},
+    "jpm_eur": {"cache": "jpm-ltcma-eur.pdf", "urls": lambda d: jpm_urls(d, "eur")},
+    "ssga": {"cache": "ssga-ltacf.pdf", "urls": lambda d: ssga_urls(d)},
 }
+
+# Magic bytes to reject HTML error pages served with a 200.
+MAGIC = {".xlsx": b"PK\x03\x04", ".pdf": b"%PDF"}
 
 # ---- bucket -> provider proxy maps -----------------------------------------
 
@@ -171,7 +201,7 @@ PROVIDER_META = {
         "horizon": "10y",
         "return_basis": "geometric",
         "fees": "gross",
-        "source_url": SOURCES["blackrock"]["url"],
+        "source_url": BLACKROCK_URL,
         "notes": "Nominal. Non-USD bond figures are currency-hedged; equities unhedged. "
                  "Uses the 'Starting point' base-case tab (ignores scenario tabs).",
     },
@@ -203,7 +233,7 @@ VALID_RANGE = (-15.0, 25.0)  # plausible % p.a. expected return; outside => pars
 # Fetch
 # ---------------------------------------------------------------------------
 
-def get_file(key: str, source_dir: Path | None, cache_dir: Path, force: bool) -> Path:
+def get_file(key: str, source_dir: Path | None, cache_dir: Path, force: bool, today) -> Path:
     cache_name = SOURCES[key]["cache"]
     if source_dir is not None:
         p = source_dir / cache_name
@@ -214,12 +244,22 @@ def get_file(key: str, source_dir: Path | None, cache_dir: Path, force: bool) ->
     dest = cache_dir / cache_name
     if dest.exists() and not force:
         return dest
-    url = SOURCES[key]["url"]
-    print(f"  downloading {key}: {url}")
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        dest.write_bytes(r.read())
-    return dest
+    magic = MAGIC[dest.suffix]
+    errors = []
+    for url in SOURCES[key]["urls"](today):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                data = r.read()
+            if not data.startswith(magic):
+                errors.append(f"{url} -> not a {dest.suffix} ({data[:8]!r})")
+                continue
+            dest.write_bytes(data)
+            print(f"  {key}: fetched {url}")
+            return dest
+        except Exception as e:  # HTTPError / URLError / timeout -> try next candidate
+            errors.append(f"{url} -> {e}")
+    raise RuntimeError(f"{key}: no candidate URL worked:\n    " + "\n    ".join(errors))
 
 
 def pdf_text(path: Path) -> str:
@@ -377,8 +417,12 @@ def main():
     ap.add_argument("--today", help="ISO date stamp for 'generated' (default: today)")
     args = ap.parse_args()
 
+    today = (
+        datetime.strptime(args.today, "%Y-%m-%d").date() if args.today else date.today()
+    )
+
     print("Fetching sources...")
-    f = {k: get_file(k, args.source_dir, args.cache_dir, args.force) for k in SOURCES}
+    f = {k: get_file(k, args.source_dir, args.cache_dir, args.force, today) for k in SOURCES}
 
     print("Parsing...")
     bl, bl_date = parse_blackrock(f["blackrock"])
@@ -414,10 +458,9 @@ def main():
         for w in all_warnings:
             print("   -", w)
 
-    stamp = args.today or date.today().isoformat()
     doc = {
         "schema_version": 1,
-        "generated": stamp,
+        "generated": today.isoformat(),
         "disclaimer": "Public CMAs mapped to Parkview's 10 buckets via the closest provider proxy. "
                       "Bases differ (geometric vs arithmetic, 10y vs 10-15y, nominal, hedging, FX) "
                       "- see each provider's notes/return_basis before comparing.",
@@ -428,6 +471,19 @@ def main():
     if args.dry_run:
         print("\n[dry-run] not writing.")
         return 1 if any("out of range" in w or "MISSING" in w for w in all_warnings) else 0
+
+    # Avoid a no-op PR: if only the 'generated' timestamp would change, keep the
+    # previous one so the file stays byte-identical and CI opens no pull request.
+    if args.out.exists():
+        try:
+            prev = json.loads(args.out.read_text(encoding="utf-8"))
+            if {k: v for k, v in doc.items() if k != "generated"} == {
+                k: v for k, v in prev.items() if k != "generated"
+            }:
+                doc["generated"] = prev.get("generated", doc["generated"])
+                print("No data change (only timestamp) - preserving 'generated'.")
+        except (json.JSONDecodeError, OSError):
+            pass
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
