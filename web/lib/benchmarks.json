@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "generated": "2026-06-26",
+  "disclaimer": "Public CMAs mapped to Parkview's 10 buckets via the closest provider proxy. Bases differ (geometric vs arithmetic, 10y vs 10-15y, nominal, hedging, FX) - see each provider's notes/return_basis before comparing.",
+  "buckets": [
+    "liquidity",
+    "bonds_global",
+    "bonds_hy",
+    "bonds_em",
+    "inflation_linked",
+    "equity_us",
+    "equity_europe",
+    "equity_japan",
+    "equity_em",
+    "absolute_return"
+  ],
+  "providers": {
+    "blackrock": {
+      "name": "BlackRock Investment Institute",
+      "publication": "Capital Market Assumptions",
+      "horizon": "10y",
+      "return_basis": "geometric",
+      "fees": "gross",
+      "source_url": "https://www.blackrock.com/blk-inst-c-assets/images/tools/blackrock-investment-institute/cma/blackrock-capital-market-assumptions.xlsx",
+      "notes": "Nominal. Non-USD bond figures are currency-hedged; equities unhedged. Uses the 'Starting point' base-case tab (ignores scenario tabs).",
+      "as_of": "2026-03-31",
+      "returns": {
+        "usd": {
+          "liquidity": {
+            "value": 3.59,
+            "proxy": "US cash"
+          },
+          "bonds_global": {
+            "value": 4.63,
+            "proxy": "US government (all maturities)"
+          },
+          "bonds_hy": {
+            "value": 6.46,
+            "proxy": "US high yield"
+          },
+          "bonds_em": {
+            "value": 6.02,
+            "proxy": "USD EM debt"
+          },
+          "inflation_linked": {
+            "value": 5.04,
+            "proxy": "US inflation-linked government"
+          },
+          "equity_us": {
+            "value": 8.47,
+            "proxy": "US large cap equities"
+          },
+          "equity_europe": {
+            "value": 8.05,
+            "proxy": "Europe large cap equities"
+          },
+          "equity_japan": {
+            "value": 8.85,
+            "proxy": "Japan large cap equities"
+          },
+          "equity_em": {
+            "value": 7.27,
+            "proxy": "Emerging large cap equities"
+          },
+          "absolute_return": {
+            "value": 9.21,
+            "proxy": "Hedge funds (global)"
+          }
+        },
+        "eur": {
+          "liquidity": {
+            "value": 2.47,
+            "proxy": "EMU cash"
+          },
+          "bonds_global": {
+            "value": 3.78,
+            "proxy": "EMU treasury bonds"
+          },
+          "bonds_hy": {
+            "value": 5.03,
+            "proxy": "Global high yield bonds"
+          },
+          "bonds_em": {
+            "value": 4.69,
+            "proxy": "USD EM debt"
+          },
+          "inflation_linked": {
+            "value": 3.87,
+            "proxy": "EMU index-linked treasuries"
+          },
+          "equity_us": {
+            "value": 7.34,
+            "proxy": "US large cap equities"
+          },
+          "equity_europe": {
+            "value": 6.92,
+            "proxy": "Europe large cap equities"
+          },
+          "equity_japan": {
+            "value": 7.71,
+            "proxy": "Japan large cap equities"
+          },
+          "equity_em": {
+            "value": 6.17,
+            "proxy": "Emerging large cap equities"
+          },
+          "absolute_return": {
+            "value": 8.09,
+            "proxy": "Hedge funds (global)"
+          }
+        }
+      }
+    },
+    "jpmorgan": {
+      "name": "J.P. Morgan Asset Management",
+      "publication": "2026 Long-Term Capital Market Assumptions (30th edition)",
+      "horizon": "10-15y",
+      "return_basis": "geometric",
+      "fees": "gross (alternatives net of manager fees)",
+      "source_url": "https://am.jpmorgan.com/us/en/asset-management/institutional/insights/portfolio-insights/ltcma/",
+      "notes": "Nominal compound (2026) returns. Horizon is 10-15y (longer than our 10y). Non-base-currency assets are currency-hedged in the EUR matrix.",
+      "as_of": "2025-09-30",
+      "returns": {
+        "usd": {
+          "liquidity": {
+            "value": 3.1,
+            "proxy": "U.S. Cash"
+          },
+          "bonds_global": {
+            "value": 4.6,
+            "proxy": "U.S. Aggregate Bonds"
+          },
+          "bonds_hy": {
+            "value": 6.1,
+            "proxy": "U.S. High Yield Bonds"
+          },
+          "bonds_em": {
+            "value": 5.8,
+            "proxy": "Emerging Markets Sovereign Debt"
+          },
+          "inflation_linked": {
+            "value": 4.1,
+            "proxy": "TIPS"
+          },
+          "equity_us": {
+            "value": 6.7,
+            "proxy": "U.S. Large Cap"
+          },
+          "equity_europe": {
+            "value": 8.5,
+            "proxy": "Euro Area Large Cap"
+          },
+          "equity_japan": {
+            "value": 9.0,
+            "proxy": "Japanese Equity"
+          },
+          "equity_em": {
+            "value": 7.2,
+            "proxy": "Emerging Markets Equity"
+          },
+          "absolute_return": {
+            "value": 4.9,
+            "proxy": "Diversified Hedge Funds"
+          }
+        },
+        "eur": {
+          "liquidity": {
+            "value": 2.4,
+            "proxy": "Euro Cash"
+          },
+          "bonds_global": {
+            "value": 3.1,
+            "proxy": "Euro Government Bonds"
+          },
+          "bonds_hy": {
+            "value": 5.4,
+            "proxy": "U.S. High Yield Bonds hedged"
+          },
+          "bonds_em": {
+            "value": 5.1,
+            "proxy": "Emerging Markets Sovereign Debt hedged"
+          },
+          "inflation_linked": {
+            "value": 3.3,
+            "proxy": "Euro Govt Inflation-Linked Bonds"
+          },
+          "equity_us": {
+            "value": 5.5,
+            "proxy": "U.S. Large Cap"
+          },
+          "equity_europe": {
+            "value": 7.3,
+            "proxy": "Euro Area Large Cap"
+          },
+          "equity_japan": {
+            "value": 7.8,
+            "proxy": "Japanese Equity"
+          },
+          "equity_em": {
+            "value": 6.0,
+            "proxy": "Emerging Markets Equity"
+          },
+          "absolute_return": {
+            "value": 4.2,
+            "proxy": "Diversified Hedge Funds hedged"
+          }
+        }
+      }
+    },
+    "ssga": {
+      "name": "State Street Investment Management",
+      "publication": "Long-Term Asset Class Forecasts (Q2 2026)",
+      "horizon": "10y+",
+      "return_basis": "arithmetic",
+      "fees": "gross",
+      "source_url": "https://www.ssga.com/us/en/institutional/capabilities/multi-asset-solutions/asset-class-forecasts",
+      "notes": "ARITHMETIC averages (~0.5*sigma^2 above geometric for equities), gross of fees, LOCAL-currency (no FX translation). No standalone Japan equity. EUR coverage partial.",
+      "as_of": "2026-03-31",
+      "returns": {
+        "usd": {
+          "liquidity": {
+            "value": 3.0,
+            "proxy": "BofA 3 Month T-Bill"
+          },
+          "bonds_global": {
+            "value": 4.4,
+            "proxy": "Barclays US Aggregate Government"
+          },
+          "bonds_hy": {
+            "value": 5.5,
+            "proxy": "BofA US High Yield"
+          },
+          "bonds_em": {
+            "value": 6.6,
+            "proxy": "JPM EMBI Plus"
+          },
+          "inflation_linked": {
+            "value": 3.7,
+            "proxy": "Barclays US Treasury Inflation Protected"
+          },
+          "equity_us": {
+            "value": 6.4,
+            "proxy": "S&P 500"
+          },
+          "equity_europe": {
+            "value": 6.8,
+            "proxy": "MSCI Euro"
+          },
+          "equity_japan": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "equity_em": {
+            "value": 7.0,
+            "proxy": "MSCI EM"
+          },
+          "absolute_return": {
+            "value": 4.7,
+            "proxy": "HFRI Fund of Funds"
+          }
+        },
+        "eur": {
+          "liquidity": {
+            "value": 2.1,
+            "proxy": "JPM EUR Cash Index"
+          },
+          "bonds_global": {
+            "value": 3.4,
+            "proxy": "BofA Euro Government"
+          },
+          "bonds_hy": {
+            "value": 5.0,
+            "proxy": "BofA Euro High Yield"
+          },
+          "bonds_em": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "inflation_linked": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "equity_us": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "equity_europe": {
+            "value": 6.8,
+            "proxy": "MSCI Euro"
+          },
+          "equity_japan": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "equity_em": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "absolute_return": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          }
+        }
+      }
+    }
+  }
+}

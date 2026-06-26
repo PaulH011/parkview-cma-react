@@ -40,6 +40,9 @@ Thumbs.db
 *.db
 parkview.db
 
+# Benchmark refresh download cache (scripts/refresh_benchmarks.py)
+.cache/
+
 # Node
 node_modules/
 
