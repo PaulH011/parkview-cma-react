@@ -11,6 +11,7 @@ import { BondInputPanel } from '@/components/inputs/BondInputPanel';
 import { EquityInputPanel } from '@/components/inputs/EquityInputPanel';
 import { AlternativesInputPanel } from '@/components/inputs/AlternativesInputPanel';
 import { ResultsTable } from '@/components/results/ResultsTable';
+import { BenchmarkComparison } from '@/components/results/BenchmarkComparison';
 import { RiskReturnChart } from '@/components/results/RiskReturnChart';
 import { ExportButton } from '@/components/results/ExportButton';
 import { ActiveOverridesSummary } from '@/components/results/ActiveOverridesSummary';
@@ -276,6 +277,22 @@ export default function Dashboard() {
             />
           </CardContent>
         </Card>
+
+        {/* Industry Benchmark Comparison */}
+        {results && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Industry Benchmark Comparison</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BenchmarkComparison
+                results={results}
+                baseCurrency={baseCurrency}
+                isLoading={isLoading}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* FX Adjustment Explanation (EUR base only) */}
         {results && baseCurrency === 'eur' && results.fx_forecasts && (
