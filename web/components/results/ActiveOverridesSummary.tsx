@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import type { AssetClass, AssetResult } from '@/lib/types';
 
 interface ActiveOverridesSummaryProps {
-  results: Record<AssetClass, AssetResult>;
+  results: Partial<Record<AssetClass, AssetResult>>;
 }
 
 // Asset class display names

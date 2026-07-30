@@ -7,6 +7,8 @@ different base currencies (USD/EUR).
 
 from typing import Dict, Any
 
+from ..config import CURRENCY_TO_MACRO_REGION
+
 
 class FXModel:
     """
@@ -131,13 +133,8 @@ class FXModel:
             - 'needs_adjustment': Whether adjustment was needed
             - 'components': Detailed FX forecast components (if adjustment needed)
         """
-        # Currency to macro region mapping
-        currency_to_region = {
-            'usd': 'us',
-            'eur': 'eurozone',
-            'jpy': 'japan',
-            'em': 'em',
-        }
+        # Currency to macro region mapping (single source of truth in config)
+        currency_to_region = CURRENCY_TO_MACRO_REGION
 
         # No adjustment needed if asset is in base currency
         if home_currency == asset_local_currency:

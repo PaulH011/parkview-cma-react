@@ -294,13 +294,15 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {/* FX Adjustment Explanation (EUR base only) */}
-        {results && baseCurrency === 'eur' && results.fx_forecasts && (
+        {/* FX Adjustment Explanation (non-USD base) */}
+        {results && baseCurrency !== 'usd' && results.fx_forecasts && (
           <Card className="border-blue-200">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 Currency Adjustment
-                <span className="text-sm font-normal text-slate-500">(EUR Base)</span>
+                <span className="text-sm font-normal text-slate-500">
+                  ({baseCurrency.toUpperCase()} Base)
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>

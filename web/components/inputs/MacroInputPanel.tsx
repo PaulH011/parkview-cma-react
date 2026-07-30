@@ -35,6 +35,13 @@ const REGIONS: { key: MacroRegion; label: string }[] = [
   { key: 'em', label: 'EM' },
 ];
 
+// Switzerland only drives results in CHF base (liquidity, bonds global CHF
+// regime, absolute return, and the CHF FX adjustment) — shown only there.
+const REGIONS_CHF: { key: MacroRegion; label: string }[] = [
+  ...REGIONS,
+  { key: 'switzerland', label: 'CH' },
+];
+
 function MacroRegionInputs({ region }: { region: MacroRegion }) {
   const { macro, setMacroValue, syncMacroComputed, isMacroDirty, advancedMode } = useInputStore();
   const { computed, hasChanges, conflicts } = useMacroPreview(region);
@@ -346,19 +353,22 @@ function MacroRegionInputs({ region }: { region: MacroRegion }) {
 }
 
 export function MacroInputPanel() {
+  const baseCurrency = useInputStore((state) => state.baseCurrency);
+  const regions = baseCurrency === 'chf' ? REGIONS_CHF : REGIONS;
+
   return (
     <div className="space-y-4">
       {/* Region Tabs */}
       <Tabs defaultValue="us" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          {REGIONS.map(({ key, label }) => (
+        <TabsList className={`grid w-full ${regions.length === 5 ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          {regions.map(({ key, label }) => (
             <TabsTrigger key={key} value={key} className="text-xs">
               {label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {REGIONS.map(({ key }) => (
+        {regions.map(({ key }) => (
           <TabsContent key={key} value={key} className="mt-4">
             <MacroRegionInputs region={key} />
           </TabsContent>

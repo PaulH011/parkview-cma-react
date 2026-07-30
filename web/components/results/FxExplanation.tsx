@@ -16,16 +16,11 @@ interface FxExplanationProps {
   results: CalculateResponse;
 }
 
-// Mapping of fx_forecasts keys to display labels
-const FX_PAIR_LABELS: Record<string, string> = {
-  usd: 'EUR / USD',
-  jpy: 'EUR / JPY',
-  em: 'EUR / EM',
-};
-
-// Which assets are affected by each FX pair
+// Which assets carry each foreign-currency FX adjustment (regime/base assets
+// like Liquidity, Bonds Global, and Absolute Return never get an FX term)
 const FX_AFFECTED_ASSETS: Record<string, string[]> = {
-  usd: ['Liquidity', 'Bonds Global', 'Bonds HY', 'Bonds EM', 'Equity US', 'Absolute Return'],
+  usd: ['Bonds HY', 'Bonds EM', 'Equity US'],
+  eur: ['Equity Europe'],
   jpy: ['Equity Japan'],
   em: ['Equity EM'],
 };
@@ -39,6 +34,8 @@ function formatPct(value: number): string {
 export function FxExplanation({ results }: FxExplanationProps) {
   const fxData = results.fx_forecasts;
   if (!fxData || Object.keys(fxData).length === 0) return null;
+
+  const base = (results.base_currency || 'eur').toUpperCase();
 
   // Check which individual assets actually have an fx_return component
   const assetsWithFx: { name: string; fxReturn: number }[] = [];
@@ -56,6 +53,7 @@ export function FxExplanation({ results }: FxExplanationProps) {
   };
 
   for (const [key, result] of Object.entries(results.results)) {
+    if (!result) continue;
     const fxComponent = result.components?.fx_return;
     if (fxComponent && Math.abs(fxComponent) > 0.0001) {
       assetsWithFx.push({
@@ -72,17 +70,17 @@ export function FxExplanation({ results }: FxExplanationProps) {
         <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
         <div className="space-y-2 text-sm">
           <p className="text-blue-900 font-medium">
-            EUR Base Currency — FX-Adjusted Returns
+            {base} Base Currency — FX-Adjusted Returns
           </p>
           <p className="text-blue-800">
-            All non-EUR asset returns include an FX adjustment using RA&apos;s PPP-based methodology.
+            All non-{base} asset returns include an FX adjustment using RA&apos;s PPP-based methodology.
             The expected FX change is a weighted combination of:
           </p>
           <div className="font-mono text-xs bg-white px-3 py-2 rounded border border-blue-200 text-blue-900">
-            E[FX] = 30% &times; (EUR T-Bill &minus; Foreign T-Bill) + 70% &times; (EUR Inflation &minus; Foreign Inflation)
+            E[FX] = 30% &times; ({base} T-Bill &minus; Foreign T-Bill) + 70% &times; ({base} Inflation &minus; Foreign Inflation)
           </div>
           <p className="text-blue-700 text-xs">
-            Positive FX change = EUR expected to depreciate vs. that currency, which <strong>adds</strong> to foreign asset returns in EUR terms.
+            Positive FX change = {base} expected to depreciate vs. that currency, which <strong>adds</strong> to foreign asset returns in {base} terms.
           </p>
         </div>
       </div>
@@ -106,7 +104,7 @@ export function FxExplanation({ results }: FxExplanationProps) {
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-1.5">
                     <ArrowRightLeft className="h-3 w-3 text-slate-400" />
-                    {FX_PAIR_LABELS[ccy] || `EUR / ${ccy.toUpperCase()}`}
+                    {`${base} / ${ccy.toUpperCase()}`}
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-mono text-sm">

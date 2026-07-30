@@ -65,6 +65,22 @@ export const DEFAULT_INPUTS: AllInputs = {
       // on 4% rather than the ~7% implied by RGDP + Inflation.
       country_factor: -3.40,
     },
+    switzerland: {
+      // CHF base currency only; not part of Global RGDP weights.
+      // Calibrated mid-2026: CPI 0.5% (FSO), SNB policy 0%, 10y Eidgenosse 0.4%.
+      inflation_forecast: 0.85,     // 0.3*0.50 + 0.7*1.00
+      rgdp_growth: 1.20,
+      tbill_forecast: 0.60,         // 0.3*0.00 + 0.7*0.85
+      population_growth: 0.70,
+      productivity_growth: 1.00,
+      my_ratio: 2.2,
+      current_headline_inflation: 0.50,
+      long_term_inflation: 1.00,    // SNB price stability (0-2%); LT expectations ~1%
+      current_tbill: 0.00,          // SNB policy rate (SARON ~-0.04%)
+      // Strongly negative: safe-haven franc keeps Swiss short rates
+      // structurally below the RGDP + Inflation equilibrium.
+      country_factor: -1.20,
+    },
   },
   bonds: {
     // Q2 2026 defaults. Term-premium fields are set so the model's
@@ -85,6 +101,13 @@ export const DEFAULT_INPUTS: AllInputs = {
         // TP normalizes upward 0.40 -> 0.50 over horizon
         current_term_premium: 0.40,
         fair_term_premium: 0.50,
+      },
+      chf: {
+        current_yield: 0.40,           // 10y Swiss Confederation (Eidgenosse, Jul 2026)
+        duration: 9.0,                 // SBI domestic government is long-duration (~9-10y)
+        // Flat Swiss curve: TP normalizes -0.20 -> 0.20 over horizon
+        current_term_premium: -0.20,
+        fair_term_premium: 0.20,
       },
     },
     hy: {
@@ -223,6 +246,7 @@ export const REGION_NAMES: Record<string, string> = {
   japan: 'Japan',
   em: 'Emerging Markets',
   europe: 'Europe',
+  switzerland: 'Switzerland',
 };
 
 // Macro field display names

@@ -95,7 +95,7 @@ function convertSavedOverridesToUiUnits(overrides: Overrides): Overrides {
   // Bonds Global is regime-based (like inflation_linked) — convert per regime
   if (overrides.bonds_global) {
     converted.bonds_global = {};
-    for (const regime of ['usd', 'eur'] as const) {
+    for (const regime of ['usd', 'eur', 'chf'] as const) {
       const regimeValues = overrides.bonds_global[regime];
       if (!regimeValues) continue;
       const out: Record<string, number> = {};
@@ -295,7 +295,7 @@ export function ScenarioManager() {
 
   const handleLoadSavedScenario = (scenario: SavedScenario) => {
     const normalizedBase = scenario.base_currency?.toLowerCase();
-    if (normalizedBase === 'usd' || normalizedBase === 'eur') {
+    if (normalizedBase === 'usd' || normalizedBase === 'eur' || normalizedBase === 'chf') {
       setBaseCurrency(normalizedBase);
     }
     const overridesForUi = convertSavedOverridesToUiUnits(scenario.overrides as Overrides);

@@ -12,7 +12,7 @@ class CalculateRequest(BaseModel):
     )
     base_currency: str = Field(
         default="usd",
-        description="Base currency for returns: 'usd' or 'eur'"
+        description="Base currency for returns: 'usd', 'eur', or 'chf'"
     )
     scenario_name: str = Field(
         default="Current Scenario",
@@ -43,7 +43,7 @@ class CalculateRequest(BaseModel):
 class MacroPreviewRequest(BaseModel):
     """Request model for lightweight macro preview calculation."""
     region: str = Field(
-        description="Region identifier: us, eurozone, japan, or em"
+        description="Region identifier: us, eurozone, japan, em, or switzerland"
     )
     building_blocks: Dict[str, float] = Field(
         description="Building block values (as decimals, e.g., 0.012 for 1.2%)"

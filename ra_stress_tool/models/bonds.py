@@ -369,7 +369,7 @@ class GovernmentBondModel(BondModel):
         self.base_currency = str(base_currency).lower()
 
     def _active_regime(self) -> str:
-        return 'eur' if self.base_currency == 'eur' else 'usd'
+        return self.base_currency if self.base_currency in ('eur', 'chf') else 'usd'
 
     def get_inputs(self) -> Dict[str, TrackedValue]:
         """Return regime-specific inputs (USD or EUR) as TrackedValues."""

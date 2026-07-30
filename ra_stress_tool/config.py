@@ -24,6 +24,7 @@ class BaseCurrency(Enum):
     """Supported base currencies for return calculations."""
     USD = "usd"
     EUR = "eur"
+    CHF = "chf"
 
 
 class AssetClass(Enum):
@@ -222,6 +223,16 @@ DEFAULT_MARKET_DATA = {
         'productivity_growth': 0.0244,         # 2.44%
         'my_ratio': 1.5,
     },
+    # Switzerland Macro (CHF base currency only; NOT part of Global RGDP weights)
+    # Calibrated mid-2026: CPI 0.5% YoY (FSO), SNB policy 0% / SARON ~-0.04%,
+    # pop growth 0.7% (FSO), productivity ~1.0% (FSO 2000-2022 avg)
+    'switzerland': {
+        'current_headline_inflation': 0.005,   # 0.5%
+        'current_tbill': 0.000,                # 0.0% (SNB policy 0%; E[T-Bill] ≈ 0.60%)
+        'population_growth': 0.007,            # 0.7% (immigration-driven)
+        'productivity_growth': 0.010,          # 1.0%
+        'my_ratio': 2.2,                       # Tool convention (midpoint 2.0): aging, less than EZ/JP 2.3
+    },
 }
 
 
@@ -252,6 +263,14 @@ DEFAULT_ASSET_DATA = {
             # TP normalizes upward 0.40 -> 0.50 over horizon
             'current_term_premium': 0.004,         # 0.40%
             'fair_term_premium': 0.005,            # 0.50%
+        },
+        'chf': {
+            'current_yield': 0.004,                # 0.4% (10y Swiss Confederation, Jul 2026)
+            'duration': 9.0,                       # SBI domestic government is long-duration (~9-10y)
+            # Swiss curve is flat: current TP slightly negative vs E[T-Bill] ≈ 0.60%,
+            # normalizing to a small positive fair TP over the horizon
+            'current_term_premium': -0.002,        # -0.20% (back-solved: yield − E[T-Bill])
+            'fair_term_premium': 0.002,            # 0.20%
         },
     },
 
@@ -456,6 +475,7 @@ CURRENCY_TO_MACRO_REGION = {
     'eur': 'eurozone',
     'jpy': 'japan',
     'em': 'em',
+    'chf': 'switzerland',
 }
 
 

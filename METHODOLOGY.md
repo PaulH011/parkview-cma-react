@@ -2,7 +2,7 @@
 
 **Purpose**: this document is the exhaustive specification of every calculation, input, default, constant, and dependency in the Parkview Capital Market Assumptions Tool. It is written so that a reader can reconstruct the entire tool as a spreadsheet, formula-for-formula, without reading the source code.
 
-**Scope**: covers all 10 asset classes (Liquidity, Bonds Global, Bonds HY, Bonds EM HC, Bonds Inflation Linked, Equity US/Europe/Japan/EM, Absolute Return), both equity model variants (Research Affiliates and Grinold-Kroner), both base currencies (USD and EUR), and the FX adjustment mechanism.
+**Scope**: covers all 10 asset classes (Liquidity, Bonds Global, Bonds HY, Bonds EM HC, Bonds Inflation Linked, Equity US/Europe/Japan/EM, Absolute Return), both equity model variants (Research Affiliates and Grinold-Kroner), three base currencies (USD, EUR and CHF), and the FX adjustment mechanism. **CHF exception**: Bonds Inflation Linked is not offered in CHF base (Switzerland has no domestic inflation-linked government bond market), so CHF produces 9 asset classes.
 
 **Defaults shown reflect Q2 2026** (commit `f1dd905`, May 2026). When a default is "displayed in percentage points" it means the UI shows `2.50` for 2.5%; when it is "stored as a decimal" the engine uses `0.025`.
 
@@ -63,12 +63,14 @@ For each asset class the engine produces:
 
 ### 1.4 Base currency switch
 
-`base_currency ∈ {'usd', 'eur'}`. Affects:
-- Liquidity uses the base-region T-Bill directly
-- Inflation Linked switches between USD-TIPS and EUR-ILB regime inputs
-- Bonds Global switches between USD-Treasury/Global-Agg and Bund/EUR-Sovereign regime inputs (this is **new** in Q2 2026)
+`base_currency ∈ {'usd', 'eur', 'chf'}`. Affects:
+- Liquidity uses the base-region T-Bill directly (US, Eurozone, or Switzerland)
+- Inflation Linked switches between USD-TIPS and EUR-ILB regime inputs. **Not offered in CHF base** — Switzerland has no domestic linker market; the engine omits the asset class from CHF results entirely.
+- Bonds Global switches between USD-Treasury/Global-Agg, Bund/EUR-Sovereign, and Swiss-Confederation (Eidgenossen) regime inputs
 - Absolute Return uses the base-region T-Bill as the risk-free leg
-- All other assets (Bonds HY, EM HC, all 4 equities) get an additive **FX adjustment** to translate their native-currency return into the base currency
+- All other assets (Bonds HY, EM HC, all 4 equities) get an additive **FX adjustment** to translate their native-currency return into the base currency. In CHF base this includes **Equity Europe** (EUR is foreign to a CHF investor), so all four FX pairs are active: CHF→USD, CHF→EUR, CHF→JPY, CHF→EM.
+
+The Switzerland macro region exists only to serve CHF base: it is **not** part of the Global RGDP weights (26/15/5/40 unchanged — Switzerland is ~0.9% of world GDP, part of the omitted rest-of-world), and it has no effect on USD- or EUR-base results.
 
 ---
 
@@ -177,6 +179,7 @@ Country factor for each region (used both as default and as adjustable building 
 - Eurozone: `−0.002` (−0.20%)
 - Japan: `−0.005` (−0.50%)
 - EM: `−0.034` (−3.40%) — *reflects financial-repression / capital-controls suppression of EM short rates below the theoretical RGDP+Inflation equilibrium; required to keep computed E[T-Bill] near 4% given EM RGDP 3.4% and Inflation 4.0%*
+- Switzerland: `−0.012` (−1.20%) — *safe-haven franc: SNB policy rates sit structurally below the RGDP+Inflation equilibrium; calibrated so E[T-Bill] lands near 0.60% given Swiss RGDP 1.2% and Inflation 0.85%*
 
 ### 3.4 Direct-forecast override path
 
@@ -204,6 +207,9 @@ The denominator normalises because the four explicit regions sum to 0.86 (rest-o
 | Eurozone | 2.00% | 2.00% | 2.10% | 0.10% | 1.49% | 2.3 | −0.20% |
 | Japan | 1.50% | 1.50% | 1.62% | −0.20% | 1.59% | 2.3 | −0.50% |
 | EM | 4.00% | 4.00% | 4.00% | 1.00% | 2.44% | 1.5 | −3.40% |
+| Switzerland* | 0.50% | 1.00% | 0.00% | 0.70% | 1.00% | 2.2 | −1.20% |
+
+\* CHF base only; not in Global RGDP weights. Calibrated mid-2026: FSO CPI 0.5% YoY, SNB policy 0% (SARON ≈ −0.04%), FSO population growth 0.7%, productivity ~1.0% (FSO 2000–2022 average), LT inflation anchor 1.0% (SNB price-stability range 0–2%, long-term survey expectations). The MY ratio is expressed in the tool's own convention (sigmoid midpoint 2.0; US 2.1, EZ/JP 2.3) — Switzerland is set at 2.2: aging, but softened by immigration relative to EZ/Japan.
 
 ### 3.7 Computed forecasts from these defaults
 
@@ -213,6 +219,7 @@ The denominator normalises because the four explicit regions sum to 0.86 (rest-o
 | Eurozone | 2.00% | 0.9987% | 2.5891% |
 | Japan | 1.50% | 0.7987% | 1.7451% |
 | EM | 4.00% | 3.4021% | 4.0015% |
+| Switzerland | 0.85% | 1.2026% | 0.5968% |
 
 **Global RGDP**: `2.1659%` (weighted average using the 26/15/5/40 weights above, normalised by 0.86).
 
@@ -224,18 +231,18 @@ When `base_currency ≠ asset_local_currency`, an additive FX term is applied. T
 
 ### 4.1 Asset → Local Currency Map
 
-| Asset Class | Local Currency | FX adjustment in USD base | FX adjustment in EUR base |
-|---|---|---|---|
-| Liquidity | `base` (no FX) | No | No |
-| Bonds Global Gov | `base` (regime-based) | No | No |
-| Bonds HY | `usd` | No | Yes (USD→EUR) |
-| Bonds EM HC | `usd` | No | Yes (USD→EUR) |
-| Bonds Inflation Linked | `base` (regime-based) | No | No |
-| Equity US | `usd` | No | Yes (USD→EUR) |
-| Equity Europe | `eur` | Yes (EUR→USD) | No |
-| Equity Japan | `jpy` | Yes (JPY→USD) | Yes (JPY→EUR) |
-| Equity EM | `em` | Yes (EM→USD) | Yes (EM→EUR) |
-| Absolute Return | `base` (no FX) | No | No |
+| Asset Class | Local Currency | FX adj. USD base | FX adj. EUR base | FX adj. CHF base |
+|---|---|---|---|---|
+| Liquidity | `base` (no FX) | No | No | No |
+| Bonds Global Gov | `base` (regime-based) | No | No | No |
+| Bonds HY | `usd` | No | Yes | Yes |
+| Bonds EM HC | `usd` | No | Yes | Yes |
+| Bonds Inflation Linked | `base` (regime-based) | No | No | — (not offered) |
+| Equity US | `usd` | No | Yes | Yes |
+| Equity Europe | `eur` | Yes | No | Yes |
+| Equity Japan | `jpy` | Yes | Yes | Yes |
+| Equity EM | `em` | Yes | Yes | Yes |
+| Absolute Return | `base` (no FX) | No | No | No |
 
 ### 4.2 Currency → Macro Region Map
 
@@ -245,6 +252,7 @@ When `base_currency ≠ asset_local_currency`, an additive FX term is applied. T
 | `eur` | `eurozone` |
 | `jpy` | `japan` |
 | `em` | `em` |
+| `chf` | `switzerland` |
 
 ### 4.3 FX Formula
 
@@ -296,6 +304,14 @@ ppp   = 3.0000% − 4.0000% = −1.0000%
 fx    = 0.30 × 0.0187 + 0.70 × −1.0000 = +0.0056 − 0.7000 = −0.6944%
 ```
 → USD appreciates vs EM → EM asset return is **reduced** by 0.69% in USD terms.
+
+CHF base, USD-denominated asset (e.g. Equity US, Bonds HY, Bonds EM HC):
+```
+carry = 0.5968% − 4.0202% = −3.4234%
+ppp   = 0.8500% − 3.0000% = −2.1500%
+fx    = 0.30 × −3.4234 + 0.70 × −2.1500 = −1.0270 − 1.5050 = −2.5320%
+```
+→ CHF expected to **appreciate** ~2.53%/yr vs USD → USD assets lose 2.53%/yr in CHF terms. This is the defining feature of the CHF set: all four pairs are negative (CHF→USD −2.53%, CHF→EUR −1.40%, CHF→JPY −0.80%, CHF→EM −3.23%), so every foreign asset gets a haircut for the safe-haven franc.
 
 ---
 
@@ -395,9 +411,10 @@ Annual figure, subtracted from yield-component-plus-roll-plus-valuation.
 
 **Asset class identifier**: `bonds_global`
 
-**Regime-based** (Q2 2026 change): the engine selects between two parameter sets based on `base_currency`:
+**Regime-based** (Q2 2026 change; CHF added Q3 2026): the engine selects between three parameter sets based on `base_currency`:
 - USD base → uses US Treasury / Global Aggregate USD-centric inputs and US macro region
 - EUR base → uses Bund / EUR sovereign aggregate inputs and Eurozone macro region
+- CHF base → uses Swiss Confederation (Eidgenossen) inputs and Switzerland macro region
 
 **No FX adjustment** is applied to Bonds Global. It is treated as a native-currency asset on both sides.
 
@@ -413,12 +430,14 @@ E[Real]    = E[Nominal] − inflation_forecast
 
 ### 6.2 Inputs
 
-| Field | USD regime default | EUR regime default | Unit |
-|---|---|---|---|
-| `current_yield` | 4.60% | 3.00% | % |
-| `duration` | 8.0 | 7.5 | years |
-| `current_term_premium` | 0.81% | 0.40% | % |
-| `fair_term_premium` | 1.00% | 0.50% | % |
+| Field | USD regime | EUR regime | CHF regime | Unit |
+|---|---|---|---|---|
+| `current_yield` | 4.60% | 3.00% | 0.40% | % |
+| `duration` | 8.0 | 7.5 | 9.0 | years |
+| `current_term_premium` | 0.81% | 0.40% | −0.20% | % |
+| `fair_term_premium` | 1.00% | 0.50% | 0.20% | % |
+
+CHF regime notes: 10y Eidgenosse ≈ 0.40% (Jul 2026); the SBI domestic government market is long-duration (~9–10y; the 7–15y segment ETF shows 10.2y effective duration). The Swiss curve is flat, so the current TP is slightly **negative** vs E[T-Bill] 0.60%, normalizing to a small positive fair TP.
 
 ### 6.3 Macro inputs consumed
 
@@ -429,6 +448,7 @@ E[Real]    = E[Nominal] − inflation_forecast
 
 - USD regime: `bonds_global.usd.<field>`
 - EUR regime: `bonds_global.eur.<field>`
+- CHF regime: `bonds_global.chf.<field>`
 
 ---
 
@@ -517,6 +537,8 @@ The 2% `em_spread` is a hardcoded constant in `bonds.py:558` — not user-overri
 **Asset class identifier**: `inflation_linked`
 
 **Regime-based**: USD base → US TIPS inputs and US macro; EUR base → EUR ILB inputs and Eurozone macro. No FX adjustment.
+
+**Not offered in CHF base**: Switzerland has no domestic inflation-linked government bond market. In CHF base the engine omits this asset class from results entirely (9 assets instead of 10); calling its model directly with CHF raises an error, and the UI shows an explanatory notice instead of inputs.
 
 ### 9.1 Formula
 
@@ -807,6 +829,7 @@ Complete dump, percentage points unless otherwise noted.
 | Eurozone | 2.00 | 2.00 | 2.10 | 0.10 | 1.49 | 2.3 | −0.20 |
 | Japan | 1.50 | 1.50 | 1.62 | −0.20 | 1.59 | 2.3 | −0.50 |
 | EM | 4.00 | 4.00 | 4.00 | 1.00 | 2.44 | 1.5 | −3.40 |
+| Switzerland | 0.50 | 1.00 | 0.00 | 0.70 | 1.00 | 2.2 | −1.20 |
 
 Direct-forecast display defaults (what the UI shows in the "Direct Forecast Overrides" fields, equal to the computed building-block forecasts):
 
@@ -816,15 +839,16 @@ Direct-forecast display defaults (what the UI shows in the "Direct Forecast Over
 | Eurozone | 2.00 | 1.00 | 2.59 |
 | Japan | 1.50 | 0.80 | 1.75 |
 | EM | 4.00 | 3.40 | 4.00 |
+| Switzerland | 0.85 | 1.20 | 0.60 |
 
 ### 14.2 Bonds Global Government (regime-based)
 
-| Field | USD regime | EUR regime |
-|---|---|---|
-| `current_yield` | 4.60 | 3.00 |
-| `duration` | 8.0 | 7.5 |
-| `current_term_premium` | 0.81 | 0.40 |
-| `fair_term_premium` | 1.00 | 0.50 |
+| Field | USD regime | EUR regime | CHF regime |
+|---|---|---|---|
+| `current_yield` | 4.60 | 3.00 | 0.40 |
+| `duration` | 8.0 | 7.5 | 9.0 |
+| `current_term_premium` | 0.81 | 0.40 | −0.20 |
+| `fair_term_premium` | 1.00 | 0.50 | 0.20 |
 
 ### 14.3 Bonds High Yield
 
@@ -1269,6 +1293,41 @@ E[Real]    = 8.739 − 3.00 = 5.739%   ✓
 E[Nominal] = E[T-Bill]_us = 4.0202%
 E[Real]    = 4.0202 − 3.00 = 1.0202%   ✓
 ```
+
+### 16.11b Example — Swiss macro chain + a CHF-base asset
+
+Building blocks: `pop=0.70%`, `prod=1.00%`, `my_ratio=2.2`, `curr_inf=0.50%`, `LT_inf=1.00%`, `curr_tb=0.00%`, `country_factor=−1.20%`.
+
+```
+# Demographics (MY 2.2)
+z    = 2.0 × (2.0 − 2.2) = −0.4
+sig  = 1 / (1 + exp(0.4)) = 0.40131
+demo = (0.40131 − 0.5) × 0.02 = −0.19737% 
+
+# RGDP
+output_per_capita = 1.00 + (−0.1974) + (−0.30) = 0.5026%
+E[RGDP] = 0.70 + 0.5026 = 1.2026%   ✓
+
+# Inflation
+E[Inflation] = 0.30 × 0.50 + 0.70 × 1.00 = 0.85%   ✓
+
+# T-Bill (safe-haven country factor)
+LT_TB = max(−0.75, −1.20 + 1.2026 + 0.85) = 0.8526%
+E[T-Bill] = 0.30 × 0.00 + 0.70 × 0.8526 = 0.5968%   ✓
+
+# Bonds Global (CHF regime): yield 0.40%, dur 9.0, TP −0.20 → 0.20
+avg_TP    = (−0.20 + 0.20 × 9) / 10 = 0.16%
+avg_yield = 0.5968 + 0.16 = 0.7568%
+roll      = (−0.20 / 10) × 9.0 = −0.18%
+valuation = −9.0 × (0.20 − (−0.20)) × 0.97414 / 10 = −0.3507%
+E[Nominal] = 0.7568 − 0.18 − 0.3507 = 0.2261%   ✓ (engine: 0.2261)
+E[Real]    = 0.2261 − 0.85 = −0.6239%   ✓
+
+# Bonds HY in CHF base: US-native calc 3.0702% (Example 4) + CHF→USD fx −2.5320%
+E[Nominal] = 3.0702 − 2.5320 = 0.5382%   ✓ (engine: 0.5382)
+```
+
+Note: Bonds Inflation Linked is omitted in CHF base (no Swiss linker market) — CHF results contain 9 asset classes.
 
 ### 16.12 Example 12 — Absolute Return (USD base, GK equity active)
 

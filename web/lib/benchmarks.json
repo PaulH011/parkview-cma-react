@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated": "2026-06-26",
+  "generated": "2026-07-30",
   "disclaimer": "Public CMAs mapped to Parkview's 10 buckets via the closest provider proxy. Bases differ (geometric vs arithmetic, 10y vs 10-15y, nominal, hedging, FX) - see each provider's notes/return_basis before comparing.",
   "buckets": [
     "liquidity",
@@ -108,6 +108,48 @@
             "value": 8.09,
             "proxy": "Hedge funds (global)"
           }
+        },
+        "chf": {
+          "liquidity": {
+            "value": 0.65,
+            "proxy": "Swiss cash"
+          },
+          "bonds_global": {
+            "value": -0.16,
+            "proxy": "Swiss government bonds"
+          },
+          "bonds_hy": {
+            "value": 3.21,
+            "proxy": "Global high yield bonds"
+          },
+          "bonds_em": {
+            "value": 2.87,
+            "proxy": "USD EM debt"
+          },
+          "inflation_linked": {
+            "value": 1.75,
+            "proxy": "Developed inflation-linked bonds"
+          },
+          "equity_us": {
+            "value": 7.34,
+            "proxy": "US large cap equities"
+          },
+          "equity_europe": {
+            "value": 6.92,
+            "proxy": "Europe large cap equities"
+          },
+          "equity_japan": {
+            "value": 7.71,
+            "proxy": "Japan large cap equities"
+          },
+          "equity_em": {
+            "value": 6.16,
+            "proxy": "Emerging large cap equities"
+          },
+          "absolute_return": {
+            "value": 8.09,
+            "proxy": "Hedge funds (global)"
+          }
         }
       }
     },
@@ -204,6 +246,48 @@
             "value": 4.2,
             "proxy": "Diversified Hedge Funds hedged"
           }
+        },
+        "chf": {
+          "liquidity": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "bonds_global": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "bonds_hy": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "bonds_em": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "inflation_linked": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "equity_us": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "equity_europe": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "equity_japan": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "equity_em": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          },
+          "absolute_return": {
+            "value": null,
+            "proxy": "no public CHF matrix"
+          }
         }
       }
     },
@@ -287,6 +371,48 @@
           "equity_europe": {
             "value": 5.8,
             "proxy": "MSCI Euro"
+          },
+          "equity_japan": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "equity_em": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "absolute_return": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          }
+        },
+        "chf": {
+          "liquidity": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "bonds_global": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "bonds_hy": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "bonds_em": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "inflation_linked": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "equity_us": {
+            "value": null,
+            "proxy": "no native line in this currency"
+          },
+          "equity_europe": {
+            "value": null,
+            "proxy": "no native line in this currency"
           },
           "equity_japan": {
             "value": null,

@@ -58,8 +58,11 @@ async def calculate_full(request: CalculateRequest):
             }
 
         # Convert to JSON-serializable format
-        # Filter out 'global' from macro_forecasts (it only has rgdp_growth, no inflation/tbill)
+        # Filter out 'global' from macro_forecasts (it only has rgdp_growth, no inflation/tbill).
+        # Switzerland is only surfaced in CHF base (it drives nothing elsewhere).
         macro_regions = ['us', 'eurozone', 'japan', 'em']
+        if request.base_currency.lower() == 'chf':
+            macro_regions.append('switzerland')
 
         # Build FX forecasts if available (non-empty when base currency is EUR)
         fx_forecasts = None
