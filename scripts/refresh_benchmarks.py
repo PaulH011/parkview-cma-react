@@ -135,6 +135,20 @@ BLACKROCK_MAP = {
         "equity_em": "Emerging large cap equities",
         "absolute_return": "Hedge funds (global)",
     },
+    "chf": {
+        "liquidity": "Swiss cash",
+        "bonds_global": "Swiss government bonds",
+        "bonds_hy": "Global high yield bonds",
+        "bonds_em": "USD EM debt",
+        # Reference only: Switzerland has no domestic linker market, so
+        # Parkview shows n/a; BlackRock's CHF book uses developed linkers.
+        "inflation_linked": "Developed inflation-linked bonds",
+        "equity_us": "US large cap equities",
+        "equity_europe": "Europe large cap equities",
+        "equity_japan": "Japan large cap equities",
+        "equity_em": "Emerging large cap equities",
+        "absolute_return": "Hedge funds (global)",
+    },
 }
 
 # J.P. Morgan: exact row label; we take the 4th number (Compound Return 2026)
@@ -163,6 +177,8 @@ JPM_MAP = {
         "equity_em": "Emerging Markets Equity",
         "absolute_return": "Diversified Hedge Funds hedged",
     },
+    # J.P. Morgan publishes no public CHF assumptions matrix — all null.
+    "chf": {b: None for b in BUCKETS},
 }
 
 # SSGA: anchor on the row's asset-class LABEL (or unambiguous benchmark) as an exact
@@ -194,6 +210,8 @@ SSGA_MAP = {
         "equity_em": None,
         "absolute_return": None,             # HFRI FoF is USD only
     },
+    # SSGA's local-currency table has no Swiss lines — all null.
+    "chf": {b: None for b in BUCKETS},
 }
 
 PROVIDER_META = {
@@ -324,9 +342,12 @@ def parse_jpm(usd_path: Path, eur_path: Path):
     tail4 = re.compile(r" +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+) +(-?\d+\.\d+)")
     result = {}
     for cur, mp in JPM_MAP.items():
-        lines = texts[cur].splitlines()
+        lines = texts[cur].splitlines() if cur in texts else []
         result[cur] = {}
         for bucket, label in mp.items():
+            if label is None:
+                result[cur][bucket] = {"value": None, "proxy": "no public CHF matrix"}
+                continue
             val = None
             for ln in lines:
                 idx = ln.find(label)
@@ -416,8 +437,10 @@ def validate(provider: str, returns: dict) -> list[str]:
                 continue
             v = cell["value"]
             if v is None:
-                # SSGA legitimately has nulls; flag only USD gaps that aren't expected
+                # Expected nulls: SSGA EUR/Japan gaps; JPM & SSGA have no CHF data
                 if provider == "ssga" and (cur == "eur" or b == "equity_japan"):
+                    continue
+                if cur == "chf" and provider in ("jpmorgan", "ssga"):
                     continue
                 warnings.append(f"{provider}.{cur}.{b}: null (proxy='{cell['proxy']}')")
             elif not (VALID_RANGE[0] <= v <= VALID_RANGE[1]):

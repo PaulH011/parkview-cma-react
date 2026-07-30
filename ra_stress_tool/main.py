@@ -96,9 +96,7 @@ class CMEEngine:
 
     def _get_base_currency_region(self) -> str:
         """Get the macro region for the base currency."""
-        if self.base_currency == BaseCurrency.EUR:
-            return 'eurozone'
-        return 'us'
+        return CURRENCY_TO_MACRO_REGION.get(self.base_currency.value, 'us')
 
     def _get_fx_adjustment(self, asset_class: AssetClass) -> Dict[str, Any]:
         """
@@ -122,7 +120,7 @@ class CMEEngine:
             return {'fx_return': 0.0, 'components': {}, 'needs_adjustment': False}
 
         # Determine base currency string
-        base_ccy = 'eur' if self.base_currency == BaseCurrency.EUR else 'usd'
+        base_ccy = self.base_currency.value
 
         # No adjustment if asset is already in base currency
         if local_currency == base_ccy:
@@ -210,10 +208,10 @@ class CMEEngine:
             return {}  # No FX forecasts needed for USD base
 
         macro = self.compute_macro_forecasts()
-        base_ccy = 'eur' if self.base_currency == BaseCurrency.EUR else 'usd'
+        base_ccy = self.base_currency.value
 
         fx_forecasts = {}
-        for foreign_ccy in ['usd', 'jpy', 'em']:
+        for foreign_ccy in ['usd', 'eur', 'jpy', 'em']:
             if foreign_ccy != base_ccy:
                 fx_result = self.fx_model.get_fx_adjustment_for_asset(
                     home_currency=base_ccy,
@@ -240,7 +238,7 @@ class CMEEngine:
         if self._macro_cache:
             return self._macro_cache
 
-        regions = ['us', 'eurozone', 'japan', 'em']
+        regions = ['us', 'eurozone', 'japan', 'em', 'switzerland']
         forecasts = {}
 
         for region in regions:
@@ -273,7 +271,7 @@ class CMEEngine:
         
         # Check direct forecast overrides
         direct_fields = ['inflation_forecast', 'rgdp_growth', 'tbill_forecast']
-        regions = ['us', 'eurozone', 'japan', 'em']
+        regions = ['us', 'eurozone', 'japan', 'em', 'switzerland']
         
         for region in regions:
             for field in direct_fields:
@@ -475,11 +473,8 @@ class CMEEngine:
         macro = self.compute_macro_forecasts()
         macro_sources = self._get_macro_sources()
 
-        # Select regime based on base currency
-        if self.base_currency == BaseCurrency.EUR:
-            macro_region = 'eurozone'
-        else:
-            macro_region = 'us'
+        # Select regime based on base currency (USD -> us, EUR -> eurozone, CHF -> switzerland)
+        macro_region = self._get_base_currency_region()
 
         region_macro = macro[macro_region]
 
@@ -640,6 +635,14 @@ class CMEEngine:
         Uses USD TIPS assumptions for USD base currency and EUR inflation-linked
         sovereign assumptions for EUR base currency.
         """
+        if self.base_currency == BaseCurrency.CHF:
+            # Switzerland has no domestic inflation-linked government bond market;
+            # the asset class is not offered in CHF base (dropped by design).
+            raise ValueError(
+                "Inflation-linked bonds are not available in CHF base currency "
+                "(no Swiss linker market)."
+            )
+
         macro = self.compute_macro_forecasts()
         macro_sources = self._get_macro_sources()
 
@@ -930,10 +933,12 @@ class CMEEngine:
             bonds_em, AssetClass.BONDS_EM
         )
 
-        inflation_linked = self.compute_inflation_linked_return()
-        results[AssetClass.INFLATION_LINKED.value] = self._apply_fx_to_result(
-            inflation_linked, AssetClass.INFLATION_LINKED
-        )
+        # Inflation Linked is not offered in CHF base (no Swiss linker market)
+        if self.base_currency != BaseCurrency.CHF:
+            inflation_linked = self.compute_inflation_linked_return()
+            results[AssetClass.INFLATION_LINKED.value] = self._apply_fx_to_result(
+                inflation_linked, AssetClass.INFLATION_LINKED
+            )
 
         # Equities - apply FX adjustments
         region_to_asset = {

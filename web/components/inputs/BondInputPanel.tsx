@@ -169,8 +169,9 @@ function BondTypeInputs({ bondType }: { bondType: Exclude<BondType, 'global' | '
 
 function BondGlobalInputs() {
   const { bonds, setBondGlobalValue, advancedMode, baseCurrency } = useInputStore();
-  const activeRegime = baseCurrency === 'eur' ? 'eur' : 'usd';
-  const inputs = bonds.global[activeRegime];
+  const activeRegime = baseCurrency === 'usd' ? 'usd' : baseCurrency;
+  // Fetched defaults may predate the CHF regime — fall back to hardcoded
+  const inputs = bonds.global[activeRegime] ?? DEFAULT_INPUTS.bonds.global[activeRegime];
   const defaults = DEFAULT_INPUTS.bonds.global[activeRegime];
 
   const handleChange = (key: keyof BondGlobalRegimeInputs, value: string) => {
@@ -185,7 +186,9 @@ function BondGlobalInputs() {
       <div className="rounded-md border bg-blue-50 border-blue-200 px-3 py-2 text-xs text-blue-800">
         {activeRegime === 'usd'
           ? 'USD mode: using US Treasury / Global Aggregate assumptions'
-          : 'EUR mode: using Bund / EUR sovereign aggregate assumptions'}
+          : activeRegime === 'eur'
+            ? 'EUR mode: using Bund / EUR sovereign aggregate assumptions'
+            : 'CHF mode: using Swiss Confederation (Eidgenossen) assumptions'}
       </div>
 
       <div className="space-y-3">
@@ -262,6 +265,17 @@ function InflationLinkedInputs() {
       setInflationLinkedValue(activeRegime, key, numValue);
     }
   };
+
+  // Switzerland has no domestic inflation-linked bond market — the asset
+  // class is not offered in CHF base, so there are no inputs to edit.
+  if (baseCurrency === 'chf') {
+    return (
+      <div className="rounded-md border bg-amber-50 border-amber-200 px-3 py-2 text-xs text-amber-800">
+        Not available in CHF base: Switzerland has no domestic inflation-linked
+        government bond market, so this asset class is excluded from CHF results.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

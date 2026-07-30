@@ -97,8 +97,8 @@ class MacroModel:
             adjustment = adjustment_override.value
             adjustment_source = InputSource.OVERRIDE
         else:
-            # Default adjustment based on typical values
-            adjustment = -0.003 if region.lower() in ['us', 'eurozone', 'japan'] else -0.005
+            # Default adjustment based on typical values (DM -0.30%, EM -0.50%)
+            adjustment = -0.003 if region.lower() in ['us', 'eurozone', 'japan', 'switzerland'] else -0.005
             adjustment_source = InputSource.DEFAULT
 
         # Calculate output per capita growth
@@ -156,10 +156,11 @@ class MacroModel:
         else:
             # Q2 2026 long-term inflation defaults by region
             long_term_defaults = {
-                'us': 0.030,        # 3.0%
-                'eurozone': 0.020,  # 2.0% (ECB target)
-                'japan': 0.015,     # 1.5%
-                'em': 0.040,        # 4.0%
+                'us': 0.030,           # 3.0%
+                'eurozone': 0.020,     # 2.0% (ECB target)
+                'japan': 0.015,        # 1.5%
+                'em': 0.040,           # 4.0%
+                'switzerland': 0.010,  # 1.0% (SNB "price stability" = 0-2%; historical ~1%)
             }
             long_term_inflation = long_term_defaults.get(region.lower(), 0.025)
             long_term_source = InputSource.DEFAULT
@@ -245,11 +246,14 @@ class MacroModel:
             # Q2 2026 country factor defaults
             # EM is structurally negative (financial repression / capital
             # controls suppress short rates below RGDP + Inflation theoretical).
+            # Switzerland is strongly negative (safe-haven franc: structurally
+            # low policy rates well below the RGDP + Inflation equilibrium).
             country_factors = {
                 'us': 0.0,
                 'eurozone': -0.002,
                 'japan': -0.005,
                 'em': -0.034,
+                'switzerland': -0.012,
             }
             country_factor = country_factors.get(region.lower(), 0.0)
             country_factor_source = InputSource.DEFAULT

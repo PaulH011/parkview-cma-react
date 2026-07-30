@@ -32,6 +32,7 @@ const SECTION_NAMES: Record<string, string> = {
   'macro.eurozone': 'Macro - Eurozone',
   'macro.japan': 'Macro - Japan',
   'macro.em': 'Macro - EM',
+  'macro.switzerland': 'Macro - Switzerland',
   bonds_global: 'Bonds Global',
   bonds_hy: 'Bonds HY',
   bonds_em: 'Bonds EM',
@@ -113,9 +114,9 @@ function buildSections(overrides: Overrides): Section[] {
     }
   }
 
-  // Bonds Global overrides — regime-based (usd/eur)
+  // Bonds Global overrides — regime-based (usd/eur/chf)
   if (overrides.bonds_global) {
-    for (const regime of ['usd', 'eur'] as const) {
+    for (const regime of ['usd', 'eur', 'chf'] as const) {
       const regimeValues = overrides.bonds_global[regime];
       if (!regimeValues) continue;
       const entries: OverrideEntry[] = [];

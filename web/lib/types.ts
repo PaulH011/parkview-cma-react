@@ -3,7 +3,7 @@
  */
 
 // Region types
-export type MacroRegion = 'us' | 'eurozone' | 'japan' | 'em';
+export type MacroRegion = 'us' | 'eurozone' | 'japan' | 'em' | 'switzerland';
 export type EquityRegion = 'us' | 'europe' | 'japan' | 'em';
 export type BondType = 'global' | 'hy' | 'em' | 'inflation_linked';
 
@@ -21,7 +21,7 @@ export type AssetClass =
   | 'absolute_return';
 
 // Base currency
-export type BaseCurrency = 'usd' | 'eur';
+export type BaseCurrency = 'usd' | 'eur' | 'chf';
 
 // Macro input structure
 export interface MacroInputs {
@@ -60,6 +60,7 @@ export interface BondGlobalRegimeInputs {
 export interface BondGlobalInputs {
   usd: BondGlobalRegimeInputs;
   eur: BondGlobalRegimeInputs;
+  chf: BondGlobalRegimeInputs;
 }
 
 export interface InflationLinkedRegimeInputs {
@@ -144,10 +145,12 @@ export interface AssetResult {
 }
 
 // Calculation response from API
+// results is Partial: inflation_linked is absent in CHF base
+// (Switzerland has no domestic inflation-linked bond market)
 export interface CalculateResponse {
   scenario_name: string;
   base_currency: string;
-  results: Record<AssetClass, AssetResult>;
+  results: Partial<Record<AssetClass, AssetResult>>;
   macro_forecasts: Record<MacroRegion, {
     rgdp_growth: number;
     inflation: number;
@@ -186,6 +189,7 @@ export interface Overrides {
   bonds_global?: {
     usd?: Partial<BondGlobalRegimeInputs>;
     eur?: Partial<BondGlobalRegimeInputs>;
+    chf?: Partial<BondGlobalRegimeInputs>;
   };
   bonds_hy?: Partial<BondInputs>;
   bonds_em?: Partial<BondInputs>;

@@ -71,7 +71,7 @@ export function Header() {
             <span className="text-sm text-slate-500">Base:</span>
             <Select
               value={baseCurrency}
-              onValueChange={(value) => setBaseCurrency(value as 'usd' | 'eur')}
+              onValueChange={(value) => setBaseCurrency(value as 'usd' | 'eur' | 'chf')}
             >
               <SelectTrigger className="w-20 h-8">
                 <SelectValue />
@@ -79,6 +79,7 @@ export function Header() {
               <SelectContent>
                 <SelectItem value="usd">USD</SelectItem>
                 <SelectItem value="eur">EUR</SelectItem>
+                <SelectItem value="chf">CHF</SelectItem>
               </SelectContent>
             </Select>
           </div>

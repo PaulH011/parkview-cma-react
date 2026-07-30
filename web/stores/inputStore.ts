@@ -56,7 +56,7 @@ interface InputState {
   isMacroDirty: (region: MacroRegion, key: keyof MacroInputs) => boolean;
   setBondValue: (type: Exclude<BondType, 'global' | 'inflation_linked'>, key: keyof BondInputs, value: number) => void;
   setBondGlobalValue: (
-    regime: 'usd' | 'eur',
+    regime: 'usd' | 'eur' | 'chf',
     key: keyof BondGlobalRegimeInputs,
     value: number
   ) => void;
@@ -310,6 +310,10 @@ export const useInputStore = create<InputState>((set, get) => ({
           ...newBonds.global.eur,
           ...(overrides.bonds_global.eur || {}),
         },
+        chf: {
+          ...newBonds.global.chf,
+          ...(overrides.bonds_global.chf || {}),
+        },
       };
     }
 
@@ -369,9 +373,11 @@ export const useInputStore = create<InputState>((set, get) => ({
     // Check macro differences
     const directKeys = DIRECT_FORECAST_KEYS as readonly string[];
 
-    for (const region of ['us', 'eurozone', 'japan', 'em'] as MacroRegion[]) {
+    for (const region of ['us', 'eurozone', 'japan', 'em', 'switzerland'] as MacroRegion[]) {
       const current = state.macro[region];
       const regionDefaults = defaults.macro[region];
+      // Fetched defaults may predate the Switzerland region — skip if absent
+      if (!current || !regionDefaults) continue;
       const regionOverrides: Partial<MacroInputs> = {};
 
       for (const [key, value] of Object.entries(current)) {
@@ -431,11 +437,13 @@ export const useInputStore = create<InputState>((set, get) => ({
       }
     }
 
-    // Bonds Global is regime-based — nest under bonds_global.{usd,eur}
+    // Bonds Global is regime-based — nest under bonds_global.{usd,eur,chf}
     const globalOverrides: NonNullable<Overrides['bonds_global']> = {};
-    for (const regime of ['usd', 'eur'] as const) {
+    for (const regime of ['usd', 'eur', 'chf'] as const) {
       const currentRegime = state.bonds.global[regime];
       const defaultRegime = defaults.bonds.global[regime];
+      // Fetched defaults may predate the CHF regime — skip if absent
+      if (!currentRegime || !defaultRegime) continue;
       const regimeOverrides: Partial<BondGlobalRegimeInputs> = {};
 
       for (const [key, value] of Object.entries(currentRegime)) {
