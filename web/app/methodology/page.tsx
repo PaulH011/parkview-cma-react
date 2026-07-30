@@ -162,13 +162,14 @@ export default function MethodologyPage() {
 
         <Card className="bg-blue-50 border-blue-200 mt-4 mb-6">
           <CardContent className="pt-4">
-            <h4 className="font-semibold text-blue-800 mb-2">Visual FX Breakdown (EUR Mode)</h4>
+            <h4 className="font-semibold text-blue-800 mb-2">Visual FX Breakdown (EUR / CHF Mode)</h4>
             <p className="text-sm text-blue-700">
-              When you toggle to <strong>EUR</strong> as the base currency, a <strong>Currency Adjustment</strong> card
-              appears on the dashboard showing the carry and PPP components for each currency pair
-              (EUR/USD, EUR/JPY, EUR/EM), which asset classes each pair affects, and the per-asset FX impact.
-              Additionally, the asset breakdown waterfall charts will include an <strong>FX Return</strong> bar
-              showing the currency adjustment contribution for each non-EUR asset.
+              When you toggle to <strong>EUR</strong> or <strong>CHF</strong> as the base currency, a{' '}
+              <strong>Currency Adjustment</strong> card appears on the dashboard showing the carry and PPP
+              components for each currency pair (e.g. EUR/USD, EUR/JPY, EUR/EM — or in CHF mode all four:
+              CHF/USD, CHF/EUR, CHF/JPY, CHF/EM), which asset classes each pair affects, and the per-asset
+              FX impact. Additionally, the asset breakdown waterfall charts include an <strong>FX Return</strong> bar
+              showing the currency adjustment contribution for each foreign-currency asset.
             </p>
           </CardContent>
         </Card>
@@ -182,19 +183,20 @@ export default function MethodologyPage() {
                 <th className="p-2 text-left">Local Currency</th>
                 <th className="p-2 text-left">USD Base</th>
                 <th className="p-2 text-left">EUR Base</th>
+                <th className="p-2 text-left">CHF Base</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b"><td className="p-2">Liquidity</td><td className="p-2">Base currency</td><td className="p-2">No FX adjustment</td><td className="p-2">No FX adjustment</td></tr>
-              <tr className="border-b"><td className="p-2">Bonds Global</td><td className="p-2">USD</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td></tr>
-              <tr className="border-b"><td className="p-2">Bonds HY</td><td className="p-2">USD</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td></tr>
-              <tr className="border-b"><td className="p-2">Bonds EM</td><td className="p-2">USD</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td></tr>
-              <tr className="border-b"><td className="p-2">Bonds Inflation Linked</td><td className="p-2">Base currency regime</td><td className="p-2">Uses USD TIPS regime</td><td className="p-2">Uses EUR ILB regime</td></tr>
-              <tr className="border-b"><td className="p-2">Equity US</td><td className="p-2">USD</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td></tr>
-              <tr className="border-b"><td className="p-2">Equity Europe</td><td className="p-2">EUR</td><td className="p-2">FX adjustment applied</td><td className="p-2">No FX adjustment</td></tr>
-              <tr className="border-b"><td className="p-2">Equity Japan</td><td className="p-2">JPY</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td></tr>
-              <tr className="border-b"><td className="p-2">Equity EM</td><td className="p-2">EM currencies</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td></tr>
-              <tr className="border-b"><td className="p-2">Absolute Return</td><td className="p-2">Base currency</td><td className="p-2">No FX adjustment</td><td className="p-2">No FX adjustment</td></tr>
+              <tr className="border-b"><td className="p-2">Liquidity</td><td className="p-2">Base currency</td><td className="p-2">No FX adjustment</td><td className="p-2">No FX adjustment</td><td className="p-2">No FX adjustment</td></tr>
+              <tr className="border-b"><td className="p-2">Bonds Global</td><td className="p-2">Base currency regime</td><td className="p-2">No FX (UST regime)</td><td className="p-2">No FX (Bund regime)</td><td className="p-2">No FX (Eidgenossen regime)</td></tr>
+              <tr className="border-b"><td className="p-2">Bonds HY</td><td className="p-2">USD</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td></tr>
+              <tr className="border-b"><td className="p-2">Bonds EM</td><td className="p-2">USD</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td></tr>
+              <tr className="border-b"><td className="p-2">Bonds Inflation Linked</td><td className="p-2">Base currency regime</td><td className="p-2">Uses USD TIPS regime</td><td className="p-2">Uses EUR ILB regime</td><td className="p-2">Not offered (no Swiss linker market)</td></tr>
+              <tr className="border-b"><td className="p-2">Equity US</td><td className="p-2">USD</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td></tr>
+              <tr className="border-b"><td className="p-2">Equity Europe</td><td className="p-2">EUR</td><td className="p-2">FX adjustment applied</td><td className="p-2">No FX adjustment</td><td className="p-2">FX adjustment applied</td></tr>
+              <tr className="border-b"><td className="p-2">Equity Japan</td><td className="p-2">JPY</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td></tr>
+              <tr className="border-b"><td className="p-2">Equity EM</td><td className="p-2">EM currencies</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td><td className="p-2">FX adjustment applied</td></tr>
+              <tr className="border-b"><td className="p-2">Absolute Return</td><td className="p-2">Base currency</td><td className="p-2">No FX adjustment</td><td className="p-2">No FX adjustment</td><td className="p-2">No FX adjustment</td></tr>
             </tbody>
           </table>
         </div>
@@ -208,7 +210,10 @@ export default function MethodologyPage() {
         </h2>
         <p className="mb-4">
           Macro forecasts are the foundation for all asset class returns. The tool computes forecasts
-          for four regions: <strong>US</strong>, <strong>Eurozone</strong>, <strong>Japan</strong>, and <strong>Emerging Markets (EM)</strong>.
+          for five regions: <strong>US</strong>, <strong>Eurozone</strong>, <strong>Japan</strong>,{' '}
+          <strong>Emerging Markets (EM)</strong>, and <strong>Switzerland</strong>. The Switzerland region
+          exists solely to serve the CHF base currency (cash, the Swiss bond regime, and the CHF FX
+          adjustment) — it is not part of the Global GDP weighting and has no effect on USD or EUR results.
         </p>
 
         <Tabs defaultValue="gdp" className="w-full">
@@ -308,7 +313,7 @@ export default function MethodologyPage() {
                     </thead>
                     <tbody>
                       <tr className="border-b"><td className="p-2 font-medium">Current T-Bill</td><td className="p-2">Today's 3-month T-Bill rate</td><td className="p-2">US: 3.60%, EU: 2.10%, JP: 1.62%, EM: 4.00%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Country Factor</td><td className="p-2">Liquidity/risk premium</td><td className="p-2">US: 0%, EU: -0.2%, JP: -0.5%, EM: -3.4%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Country Factor</td><td className="p-2">Liquidity/risk premium</td><td className="p-2">US: 0%, EU: -0.2%, JP: -0.5%, EM: -3.4%, CH: -1.2% (safe-haven franc)</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Rate Floor</td><td className="p-2">Minimum possible rate</td><td className="p-2">-0.75%</td></tr>
                     </tbody>
                   </table>
@@ -807,16 +812,17 @@ export default function MethodologyPage() {
                         <th className="p-2 text-right">Eurozone</th>
                         <th className="p-2 text-right">Japan</th>
                         <th className="p-2 text-right">EM</th>
+                        <th className="p-2 text-right">Switzerland*</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Headline Inflation</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Long-Term Inflation Target</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Current T-Bill Rate</td><td className="p-2 text-right">3.60%</td><td className="p-2 text-right">2.10%</td><td className="p-2 text-right">1.62%</td><td className="p-2 text-right">4.00%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Country Factor</td><td className="p-2 text-right">0.00%</td><td className="p-2 text-right">-0.20%</td><td className="p-2 text-right">-0.50%</td><td className="p-2 text-right">-3.40%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Population Growth</td><td className="p-2 text-right">0.40%</td><td className="p-2 text-right">0.10%</td><td className="p-2 text-right">-0.20%</td><td className="p-2 text-right">1.00%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Productivity Growth</td><td className="p-2 text-right">1.20%</td><td className="p-2 text-right">1.49%</td><td className="p-2 text-right">1.59%</td><td className="p-2 text-right">2.44%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">MY Ratio (Middle/Young)</td><td className="p-2 text-right">2.10</td><td className="p-2 text-right">2.30</td><td className="p-2 text-right">2.30</td><td className="p-2 text-right">1.50</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Headline Inflation</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">0.50%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Long-Term Inflation Target</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">1.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current T-Bill Rate</td><td className="p-2 text-right">3.60%</td><td className="p-2 text-right">2.10%</td><td className="p-2 text-right">1.62%</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">0.00%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Country Factor</td><td className="p-2 text-right">0.00%</td><td className="p-2 text-right">-0.20%</td><td className="p-2 text-right">-0.50%</td><td className="p-2 text-right">-3.40%</td><td className="p-2 text-right">-1.20%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Population Growth</td><td className="p-2 text-right">0.40%</td><td className="p-2 text-right">0.10%</td><td className="p-2 text-right">-0.20%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.70%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Productivity Growth</td><td className="p-2 text-right">1.20%</td><td className="p-2 text-right">1.49%</td><td className="p-2 text-right">1.59%</td><td className="p-2 text-right">2.44%</td><td className="p-2 text-right">1.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">MY Ratio (Middle/Young)</td><td className="p-2 text-right">2.10</td><td className="p-2 text-right">2.30</td><td className="p-2 text-right">2.30</td><td className="p-2 text-right">1.50</td><td className="p-2 text-right">2.20</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -831,12 +837,13 @@ export default function MethodologyPage() {
                         <th className="p-2 text-right">Eurozone</th>
                         <th className="p-2 text-right">Japan</th>
                         <th className="p-2 text-right">EM</th>
+                        <th className="p-2 text-right">Switzerland*</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">E[Inflation] (10yr avg)</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td></tr>
-                      <tr className="border-b bg-blue-50"><td className="p-2 font-medium">E[Real GDP Growth] (10yr avg)</td><td className="p-2 text-right">1.20%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.80%</td><td className="p-2 text-right">3.40%</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">E[T-Bill Rate] (10yr avg)</td><td className="p-2 text-right">4.02%</td><td className="p-2 text-right">2.59%</td><td className="p-2 text-right">1.75%</td><td className="p-2 text-right">4.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">E[Inflation] (10yr avg)</td><td className="p-2 text-right">3.00%</td><td className="p-2 text-right">2.00%</td><td className="p-2 text-right">1.50%</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">0.85%</td></tr>
+                      <tr className="border-b bg-blue-50"><td className="p-2 font-medium">E[Real GDP Growth] (10yr avg)</td><td className="p-2 text-right">1.20%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.80%</td><td className="p-2 text-right">3.40%</td><td className="p-2 text-right">1.20%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">E[T-Bill Rate] (10yr avg)</td><td className="p-2 text-right">4.02%</td><td className="p-2 text-right">2.59%</td><td className="p-2 text-right">1.75%</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">0.60%</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -847,6 +854,14 @@ export default function MethodologyPage() {
                       <strong>Note:</strong> The computed forecasts are derived from the building block inputs using the macro models
                       (30/70 weighting for inflation and T-Bill, GDP from population + productivity + demographics).
                       Users can override these forecasts directly, which takes priority over the building block computation.
+                    </p>
+                    <p className="text-sm text-blue-700 mt-2">
+                      <strong>* Switzerland (CHF base only):</strong> calibrated mid-2026 from FSO CPI (0.5% YoY),
+                      SNB policy rate (0%, SARON ≈ −0.04%), FSO population growth (0.7%) and productivity (~1.0%),
+                      with a 1.0% long-term inflation anchor (SNB price-stability range 0–2%). The strongly negative
+                      country factor (−1.20%) reflects the safe-haven franc: Swiss short rates sit structurally below
+                      the GDP + inflation equilibrium. Switzerland is excluded from the Global GDP weights and only
+                      affects results in CHF base.
                     </p>
                   </CardContent>
                 </Card>
@@ -872,10 +887,10 @@ export default function MethodologyPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Yield</td><td className="p-2 text-right">4.60% / 3.00%</td><td className="p-2 text-right">7.10%</td><td className="p-2 text-right">6.00%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Duration (years)</td><td className="p-2 text-right">8.0 / 7.5</td><td className="p-2 text-right">3.0</td><td className="p-2 text-right">5.8</td></tr>
-                      <tr className="border-b"><td className="p-2 font-medium">Current Term Premium</td><td className="p-2 text-right">0.81% / 0.40%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.81%</td></tr>
-                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Term Premium</td><td className="p-2 text-right">1.00% / 0.50%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">1.00%</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Yield</td><td className="p-2 text-right">4.60% / 3.00% / 0.40%</td><td className="p-2 text-right">7.10%</td><td className="p-2 text-right">6.00%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Duration (years)</td><td className="p-2 text-right">8.0 / 7.5 / 9.0</td><td className="p-2 text-right">3.0</td><td className="p-2 text-right">5.8</td></tr>
+                      <tr className="border-b"><td className="p-2 font-medium">Current Term Premium</td><td className="p-2 text-right">0.81% / 0.40% / -0.20%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">0.81%</td></tr>
+                      <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Term Premium</td><td className="p-2 text-right">1.00% / 0.50% / 0.20%</td><td className="p-2 text-right">1.00%</td><td className="p-2 text-right">1.00%</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Credit Spread</td><td className="p-2 text-right">--</td><td className="p-2 text-right">2.60%</td><td className="p-2 text-right">--</td></tr>
                       <tr className="border-b bg-slate-50"><td className="p-2 font-medium">Fair Credit Spread</td><td className="p-2 text-right">--</td><td className="p-2 text-right">4.00%</td><td className="p-2 text-right">--</td></tr>
                       <tr className="border-b"><td className="p-2 font-medium">Default Rate</td><td className="p-2 text-right">--</td><td className="p-2 text-right">3.40%</td><td className="p-2 text-right">3.40%</td></tr>
@@ -893,10 +908,13 @@ export default function MethodologyPage() {
                       Bonds EM uses US macro assumptions since they are USD-denominated hard currency bonds.
                     </p>
                     <p className="text-sm text-amber-700 mt-2">
-                      <strong>Bonds Global is regime-based:</strong> values shown as "USD / EUR".
+                      <strong>Bonds Global is regime-based:</strong> values shown as "USD / EUR / CHF".
                       In USD mode the engine uses US Treasury / Global Aggregate assumptions and US macro;
-                      in EUR mode it switches to Bund / EUR sovereign aggregate assumptions and Eurozone macro.
-                      No FX adjustment is applied — Bonds Global is treated as a native-currency asset on both sides.
+                      in EUR mode it switches to Bund / EUR sovereign aggregate assumptions and Eurozone macro;
+                      in CHF mode it uses Swiss Confederation (Eidgenossen) assumptions and Swiss macro —
+                      the flat Swiss curve gives a slightly negative current term premium (10y yield 0.40%
+                      vs E[T-Bill] 0.60%). No FX adjustment is applied in any mode — Bonds Global is treated
+                      as a native-currency asset.
                     </p>
                   </CardContent>
                 </Card>
@@ -907,7 +925,8 @@ export default function MethodologyPage() {
                       <strong>Bonds Inflation Linked:</strong> Defaults are regime-specific. In USD base mode, the model uses
                       US TIPS assumptions; in EUR base mode, it uses EUR inflation-linked sovereign assumptions.
                       Inputs include current real yield, duration, real term premium, inflation beta, index lag drag,
-                      and liquidity/technical adjustment.
+                      and liquidity/technical adjustment. <strong>Not offered in CHF base:</strong> Switzerland has no
+                      domestic inflation-linked government bond market, so CHF results contain 9 asset classes.
                     </p>
                   </CardContent>
                 </Card>
