@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated": "2026-07-30",
+  "generated": "2026-09-15",
   "disclaimer": "Public CMAs mapped to Parkview's 10 buckets via the closest provider proxy. Bases differ (geometric vs arithmetic, 10y vs 10-15y, nominal, hedging, FX) - see each provider's notes/return_basis before comparing.",
   "buckets": [
     "liquidity",
@@ -23,131 +23,131 @@
       "fees": "gross",
       "source_url": "https://www.blackrock.com/blk-inst-c-assets/images/tools/blackrock-investment-institute/cma/blackrock-capital-market-assumptions.xlsx",
       "notes": "Nominal. Non-USD bond figures are currency-hedged; equities unhedged. Uses the 'Starting point' base-case tab (ignores scenario tabs).",
-      "as_of": "2026-03-31",
+      "as_of": "2026-06-30",
       "returns": {
         "usd": {
           "liquidity": {
-            "value": 3.59,
+            "value": 3.66,
             "proxy": "US cash"
           },
           "bonds_global": {
-            "value": 4.63,
+            "value": 4.76,
             "proxy": "US government (all maturities)"
           },
           "bonds_hy": {
-            "value": 6.46,
+            "value": 6.43,
             "proxy": "US high yield"
           },
           "bonds_em": {
-            "value": 6.02,
+            "value": 6.01,
             "proxy": "USD EM debt"
           },
           "inflation_linked": {
-            "value": 5.04,
+            "value": 5.18,
             "proxy": "US inflation-linked government"
           },
           "equity_us": {
-            "value": 8.47,
+            "value": 8.97,
             "proxy": "US large cap equities"
           },
           "equity_europe": {
-            "value": 8.05,
+            "value": 7.43,
             "proxy": "Europe large cap equities"
           },
           "equity_japan": {
-            "value": 8.85,
+            "value": null,
             "proxy": "Japan large cap equities"
           },
           "equity_em": {
-            "value": 7.27,
+            "value": 8.8,
             "proxy": "Emerging large cap equities"
           },
           "absolute_return": {
-            "value": 9.21,
+            "value": 9.29,
             "proxy": "Hedge funds (global)"
           }
         },
         "eur": {
           "liquidity": {
-            "value": 2.47,
+            "value": 2.59,
             "proxy": "EMU cash"
           },
           "bonds_global": {
-            "value": 3.78,
+            "value": 3.76,
             "proxy": "EMU treasury bonds"
           },
           "bonds_hy": {
-            "value": 5.03,
+            "value": 4.98,
             "proxy": "Global high yield bonds"
           },
           "bonds_em": {
-            "value": 4.69,
+            "value": 4.76,
             "proxy": "USD EM debt"
           },
           "inflation_linked": {
-            "value": 3.87,
+            "value": 3.74,
             "proxy": "EMU index-linked treasuries"
           },
           "equity_us": {
-            "value": 7.34,
+            "value": 7.69,
             "proxy": "US large cap equities"
           },
           "equity_europe": {
-            "value": 6.92,
+            "value": 6.17,
             "proxy": "Europe large cap equities"
           },
           "equity_japan": {
-            "value": 7.71,
+            "value": null,
             "proxy": "Japan large cap equities"
           },
           "equity_em": {
-            "value": 6.17,
+            "value": 7.53,
             "proxy": "Emerging large cap equities"
           },
           "absolute_return": {
-            "value": 8.09,
+            "value": 8.04,
             "proxy": "Hedge funds (global)"
           }
         },
         "chf": {
           "liquidity": {
-            "value": 0.65,
+            "value": 0.57,
             "proxy": "Swiss cash"
           },
           "bonds_global": {
-            "value": -0.16,
+            "value": -0.26,
             "proxy": "Swiss government bonds"
           },
           "bonds_hy": {
-            "value": 3.21,
+            "value": 2.95,
             "proxy": "Global high yield bonds"
           },
           "bonds_em": {
-            "value": 2.87,
+            "value": 2.73,
             "proxy": "USD EM debt"
           },
           "inflation_linked": {
-            "value": 1.75,
+            "value": 1.72,
             "proxy": "Developed inflation-linked bonds"
           },
           "equity_us": {
-            "value": 7.34,
+            "value": 7.53,
             "proxy": "US large cap equities"
           },
           "equity_europe": {
-            "value": 6.92,
+            "value": 6.01,
             "proxy": "Europe large cap equities"
           },
           "equity_japan": {
-            "value": 7.71,
+            "value": null,
             "proxy": "Japan large cap equities"
           },
           "equity_em": {
-            "value": 6.16,
+            "value": 7.38,
             "proxy": "Emerging large cap equities"
           },
           "absolute_return": {
-            "value": 8.09,
+            "value": 7.88,
             "proxy": "Hedge funds (global)"
           }
         }
@@ -311,15 +311,15 @@
             "proxy": "US Government Bond"
           },
           "bonds_hy": {
-            "value": 5.5,
+            "value": 5.1,
             "proxy": "US High Yield Bond"
           },
           "bonds_em": {
-            "value": 6.6,
+            "value": 5.4,
             "proxy": "Emerging Markets Bonds"
           },
           "inflation_linked": {
-            "value": 3.7,
+            "value": 4.0,
             "proxy": "US TIPS Bond"
           },
           "equity_us": {
@@ -335,7 +335,7 @@
             "proxy": "no native line in this currency"
           },
           "equity_em": {
-            "value": 7.4,
+            "value": 7.2,
             "proxy": "Emerging Markets (EM)"
           },
           "absolute_return": {
@@ -345,15 +345,15 @@
         },
         "eur": {
           "liquidity": {
-            "value": 2.1,
+            "value": 2.2,
             "proxy": "EMU Cash"
           },
           "bonds_global": {
-            "value": 3.4,
+            "value": 3.2,
             "proxy": "Euro Government Bonds"
           },
           "bonds_hy": {
-            "value": 5.0,
+            "value": 4.5,
             "proxy": "Euro High Yield Bonds"
           },
           "bonds_em": {
